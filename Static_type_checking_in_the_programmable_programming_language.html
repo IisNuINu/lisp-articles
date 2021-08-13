@@ -1,0 +1,301 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-11T10:04:45.365795332"/>
+	<meta name="changed" content="2021-08-11T10:06:30.016455458"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		pre.cjk { font-family: "Courier New", monospace }
+		a:link { so-language: zxx }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western"><a name="5610"></a>Статическая проверка типов на 
+программируемом языке программирования (Lisp) </h1>
+
+<p><a href="https://medium.com/@MartinCracauer?source=post_page-----79bb79eb068a--------------------------------">
+  <font color="#000080">
+    <img src="Static_type_checking_in_the_programmable_programming_language_html_39aaac8f8c35ff7a.jpg" name="Image1" alt="Martin Cracauer" align="bottom" width="28" height="28" border="1"/>
+  </font>
+</a>
+</p>
+
+<p><a href="https://medium.com/@MartinCracauer?source=post_page-----79bb79eb068a--------------------------------">Martin
+Cracauer</a></p>
+
+<p><a href="https://medium.com/@MartinCracauer/static-type-checking-in-the-programmable-programming-language-lisp-79bb79eb068a?source=post_page-----79bb79eb068a--------------------------------">Mar
+30, 2019Â·11 min read</a></p>
+
+<p><img src="Static_type_checking_in_the_programmable_programming_language_html_c19f2ced434922.png" name="Image2" align="bottom" width="500" height="700" border="0"/>
+</p>
+
+<p><a name="6e78"></a>Существует заблуждение, что Lisp - это язык 
+с динамической типизацией, который не предлагает проверку типов во 
+время компиляции. Lisp - это программируемый язык программирования, 
+что, конечно, не соответствует действительности. </p>
+
+<pre class="western"><a name="ed04"></a>(defun meh (p1)
+  (declare (fixnum p1))
+  (+ p1 3))
+(defun meh2 (p1)
+  (declare (fixnum p1))
+  (+ p1 &quot;8&quot;))</pre>
+<p>
+<a name="c514"></a>Вы получите это: </p>
+
+<pre class="western"><a name="8046"></a><a name="d306"></a>2 compiler notes:typecheck-demo.lisp:7:3:                                                        
+  note: deleting unreachable code                                               
+  warning:                                                                      
+    Constant &quot;8&quot; conflicts with its asserted type NUMBER.                       
+    See also:                                                                   
+<a name="ab34"></a>      SBCL Manual, Handling of Types [:node]Compilation failed.</pre>
+<p>
+<a name="34ee"></a>Вы можете объявить почти все, что вы бы сделали 
+в обычных статически типизированных языках. Функциональный интерфейс: </p>
+
+<pre class="western"><a name="6e15"></a>(defun meh3a (p1)
+  (+ p1 3))
+(declaim (ftype (function (fixnum) t) meh3a))
+(defun meh3b ()
+  (meh3a &quot;moo&quot;))
+==&gt;
+<a name="04e6"></a>2 compiler notes:typecheck-demo.lisp:13:3:                                                       
+  note: deleting unreachable code                                               
+  warning:                                                                      
+    Constant &quot;moo&quot; conflicts with its asserted type FIXNUM.                     
+    See also:                                                                   
+<a name="e01d"></a>      SBCL Manual, Handling of Types [:node]Compilation failed.</pre>
+<p>
+<a name="6b03"></a>Или вы можете вытащить объявление впереди, 
+чтобы определение первой функции уже проверялось на объявление типа 
+при определении функции: </p>
+
+<pre class="western"><a name="6b39"></a>(declaim (ftype (function (string) t) meh4a))
+(defun meh4a (p1)
+  (+ p1 3))
+(defun meh4b ()
+  (meh4a &quot;moo&quot;))
+<a name="18e4"></a>2 compiler notes:typecheck-demo.lisp:18:3:                                                       
+  note: deleting unreachable code                                               
+  warning:                                                                      
+    Derived type of P1 is                                                       
+      (VALUES STRING &amp;OPTIONAL),                                                
+    conflicting with its asserted type                                          
+      NUMBER.                                                                   
+    See also:                                                                   
+<a name="4973"></a>      SBCL Manual, Handling of Types [:node]Compilation failed.
+;; note that this is the first function failing
+;; the second one compiles fine.</pre>
+<p>
+<a name="4efb"></a><a name="rmm"></a>Очевидно, это не самый удобный синтаксис. 
+Но это легко исправить с помощью программируемого языка программирования, 
+в котором есть вычисления во время компиляции.</p>
+
+<p><a name="a041"></a>Итак, что мы хотим для этой демонстрации, 
+так это возможность помещать типы аргументов непосредственно в список аргументов. 
+Определение функции могло бы выглядеть так: </p>
+
+<pre class="western"><a name="9c83"></a>(defunt meh5c ((int p1) (int p2))
+    (+ p1 p2))
+(meh5c 1 2) ; ==&gt; 3</pre>
+<p>
+<a name="f487"></a>Итак, у нас есть новое имя вместо defun, и мы хотим написать 
+один фрагмент вычисления времени компиляции, который позаботится как о 
+фактическом defun, так и об объявлении типов. После того, как мы напишем этот макрос, 
+мы просто хотим писать функции в новом синтаксисе.
+</p>
+
+<p><a name="790d"></a>Вот макрос, который это делает: </p>
+
+<pre class="western"><a name="4db7"></a>(defmacro defunt (name (&amp;rest args) &amp;body body)
+  &quot;defun with optional type declarations&quot;
+  `(progn
+     (declaim (ftype 
+               (function 
+                ,(let (declares)
+                   (dolist (arg args)
+                     (push 
+                      (if (listp arg)
+                          (if (equalp (string (first arg)) &quot;int&quot;)
+                              'fixnum
+                              (first arg))
+                          t)
+                      declares))
+                   declares)
+                t) ,name))
+     (defun ,name
+         ,(loop for arg in args
+             collect
+               (if (listp arg)
+                   (second arg)
+                   arg))
+       ,<a href="http://twitter.com/body">@body</a>)))</pre>
+<p>
+<a name="dbf9"></a>Я объясню немного больше, давайте просто протестируем
+вот это: </p>
+
+<pre class="western"><a name="ae52"></a>;; simple use with no type declaration
+(defunt meh5a (p1 p2)
+<a name="b630"></a>    (+ p1 p2));; one declared type, not the other
+(defunt meh5b ((int p1) p2)
+<a name="70a7"></a>    (+ p1 p2));; make sure this works
+(defun meh5btest (p1)
+<a name="173e"></a>  (+ p1 &quot;8&quot;))(defunt meh5c ((int p1) (int p2))
+    (+ p1 p2))</pre>
+<p>
+<a name="888f"></a>Компиляция результатов meh5test, как и ожидалось, в </p>
+
+<pre class="western"><a name="d72b"></a>typecheck-demo.lisp:81:3:                                                       
+  note: deleting unreachable code                                               
+  warning:                                                                      
+    Constant &quot;8&quot; conflicts with its asserted type NUMBER.                       
+    See also:                                                                   
+<a name="22bb"></a>      SBCL Manual, Handling of Types [:node]Compilation failed.</pre>
+<p>
+<a name="aa57"></a>Итак, вы написали этот макрос один раз, 
+и с этого момента вы можете просто использовать его. Макрос кажется немного 
+трудным для чтения программистам, которые еще не привыкли к Lisp. 
+Я могу сказать вам, что я написал этот макрос, а не весь этот пост, 
+когда ожидал полета, идущего со встречи разработчиков AmberMD на 
+European Lisp Symposium.</p>
+
+<p><a name="b493"></a>Это быстро. И есть грамотные средства отладки.
+Я продемонстрирую отладку позже. </p>
+
+<p><a name="9126"></a>Возможность отладки вычислений во время компиляции 
+имеет решающее значение. Можете ли вы представить себе пошаговое выполнение 
+макроса препроцессора C или вычисление шаблона C++? Или использовать отладку 
+printf (также известную как единственный настоящий отладчик) на C или C++ 
+во время компиляции?</p>
+
+<p><a name="1e29"></a>Вот тот же макрос с некоторыми комментариями: </p>
+
+<pre class="western"><a name="bb5b"></a>(defmacro defunt (name (&amp;rest args) &amp;body body)
+  &quot;defun with optional type declarations&quot;
+  ;; обратная кавычка переходит в  &quot;режим эха для кода&quot;, не
+  ;; вычислять при запуске макроса 
+  `(progn
+     ;; этот макрос выпускает два определения для
+     ;; компилятора:
+     ;; 1 - декларацию типа декларации
+     ;; 2 - определение функции - defun
+     (declaim (ftype
+               (function
+                ;; запятая внутри обратной каавычки означает
+                ;; &quot;выполнение при запуске макроса&quot;
+                ,(let (declares)
+                   (dolist (arg args)
+                     (push
+                      (if (listp arg)
+                          ;; Так же переводим для людей C, но не зависимо
+                          ;; от регистра
+                          (if (equalp (string (first arg)) &quot;int&quot;)
+                              'fixnum
+                              (first arg))
+                          t)
+                      declares))
+                   ;; вернуть этот список, который интегрирован в код. 
+                   ;; Видите ли, поэтому у нас так много скобок. Потому что то, 
+                   ;; что здесь является пассивным списком данных, превращается в 
+                   ;; код без какого-либо переформатирования.
+                   ;; Прочтите ниже пошаговое объяснение того, что происходит 
+                   declares)
+                t) ,name))
+     (defun ,name
+         ;; используйте здесь макрос цикла для той же цели, 
+         ;; что мы вручную собрали аргументы с помощью dolist 
+         ;; и push выше 
+         ,(loop for arg in args
+             collect
+               (if (listp arg)
+                   (second arg)
+                   arg))
+       ,<a href="http://twitter.com/body">@body</a>)))
+;; результат вышеуказанного макроса затем передается в компилятор
+;; Итак, здесь мы используем три уровня времени выполнения:
+;; 1 - при запуске макроса
+;; 2 - вывод макроса, который подается в компилятор
+;; 3 - время выполнения, когда вы фактически вызываете результирующую функцию </pre>
+<p>
+<a name="ba9c"></a>За этим стоит следующая концепция:</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a name="cf79"></a>один вызов макроса может вызвать 
+	несколько новых операторов. Мы используем это, чтобы генерировать как declare, 
+	так и defun из одного пользовательского определения. </p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="a782"></a>внутри макроса вы можете контролировать, 
+	какой код запускается во время вызова макроса, а что передается компилятору. 
+	Имейте в виду, что в обоих случаях в вашем распоряжении полный язык. Одна из причин, 
+	по которой эти макросы могут быть немного трудными для чтения, заключается в том, 
+	что вам явно нужно переключаться между разными временами вычисления, а код имеет 
+	тот же синтаксис. Макрос препроцессора C или шаблон C++ используют разные языки 
+	во время компиляции и выполнения, поэтому немного более понятно, что и когда 
+	вычисляется. Конечно, вы не можете использовать свою обычную библиотеку во время
+	компиляции, как в Lisp. </p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="f3a1"></a>если вы не укажете иное, 
+	код внутри макроса выполняется во время раскрытия макроса. Возвращаемое 
+	значение - это то, что передается в компилятор. Возвращаемое значение 
+	скорее будет списком, списком операторов языка Лисп. Вот почему в Лиспе 
+	вы должны использовать синтаксис списка для кода. Понятно? Это важно. 
+	Вы создаете эту вещь с вложенными круглыми скобками, которая представляет 
+	собой список во время компиляции, и вы загружаете его в компилятор, так 
+	что список становится кодом. </p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="8be8"></a>кавычка(‘) или обратная кавычка (`) 
+	оставляет такие вещи как списки и не вычисляет их во время вызова макроса. 
+	Вот как вы возвращаете список (который является данными, а не вычислением) 
+	из макроса (который затем передается в компилятор). </p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="9b06"></a>Запятая (,) может использоваться 
+	внутри блока с обратной кавычкой(`), чтобы переключить время вычисления 
+	обратно на время вызова макроса. Ваш блок с запятыми также возвращает 
+	списки, и они интегрируются в блок с обратными кавычками. </p>
+
+	<li/>
+
+<p><a name="6094"></a>Конструкция ,@ удаляет одну вложенность списка, 
+	поэтому она превращает ((foo bar)) в (foo bar). Это часто требуется, 
+	когда вы возвращаете коллекции элементов из собственных переменных 
+	макроса или блока с запятой. Это касается глубины макросов и некоторого 
+	неясного синтаксиса, но это не особенно сложно, учитывая инструменты отладки. </p>
+
+</ul>
+
+<p><a name="8397"></a>Итак, если вы хотите написать такие макросы: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a name="b218"></a>получите редактор с автоматическим 
+	отступом для кода Lisp. Он также должен показать вам совпадающую открывающую 
+	скобку, когда вы вводите закрывающую скобку. Ни один программист на Лиспе не 
+	размещает эти скобки вручную. Это важно. Сосчитать эти вещи вручную сводит с ума. 
+</p>
+
+	<li/>
+
+<p><a name="ac4d"></a>приготовь несколько книг. «О Лиспе» Пола Грэма - 
+	бесплатная книга, в которой очень хорошо объясняются макросы Лиспа. 
+	Продолжать писать только на основе сообщения в блоге, вероятно, сложно </p>
+
+</ul>
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

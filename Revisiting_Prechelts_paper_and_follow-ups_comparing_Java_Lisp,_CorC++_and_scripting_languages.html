@@ -1,0 +1,817 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-11T10:25:12.980670594"/>
+	<meta name="changed" content="2021-08-11T10:34:47.110775144"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h2 class="western">Возвращаясь к статье Пречелта и последующих работ, сравнивающих Java, Lisp, C/C++ и языки сценариев</h2>
+<p style="margin-bottom: 0cm"><i>Обсуждение влияния языков программирования на производительность и эффективность программ.</i>
+</p>
+
+<p>Written on 24 Jul 2021, 02:54 PM (Last updated on 31 Jul 2021,
+04:34 PM)</p>
+
+<p><img src="Revisiting_Prechelts_paper_and_follow-ups_comparing_Java_Lisp,_CorC++_and_scripting_languages_html_1afdceb729a37d1c.png" name="Image1" alt="Comparing Java and Lisp" align="bottom" width="2434" height="1616" border="0"/>
+</p>
+
+<p>В 1999 году <a href="https://twitter.com/prechelt">Лутц Прешельт</a> опубликовал основополагающую статью в COMMUNICATIONS OF THE ACM (октябрь 1999 г. / том 42, № 10).<br/>
+называющуюся  <a href="https://www.ebhakt.info/dl/Comparejavaandc_D9F7/compare_java_c.pdf">Сравнение различий в эффективности Java и C / C ++ с межличностными различиями</a>, отныне <em>Java VS C</em>, который, кажется, позже (март 2000 г.) был расширен до полной статьи, <a href="http://page.mi.fu-berlin.de/prechelt/Biblio/jccpprtTR.pdf">Эмпирическое сравнение C, C ++, Java, Perl, Python, Rexx и Tcl для программирования поиска/обработки строк</a>, далее <em>Scripting VS Java/C</em>.</p>
+
+<p>В этой статье они проанализировали данные исследования (которое проводилось 
+для другой статьи, как мы увидим позже), где участникам было предложено решить проблему, 
+состоящую из кодирования телефонных номеров в комбинацию цифр и слов из словаря, 
+предположительно чтобы людям было легче запоминать телефонные номера, которые они, 
+возможно, захотят вспомнить позже (это было до того, как мобильные телефоны получили 
+широкое распространение). </p>
+
+<p>Та же проблема была позже использована  <a href="https://flownet.com/ron/">Роном Гарретом</a> (он же Erann Gat) в своей короткой статье, <a href="https://flownet.com/ron/papers/lisp-java/lisp-java.pdf">Lisp как альтернатива Java</a>, отныне <em>Lisp VS Java</em>, начиная с 2000 года.
+</p>
+
+<p>Обе статьи широко цитируются, и даже сегодня на них продолжают 
+<a href="https://arnuldondata.medium.com/julia-and-the-reincarnation-of-lisp-f60cacd5822c">ссылаться.</a>.</p>
+
+<p>В этой статье я хотел бы вернуться к этим статьям, проанализировать их методологию 
+и выводы и попытаться выяснить, изменилось ли что-нибудь за 21 год с момента публикации 
+этих статей, написав свои собственные решения проблемы, как если бы я сам участвовал в 
+одном из исследований. </p>
+
+<p>Я написал решение на Java, не глядя на какие-либо другие решения, чтобы узнать, 
+как бы работало мое решение (и Java 16), если бы оно участвовало.</p>
+
+<p>После этого я проанализировал некоторые другие решения и сравнил их с моими. 
+Основываясь на своих выводах и некоторых комментариях самого Прешельта в его статье, 
+я решил написать вторую программу на Java, которая соответствовала бы совершенно другой 
+стратегии, которая обычно использовалась в более динамичных языках. Я реализовал тот же 
+алгоритм и в Rust, чтобы понять, как будет работать современный системный язык. </p>
+
+<p>Это должно позволить нам более напрямую сравнивать современные языки с 
+использованием одного и того же точного алгоритма (насколько это возможно), 
+устраняя потенциально большие различия, которые могут возникнуть из-за различных 
+алгоритмов, выбранных программистом.</p>
+
+<h2 class="western">Обзор исследований </h2>
+
+<p>Все данные, используемые в Prechelt <em>Java VS C</em>, а также решения 
+Java/C/C++, используемые в <em>Scripting VS Java/C</em>, взяты из более раннего 
+ <a href="https://www.researchgate.net/publication/2802132_A_controlled_experiment_on_the_effects_of_PSP_training_Detailed_description_and_evaluation">исследования</a> метода разработки программного обеспечения под названием PSP (Personal Software Process). 
+Это исследование действительно проводилось с августа 1996 года по октябрь 1998 года!</p>
+
+<p>Это означает, что некоторые участники фактически использовали самый первый выпуск JDK! </p>
+
+<p>Цель этого исследования не имела ничего общего с изучением различий между Java и C/C ++, 
+она была связана с исследованием того, насколько эффективна PSP (результаты показали, 
+что, в основном, практикующие PSP имели более предсказуемую и стабильную производительность, 
+но также работали немного медленнее. ).</p>
+
+<p>В этом исследовании приняли участие 55 аспирантов, 24 из которых использовали Java, 
+9 использовали C, 13 использовали C ++, а двое других использовали Modula-2 и нечто 
+под названием Sather-K! Большинство студентов пришли либо с курса PSP, либо с курса Java Advanced. </p>
+
+<p>Тем не менее, это были данные, на которых была основана статья Java VS C. 
+В него вошли 24 программы, написанные на Java, 11 - на C ++ и 5 - на C.</p>
+
+<p>Инструкции, данные участникам исследования, слегка адаптированные для статьи о 
+<em>Lisp VS Java</em> можно найти на
+<a href="https://flownet.com/ron/papers/lisp-java/instructions.html">flownet.com</a>.</p>
+
+<p>Вот краткое описание проблемы, которую должны были решить участники: </p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">Все программы реализуют один и тот же функционал, а именно преобразование телефонных номеров в строки слов. </font>
+
+<font color="#f8f8f2">...</font>
+
+<font color="#f8f8f2">Преобразование определяется фиксированным отображением символов в цифры следующим образом: </font>
+
+<font color="#f8f8f2">e j n q r w x d s y f t a m c i v b k u l o p g h z</font>
+<font color="#f8f8f2">0 1 1 1 2 2 2 3 3 3 4 4 5 5 6 6 6 7 7 7 8 8 8 9 9 9</font>
+
+<font color="#f8f8f2">Задача программы - найти такую последовательность слов, чтобы последовательность символов</font>
+<font color="#f8f8f2">в этих словах точно соответствовала последовательности цифр в номере телефона.</font>
+<font color="#f8f8f2">Необходимо найти и распечатать все возможные решения.</font>
+<font color="#f8f8f2">Решения создаются пословно, и если ни одно слово из словаря не может быть вставлено в какой-то момент</font>
+<font color="#f8f8f2">во время этого процесса одна цифра из номера телефона может появиться в результате в этой позиции.</font>
+<font color="#f8f8f2">Многие телефонные номера вообще не имеют решения.</font></pre><blockquote> 
+Если вы хотите «участвовать» в исследовании, как можно точнее следуйте инструкциям, приведенным 
+в этой <a href="https://flownet.com/ron/papers/lisp-java/instructions.html">ссылке</a>. 
+Затем вы можете сравнить свое решение с моим и другим, используя 
+<a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding">мой репозиторий GitHub</a>, в котором есть инструкции, как легко добавить ваше решение в текущий тест и 
+запустить его!</blockquote>
+
+<p>Это хорошая задача, не слишком простая, но и не очень сложная. 
+Я нашел это достаточно интересным, чтобы самому захотеть принять участие после того, 
+как я случайно наткнулся на это в Интернете, через 21 год после публикации исследования! </p>
+
+<p>Видимо, я был не один такой. Рон Гаррет (который в то время работал в NASA, 
+а позже перешел на работу в раннюю версию Google) счел достаточно интересным провести 
+собственное исследование (уже упоминавшееся <em>Lisp VS Java</em>), 
+повторно используя ту же проблему, но прося только программистов Lisp  - реши это. 
+Он получил 16 решений от добровольцев, набранных из <em>новостной Интернет-группы</em>.</p>
+
+<p>Даже  <a href="https://norvig.com/">Питер Норвиг</a>, которого я считаю знаменитостью 
+в области компьютерных наук, опубликовал на своем веб-сайте <a href="http://www.norvig.com/java-lisp.html">собственное решение</a> проблемы, написанное на <a href="https://common-lisp.net/">Common Lisp</a> .</p>
+
+<p>Что они все узнали?</p>
+
+<p>Ну, в общем, Java медленная, использует слишком много памяти и требует не меньше усилий,
+чем C или C ++, чтобы написать что-нибудь с ее помощью. Кроме того, по крайней мере в 
+случае с Прешалтом, разница между программистами обычно больше, чем разница между языками.</p>
+
+<p>По их собственным словам: </p>
+
+<h3 class="western"><em>Java VS C</em></h3>
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">Начиная с JDK 1.2, программы Java обычно намного медленнее, чем программы, написанные на C или C ++.</font>
+<font color="#f8f8f2">Они также потребляют гораздо больше памяти.</font></pre>
+<p>
+Но и: </p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">Однако даже внутри одного языка межличностные различия между реализациями</font>
+<font color="#f8f8f2">одной и той же программы, написанной разными программистами (соотношение плохих и хороших), намного больше</font>
+<font color="#f8f8f2">чем средняя разница между Java и C / C ++.</font></pre><h3 class="western">
+<em>Scripting VS Java/C</em></h3>
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">... для данной проблемы программирования «языки сценариев» (Perl, Python, Rexx, Tcl)</font>
+<font color="#f8f8f2">более продуктивны, чем обычные языки.</font>
+
+<font color="#f8f8f2">С точки зрения времени выполнения и потребления памяти они часто оказываются лучше, чем Java и</font>
+<font color="#f8f8f2">не намного хуже, чем C или C++.</font></pre>
+<p>
+И снова:</p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">Как правило, различия между языками обычно меньше, чем типичные различия.</font>
+<font color="#f8f8f2">у разных программистов на одном языке.</font></pre><h3 class="western">
+<em>Lisp VS Java</em></h3>
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">... Производительность Lisp сравнима с C ++ или превосходит ее по скорости выполнения ...</font>
+<font color="#f8f8f2">она также имеет значительно меньшую изменчивость, что приводит к снижению проектного риска.</font>
+
+<font color="#f8f8f2">Кроме того, время разработки значительно меньше и менее изменчиво, чем на C++ или Java.</font>
+
+<font color="#f8f8f2">Потребление памяти сравнимо с Java ...</font></pre>
+<h2 class="western">
+Анализ экспериментов и их выводы</h2>
+
+<p>Пречелт подробно описывает установку своих экспериментов и профиль участников, 
+а также многочисленные предостережения, связанные с каждым исследованием. 
+Я настоятельно рекомендую бегло просмотреть <a href="https://www.researchgate.net/publication/2802132_A_controlled_experiment_on_the_effects_of_PSP_training_Detailed_description_and_evaluation">статью PSP</a>, которая положила начало его более поздним публикациям. </p>
+
+<p>Обратите внимание, что в первоначальном исследовании было две разные группы студентов: 
+студенты PSP, которые научились использовать технику (PSP) для явного повышения качества 
+своей работы, и <em>контрольная группа</em>, в основном студенты курса Java, 
+которые обязаны участвовать в исследовании. Большинство представителей C/C ++ 
+исходило от группы PSP (17 VS 5), но представители Java были более равномерно 
+разделены (14 VS 10).</p>
+
+<p>Важно помнить, что студенты PSP были приучены тратить больше времени на 
+анализ проблемы и попытки предотвратить дефекты в своих программах, и что самым 
+важным требованием исследования было сделать программы максимально надежными. </p>
+
+<p>TЭто подразумевает некоторую разницу в <em>типах</em> студентов, работающих 
+в Java VS C/C++. В <em>Java VS C</em> Пречальт даже упоминает, что в 
+<em>среднем у программистов Java было вдвое меньше опыта программирования на Java, 
+чем у программистов C/C ++ на C/C++</em>, что естественно, учитывая, что 
+исследование проводилось, когда Java едва ли был освоен. выпущен впервые.</p>
+
+<p>В любом случае, как в документе PSP, так и в <em>Java VS C</em> Пречелт очень 
+искренне говорил об ограничениях исследования, и его выводы были довольно твердыми, 
+учитывая данные (и тот факт, что они использовали Java 1.2, выпущенную в 1998 году). </p>
+
+<p>Однако с Scripting VS Java/C все становится еще мрачнее. Обратите внимание, 
+что Prechelt снова использует те же данные для программ Java и C/C++, но для группы 
+языков сценариев участники были в основном случайными людьми, найденными в ранних 
+группах Интернета: </p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">The Perl, Python, Rexx, and Tcl programs were all submitted in late 1999 by volunteers after I had posted a </font>
+<font color="#f8f8f2">âCall for Programsâ on several Usenet newsgroups (comp.lang.perl.misc, de.comp.lang.perl.misc, comp.lang.rexx, </font>
+<font color="#f8f8f2">comp.lang.tcl, comp.lang.tcl.announce, comp.lang.python, comp.lang.python.announce) and one mailing list </font>
+<font color="#f8f8f2">(called âFun with Perlâ, fwp@technofile.org).</font></pre>
+<p>
+Также обратите внимание на то, что время, затраченное на решение решений, было самооценено, 
+и участники, использующие язык сценариев, никоим образом не контролировались, в отличие от тех, 
+кто принимал участие в первом исследовании (многие из которых были вынуждены тратить больше 
+времени на размышления о проблеме). проблемы, как поощряется PSP).</p>
+
+<p>Пречелт отмечает, что <em>время работы, указанное программистами сценариев, 
+может быть неточным</em>. Что ж, это, наверное, самое большое преуменьшение во 
+всех его статьях.</p>
+
+<p>В документе установлено, что среднее время написания сценария составило 3,1 часа 
+по сравнению с 10,0 часами для группы без сценария. </p>
+
+<p>Обратите внимание, что в зависимости от того, как вы смотрите на данные, 
+вы также можете сделать вывод, что участники, которые сами сообщили о своем времени, 
+были в 3 раза быстрее, чем те, за кем действительно наблюдали. Более половины студентов 
+в первоначальном исследовании PSP потратили больше рабочего дня на решение проблемы, 
+и они использовали не только Java в этом исследовании, но практически любой язык, 
+который они хотели использовать (хотя Prechelt, похоже, использовал только Java результаты 
+в его более поздней статье)!</p>
+
+<p>Но есть еще кое-что интересное. Например, тот факт, что сценарии были 
+в два-три раза короче, чем сценарии, не являющиеся сценариями, и что есть 
+противоречивые результаты относительно различий в надежности программ, 
+открытие, которое озадачило многих других авторов исследования, особенно в области 
+статических VS динамически. типизированные языки (поскольку это говорит о том, 
+что использование статических типов на самом деле не приводит к более надежным программам).</p>
+
+<p>Если Прешельт в основном упорно указывал на недостатки своих выводов, то Гаррет был гораздо менее настойчив. </p>
+
+<p>Непонятно, как были собраны данные для его исследования, поскольку процедура 
+не была описана вообще, за исключением примечания, в котором говорилось, 
+<em>что мы, насколько это возможно, дублировали обстоятельства исходного исследования</em>. 
+Учитывая, что участники набирались из интернет-групп, я сомневаюсь, что за участниками 
+наблюдали на месте, что заставляет меня думать, что собранные данные о <em>времени разработки</em> 
+следует воспринимать с большой долей скептицизма. Тем не менее, сообщаемое время похоже 
+на время, самоотчетное группой скриптоводов в исследовании Prechelt: от 2 до 8,5 часов 
+для пользователей Lisp, от 3 до 10 часов для скриптовой группы в исследовании Prechelt. </p>
+
+<p>Прешельт делает по этому поводу интересное наблюдение:</p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">... старое эмпирическое правило, согласно которому производительность программиста измеряется в</font>
+<font color="#f8f8f2">строк кода в час (LOC/час) примерно не зависит от языка программирования.</font></pre>
+<p>
+Он использует это рассуждение, чтобы сделать вывод, что если это правда, то время, о котором 
+говорят сами люди, не должно быть далеким от реальности.</p>
+
+<p>Во всяком случае, Гаррет идет намного дальше и утверждает в своем заключении: </p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">Lisp превосходит Java и 
+сравним с C++ во время выполнения, и он превосходит</font>
+<font color="#f8f8f2">как в усилии программирования, так и в вариативности результатов.</font></pre>
+<p>
+Это довольно убедительный вывод.</p>
+
+<p>Он спрашивает себя в своей статье:</p>
+
+<pre class="western" style="margin-bottom: 0.5cm; background: #282a36"><font color="#f8f8f2">почему, если Lisp настолько хорош, неужели он не используется более широко? </font></pre>
+<p>
+Основываясь на небольшом исследовании, подобном исследованию Гаррета, я считаю, что 
+предположение о том, что Lisp настолько хорош, необоснованно. Конечно, он может использовать 
+свой собственный опыт и, возможно, свидетельства других, чтобы принять это как факт, но в 
+подобной статье вы должны предоставить свои источники, когда делаете смахивающие заявления, 
+подобные этому. Личного чувства недостаточно.</p>
+
+<p>Однако данные свидетельствуют о том, что Lisp столь же продуктивен, 
+как и языки сценариев того времени, и имеет скорость, сравнимую с C и C ++, 
+что действительно является выдающимся достижением. </p>
+
+<h2 class="western">Мой собственный опыт решения проблемы с номером телефона</h2>
+
+<p>Я столкнулся с проблемой телефонного номера Прешельта, когда читал 
+<a href="https://arnuldondata.medium.com/julia-and-the-reincarnation-of-lisp-f60cacd5822c">статью о Джулии</a>, автор которой сказал: </p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">Мое сердце было разбито, потому что Common Lisp - такой прекрасный прекрасный язык</font>
+<font color="#f8f8f2">Работать с ним одно удовольствие, и вряд ли кто-то использует его в промышленности.</font>
+<font color="#f8f8f2">В отрасли много кода на Java, даже когда для написания кода на 
+Lisp требуется **гораздо меньше времени**.</font>
+<font color="#f8f8f2">Что случилось с временем программиста, более важным, чем время машины? </font></pre>
+<p>
+<em>Источником</em> такого утверждения был <em>Lisp VS Java</em> Гаррета. 
+Я был очарован выводом этой статьи, когда впервые прочитал ее, поэтому решил «принять участие» 
+в исследовании, чтобы посмотреть, были ли их выводы реалистичными и, возможно, 
+улучшилась ли Java 16 (последняя версия на момент написания) по крайней мере немного 
+по сравнению с величием Common Lisp.</p>
+
+<p>Я прочитал инструкции, ссылки на которые есть в статье Гаррета, и сразу же начал над ними работать.</p>
+
+<p>Далее следует дамп, который я написал, когда закончил свое решение. </p>
+
+<h3 class="western">Работаем над проблемой</h3>
+
+<p>Мне удалось написать весь стандартный код (считывание ввода, очистка, сбор и 
+печать результатов, базовые тесты) всего за 1 час. Тем временем я выбирал лучшую 
+стратегию для повышения эффективности решения и решил использовать уже знакомую 
+мне структуру данных <a href="https://en.wikipedia.org/wiki/Trie">Trie</a> </p>
+
+<p>Мне потребовался еще час или около того, чтобы написать базовое решение проблемы с 
+еще несколькими тестами на основе примеров, приведенных в инструкциях ... но на самом деле 
+завершение алгоритма, к сожалению, заняло у меня больше времени 
+(я не пишу алгоритмы так каждый день), особенно из-за небольшой ошибки, которую 
+я не мог легко понять, как исправить (я пытался ввести цифру, когда не мог найти 
+слово в любой позиции, а не только в начале потенциальное слово… 
+как только причина была найдена, исправить это было тривиально). </p>
+
+<h3 class="western">Время</h3>
+
+<p>В целом, по моим оценкам, <strong>мое общее время составило около 3,5 часов</strong>. 
+Это почти вдвое больше, чем у Норвига, но, по крайней мере, я могу немного успокоиться, 
+зная, что мне удалось добиться неплохих результатов по сравнению с другими участниками 
+исследования (опять же, теми, за кем действительно наблюдали, а не только на самоотчетах): 
+ <strong>От 3 до 25 часов для C / C ++, от 4 до 63 часов для Java.</strong>.</p>
+
+<p>Не наблюдаемые участники сообщили от  <strong>2 до 8,5 часов для Lisp</strong> 
+и от <strong>1 до 10 часов для языков сценариев.</strong>.</p>
+
+<h3 class="western">Строки(линии) кода</h3>
+
+<p>Мое решение требовало <strong>167 строк кода</strong> с использованием Java 16 
+по сравнению с диапазоном от <strong>51 до 182 для Lisp</strong>, от 
+<strong>107 до 500+ для Java</strong>, от  <strong>130 до 500+ для C/C++</strong>,
+ от <strong>50 до 200</strong> для языков сценариев. </p>
+
+<h3 class="western">Представление</h3>
+
+<p>Чтобы измерить производительность, я загрузил с этой страницы несколько файлов, включая  
+<a href="https://flownet.com/ron/papers/lisp-java/dictionary.txt">dictionary.txt</a>,
+<a href="https://flownet.com/ron/papers/lisp-java/input.txt">input.txt</a>
+и <a href="https://flownet.com/ron/papers/lisp-java/output.txt">output.txt</a>.</p>
+
+<p>Поскольку за последний 21 год компьютеры прошли долгий путь, исходный входной файл 
+и словарь были слишком малы, чтобы программы могли работать дольше секунды!
+ Поэтому мне пришлось <a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/master/src/java/util/GeneratePhoneNumbers.java">создать несколько более длинных входных данных</a>,
+чтобы лучше понять, насколько производительным было мое решение. </p>
+
+<p>Учитывая, что ни одно из исследований, похоже, не опубликовало собранные ими решения, 
+я использовал реализацию CL Питера Норвига в качестве основы.</p>
+
+<p>В <em>Lisp VS Java</em> большинство решений Common Lisp имели очень похожую 
+скорость и использование памяти, поэтому я предполагаю, что реализация Norvigа 
+также будет близка к другим..</p>
+
+<blockquote>Вы можете прочитать полные инструкции по самостоятельному запуску теста 
+в этом <a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding">репозитории GitHub</a>, который включает мое решение, несколько других, которые я нашел в Интернете, 
+помимо портов, которые я сделал для решения Norvigа для Java и Rust.</blockquote>
+
+<p>Результаты этого анализа будут показаны в следующем разделе после обсуждения различных стратегий, которые можно использовать для решения проблемы. </p>
+
+<h2 class="western">Сравнение стратегий решения</h2>
+
+<p>Прешельт заметил, что в анализируемых им решениях использовалось два основных подхода: </p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">Большинство программистов в группе сценариев использовали ассоциативные массивы</font>
+<font color="#f8f8f2">предоставляемые их языком, и хранили слова словаря, которые нужно было извлечь по их числовым</font>
+<font color="#f8f8f2">кодировкам.</font>
+
+<font color="#f8f8f2">Алгоритм поиска просто пытается извлечь из этого массива, используя префиксы</font>
+<font color="#f8f8f2">увеличивающейся длины оставшейся части текущего номера телефона в качестве ключа.</font>
+<font color="#f8f8f2">Любое найденное совпадение приводит к новому частичному решению, которое будет завершено позже. </font>
+
+<font color="#f8f8f2">Напротив, практически все программисты, не использующие сценарии, выбрали одно из следующих</font>
+<font color="#f8f8f2">решений.</font>
+
+<font color="#f8f8f2">В простом случае они просто хранят весь словарь в массиве, обычно как в </font>
+<font color="#f8f8f2">исходной символьной форме, так и в соответствующем представлении телефонного номера.</font>
+<font color="#f8f8f2">Затем они выбирают и проверяют одну десятую всего словаря для каждой цифры телефонного</font>
+<font color="#f8f8f2"> номера, который нужно закодировать, используя только первую цифру в качестве ключа для ограничения пространства поиска.</font>
+<font color="#f8f8f2">Это приводит к простому, но неэффективному решению. </font>
+
+<font color="#f8f8f2">В более сложном случае используется 10-арное дерево, в котором каждый узел представляет определенную цифру,</font>
+<font color="#f8f8f2">а узлы на высоте n представляют собой n-й символ слова.</font>
+<font color="#f8f8f2">Слово сохраняется в узле, если путь от корня до этого узла представляет собой числовую</font>
+<font color="#f8f8f2">кодировку слова. </font>
+
+<font color="#f8f8f2">Это наиболее эффективное решение, но для его построения требуется сравнительно  </font>
+<font color="#f8f8f2">большое количество операторов.</font></pre>
+<p>
+На мой взгляд, этот анализ верен! Мое решение оказалось тем, которое он назвал 
+<em>наиболее эффективным</em> (он описывает структуру данных<a href="https://en.wikipedia.org/wiki/Trie">Trie</a>), решение Норвига было именно тем решением, которое придумала <em>большая часть группы скриптовиков</em>, и которое было проще реализовать.</p>
+
+<p>Это различие в стратегии имеет очевидные последствия для длины каждой программы, 
+а также для ее эффективности. Поэтому, когда мы сравниваем программы, 
+которые используют совершенно разные стратегии, мы не можем действительно экстраполировать 
+наши выводы на различия в используемых языках. Другими словами, программы, 
+использующие trie-стратегию (большинство из них, не использующие сценарии),
+ будут длиннее программ, в которых использовались ассоциативные массивы 
+(большинство сценариев), независимо от используемого языка.</p>
+
+<p>Тем не менее, все же довольно интересно отметить, что язык, кажется, 
+каким-то образом направляет программистов на использование той или иной стратегии.
+</p>
+
+<h2 class="western">Быстродействие</h2>
+
+<p>Чтобы увидеть, что произошло бы, если бы я выбрал стратегию Норвига 
+вместо использования Trie, я решил перенести его код CL как можно ближе к Java.</p>
+
+<p>Я сделал то же самое с таргетингом на Rust, чтобы определить, насколько
+ быстро может работать алгоритм (по крайней мере, я так думал)..</p>
+
+<p>Вы можете увидеть исходный код каждой реализации на GitHub: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/master/src/java/Main.java">Java
+	1</a> - моя оригинальная реализация на основе trie. 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/master/src/java/Main2.java">Java
+	2</a> - перенос решения Norvig на Java. 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/master/src/lisp/main.lisp">Lisp</a>
+	- решение Норвига, написанное на Common Lisp. 
+	</p>
+
+	<li/>
+
+<p><a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/master/src/rust/phone_encoder/src/main.rs">Rust</a>
+	- перенос решения Norvig для Rust.
+	</p>
+
+</ul>
+<blockquote>UPDATE (25th July 2021): Я также добавил решения в <a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/dart/src/dart/phone-encoder/bin/phone_encoder.dart">Dart</a> и <a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/julia/src/julia/phone_encoder.jl">Julia</a>! См. Вкл. Дарт и вкл. Джулия вкладывает вкладки в результатах, ссылки на которые приведены чуть ниже, чтобы увидеть, как они работают. </blockquote>
+
+<p>Результаты (<a href="https://docs.google.com/spreadsheets/d/14MFvpFaJ49XIA8K1coFLvsnIkpEQBbkOZbtTYujvatA/edit?usp=sharing">щелкните здесь</a>, чтобы увидеть полные данные и другие диаграммы):</p>
+
+<p><img src="Revisiting_Prechelts_paper_and_follow-ups_comparing_Java_Lisp,_CorC++_and_scripting_languages_html_f3c23fe15afb7f70.gif" name="Image2" alt="LOC per solution, Java 1: 167, Java 2: 99, Lisp: 74, Rust: 116" align="bottom" width="601" height="372" border="0"/>
+</p>
+
+<p><strong>Примечания:</strong></p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><code class="western">Java 1</code>
+	implements a different algorithm (a Trie, not an associative map)
+	than the other implementations. 
+	</p>
+
+	<li/>
+
+<p><code class="western">Rust</code> uses two libraries
+	(<code class="western">num-bigint</code> and <code class="western">lazy_static</code>),
+	the other solutions use none. 
+	</p>
+
+</ul>
+
+<p><img src="Revisiting_Prechelts_paper_and_follow-ups_comparing_Java_Lisp,_CorC++_and_scripting_languages_html_7dfdd09fe9ed5342.gif" name="Image3" alt="Input size VS Max Memory" align="bottom" width="601" height="372" border="0"/>
+</p>
+
+<p><strong>Примечания:</strong></p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">Java и Lisp жадно распределяют память из-за сборки мусора, в отличие от Rust.. 
+	</p>
+
+	<li/>
+
+<p> Запуск Java с флагами для ограничения использования памяти несколько ухудшает результаты Java, но не намного. См. <code class="western">Третий запуск</code> в <a href="https://docs.google.com/spreadsheets/d/14MFvpFaJ49XIA8K1coFLvsnIkpEQBbkOZbtTYujvatA/edit?usp=sharing">электронной таблице результатов</a>, чтобы увидеть, как меняются результаты Java.
+	</p>
+
+</ul>
+
+<p><img src="Revisiting_Prechelts_paper_and_follow-ups_comparing_Java_Lisp,_CorC++_and_scripting_languages_html_7c278894b3213801.gif" name="Image4" alt="Input size VS Runtime" align="bottom" width="601" height="372" border="0"/>
+</p>
+
+<p><strong>Замечания:</strong></p>
+
+<ul>
+	<li/>
+
+<p>The Rust solution gets very slow with a higher number of
+	inputs. I asked Rust developers on the Rust Discord Channel for help
+	figuring out why it was so slow, but after several suggestions, the
+	results did not improve significantly (the result shown above
+	includes some suggestions). I even generated a <a href="https://renato.athaydes.com/images/prechelt-study-analysis/flamegraph.svg">flamegraph</a>
+	to profile the Rust code, but was unable to find any quick fix. 
+	</p>
+
+</ul>
+<blockquote>EDIT (2021-07-31): the Rust code I wrote for this
+benchmark has several issues, which I decided to discuss at length in
+my <a href="https://renato.athaydes.com/posts/how-to-write-slow-rust-code.html">next
+blog post</a>!</blockquote>
+<blockquote>Пожалуйста, подумайте о прочтении этой статьи, когда закончите читать эту :).
+</blockquote>
+<blockquote>Если у вас нет времени: Rust может работать намного быстрее, но и другие языки 
+тоже, и оказывается, что реализация Java может работать быстрее, чем самая быстрая реализация 
+Rust, согласно новым тестам, которые я запускал после многих Rust. разработчики пришли помочь 
+сделать Rust быстрее. Common Lisp, возможно, и отстал, но это, вероятно, только потому, 
+что он не был оптимизирован так, как реализации Java и Rust. </blockquote>
+
+<p>Совершенно неожиданно Common Lisp оказался лучшим языком в целом, он работал быстрее всех, 
+кроме самого большого размера ввода (и даже тогда он уступал только другому алгоритму, 
+реализованному на Java) и потреблял очень мало памяти.</p>
+
+<p>Кажется, что Java по-прежнему потребляет гораздо больше памяти, чем языки низкого уровня 
+(в данном случае Rust), а в наши дни даже, чем Common Lisp (см. Мои замечания выше 
+о настройке параметров памяти JVM, которые на самом деле не помогают). С другой стороны, 
+это может быть очень быстро. </p>
+
+<p>Решение на Rust показывает, насколько мало памяти может потребоваться 
+для обработки любого количества входов (память одинакова для любого размера входных данных, 
+что ожидается, поскольку большая часть памяти занята загрузкой словаря), 
+но имеет некоторую неудачную производительность. деградация с увеличением 
+количества входов (см. примечания выше).
+</p>
+
+<p>Похоже, это указывает на то, что даже когда скорость имеет существенное значение, 
+использование Rust может не дать автоматического выигрыша. </p>
+
+<h2 class="western">Сравнение языков</h2>
+
+<p>Порт <a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/master/src/java/Main2.java">Java</a> (<code class="western">Java 2</code>) имеет 99 LOC VS 74 LOC для 
+<a href="https://github.com/renatoathaydes/prechelt-phone-number-encoding/blob/master/src/lisp/main.lisp">исходного CL</a>. Большинство дополнительных строк в Java на самом деле связаны 
+с парой функций, которые мне пришлось реализовать вручную:</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><code class="western">&lt;T&gt;
+	List&lt;T&gt; append( List&lt;T&gt; list, T item )</code> - необходим для рекурсии 
+по каждой ветви Trie без влияния на текущее частичное решение.
+	</p>
+
+	<li/>
+
+<p><code class="western">char[] removeIfNotLetterOrDigit(
+	char[] chars )</code> - у CL есть хороший способ сделать это, комбинируя существующие функции. 
+	</p>
+
+</ul>
+
+<p>Эти две функции занимали 19 строк, поэтому, если их не учитывать, LOC Java упадет 
+до 80 строк, что очень близко к решению на Лиспе! Заметьте также, что программисты на 
+Лиспе любят закрывать <em>блоки</em> в одной строке. Если бы мы сделали то же самое в Java, 
+переместив все <code class="western">}</code> в предыдущую строку, мы могли бы удалить 
+еще 23 строки, доведя решение Java до 57 LOC.</p>
+
+<p>Это неудивительно, если посмотреть на код (без комментариев): </p>
+
+<ul>
+	<li/>
+
+<p>Lisp 
+	</p>
+
+</ul>
+<pre class="western" style="background: #282a36"><font color="#f8f8f2">(<font color="#8be9fd"><i>defun</i></font> <font color="#8be9fd"><i>print-translations</i></font> (<font color="#8be9fd"><i>num</i></font> <font color="#8be9fd"><i>digits</i></font> <font color="#ff79c6">&amp;optional</font> (<font color="#8be9fd"><i>start</i></font> <font color="#bd93f9">0</font>) (<font color="#8be9fd"><i>words</i></font> nil))</font>
+<font color="#f8f8f2">  (<font color="#ff79c6">if</font> (<font color="#50fa7b">&gt;=</font> <font color="#8be9fd"><i>start</i></font> (<font color="#50fa7b">length</font> <font color="#8be9fd"><i>digits</i></font>))</font>
+<font color="#f8f8f2">      (<font color="#50fa7b">format</font> t <font color="#f1fa8c">&quot;~a:~{ ~a~}~%&quot;</font> <font color="#8be9fd"><i>num</i></font> (<font color="#50fa7b">reverse</font> <font color="#8be9fd"><i>words</i></font>))</font>
+<font color="#f8f8f2">      (<font color="#ff79c6">let</font> ((<font color="#8be9fd"><i>found-word</i></font> nil)</font>
+<font color="#f8f8f2">            (<font color="#8be9fd"><i>n</i></font> <font color="#bd93f9">1</font>)) <font color="#6272a4">; leading zero problem</font></font>
+<font color="#f8f8f2">        (<font color="#8be9fd"><i>loop</i></font> <font color="#8be9fd"><i>for</i></font> <font color="#8be9fd"><i>i</i></font> <font color="#8be9fd"><i>from</i></font> <font color="#8be9fd"><i>start</i></font> <font color="#8be9fd"><i>below</i></font> (<font color="#50fa7b">length</font> <font color="#8be9fd"><i>digits</i></font>) <font color="#8be9fd"><i>do</i></font></font>
+<font color="#f8f8f2">              (<font color="#8be9fd"><i>setf</i></font> <font color="#8be9fd"><i>n</i></font> (<font color="#50fa7b">+</font> (<font color="#50fa7b">*</font> <font color="#bd93f9">10</font> <font color="#8be9fd"><i>n</i></font>) (<font color="#8be9fd"><i>nth-digit</i></font> <font color="#8be9fd"><i>digits</i></font> <font color="#8be9fd"><i>i</i></font>)))</font>
+<font color="#f8f8f2">              (<font color="#8be9fd"><i>loop</i></font> <font color="#8be9fd"><i>for</i></font> <font color="#8be9fd"><i>word</i></font> <font color="#8be9fd"><i>in</i></font> (<font color="#50fa7b">gethash</font> <font color="#8be9fd"><i>n</i></font> <font color="#8be9fd"><i>*dict*</i></font>) <font color="#8be9fd"><i>do</i></font></font>
+<font color="#f8f8f2">                 (<font color="#8be9fd"><i>setf</i></font> <font color="#8be9fd"><i>found-word</i></font> t)</font>
+<font color="#f8f8f2">                 (<font color="#8be9fd"><i>print-translations</i></font> <font color="#8be9fd"><i>num</i></font> <font color="#8be9fd"><i>digits</i></font> (<font color="#50fa7b">+</font> <font color="#bd93f9">1</font> <font color="#8be9fd"><i>i</i></font>) (<font color="#50fa7b">cons</font> <font color="#8be9fd"><i>word</i></font> <font color="#8be9fd"><i>words</i></font>))))</font>
+<font color="#f8f8f2">        (<font color="#8be9fd"><i>when</i></font> (<font color="#8be9fd"><i>and</i></font> (<font color="#50fa7b">not</font> <font color="#8be9fd"><i>found-word</i></font>) (<font color="#50fa7b">not</font> (<font color="#50fa7b">numberp</font> (<font color="#50fa7b">first</font> <font color="#8be9fd"><i>words</i></font>))))</font>
+<font color="#f8f8f2">           (<font color="#8be9fd"><i>print-translations</i></font> <font color="#8be9fd"><i>num</i></font> <font color="#8be9fd"><i>digits</i></font> (<font color="#50fa7b">+</font> <font color="#8be9fd"><i>start</i></font> <font color="#bd93f9">1</font>)</font>
+<font color="#f8f8f2">                               (<font color="#50fa7b">cons</font> (<font color="#8be9fd"><i>nth-digit</i></font> <font color="#8be9fd"><i>digits</i></font> <font color="#8be9fd"><i>start</i></font>) <font color="#8be9fd"><i>words</i></font>))))))</font></pre>
+<ul>
+	<li/>
+
+<p>Java 
+	</p>
+
+</ul>
+<pre class="western" style="background: #282a36"><font color="#f8f8f2"><font color="#8be9fd"><i>private</i></font> <font color="#8be9fd">void</font> <font color="#50fa7b">printTranslations</font><font color="#ff79c6">(</font> String num<font color="#ff79c6">,</font> <font color="#8be9fd">char</font><font color="#ff79c6">[]</font> digits<font color="#ff79c6">,</font> <font color="#8be9fd">int</font> start<font color="#ff79c6">,</font> List<font color="#ff79c6">&lt;</font>String<font color="#ff79c6">&gt;</font> words<font color="#ff79c6">,</font> BiConsumer<font color="#ff79c6">&lt;</font>String<font color="#ff79c6">,</font> String<font color="#ff79c6">&gt;</font> onSolution <font color="#ff79c6">)</font> <font color="#ff79c6">{</font></font>
+<font color="#f8f8f2">    <font color="#ff79c6">if</font> <font color="#ff79c6">(</font> start <font color="#ff79c6">&gt;=</font> digits<font color="#ff79c6">.</font><font color="#50fa7b">length</font> <font color="#ff79c6">)</font> <font color="#ff79c6">{</font></font>
+<font color="#f8f8f2">        onSolution<font color="#ff79c6">.</font><font color="#50fa7b">accept</font><font color="#ff79c6">(</font> num<font color="#ff79c6">,</font> String<font color="#ff79c6">.</font><font color="#50fa7b">join</font><font color="#ff79c6">(</font> <font color="#f1fa8c">&quot; &quot;</font><font color="#ff79c6">,</font> words <font color="#ff79c6">)</font> <font color="#ff79c6">);</font></font>
+<font color="#f8f8f2">        <font color="#ff79c6">return;</font></font>
+<font color="#f8f8f2">    <font color="#ff79c6">}</font></font>
+<font color="#f8f8f2">    var foundWord <font color="#ff79c6">=</font> <font color="#ff79c6">false;</font></font>
+<font color="#f8f8f2">    var n <font color="#ff79c6">=</font> BigInteger<font color="#ff79c6">.</font><font color="#50fa7b">ONE</font><font color="#ff79c6">;</font></font>
+<font color="#f8f8f2">    <font color="#ff79c6">for</font> <font color="#ff79c6">(</font> <font color="#8be9fd">int</font> i <font color="#ff79c6">=</font> start<font color="#ff79c6">;</font> i <font color="#ff79c6">&lt;</font> digits<font color="#ff79c6">.</font><font color="#50fa7b">length</font><font color="#ff79c6">;</font> i<font color="#ff79c6">++</font> <font color="#ff79c6">)</font> <font color="#ff79c6">{</font></font>
+<font color="#f8f8f2">        n <font color="#ff79c6">=</font> n<font color="#ff79c6">.</font><font color="#50fa7b">multiply</font><font color="#ff79c6">(</font> BigInteger<font color="#ff79c6">.</font><font color="#50fa7b">TEN</font> <font color="#ff79c6">).</font><font color="#50fa7b">add</font><font color="#ff79c6">(</font> BigInteger<font color="#ff79c6">.</font><font color="#50fa7b">valueOf</font><font color="#ff79c6">(</font> nthDigit<font color="#ff79c6">(</font> digits<font color="#ff79c6">,</font> i <font color="#ff79c6">)</font> <font color="#ff79c6">)</font> <font color="#ff79c6">);</font></font>
+<font color="#f8f8f2">        List<font color="#ff79c6">&lt;</font>String<font color="#ff79c6">&gt;</font> foundWords <font color="#ff79c6">=</font> dict<font color="#ff79c6">.</font><font color="#50fa7b">get</font><font color="#ff79c6">(</font> n <font color="#ff79c6">);</font></font>
+<font color="#f8f8f2">        <font color="#ff79c6">if</font> <font color="#ff79c6">(</font> foundWords <font color="#ff79c6">!=</font> <font color="#ff79c6">null</font> <font color="#ff79c6">)</font> <font color="#ff79c6">{</font></font>
+<font color="#f8f8f2">            foundWord <font color="#ff79c6">=</font> <font color="#ff79c6">true;</font></font>
+<font color="#f8f8f2">            <font color="#ff79c6">for</font> <font color="#ff79c6">(</font> String word <font color="#ff79c6">:</font> foundWords <font color="#ff79c6">)</font> <font color="#ff79c6">{</font></font>
+<font color="#f8f8f2">                printTranslations<font color="#ff79c6">(</font> num<font color="#ff79c6">,</font> digits<font color="#ff79c6">,</font> i <font color="#ff79c6">+</font> 1<font color="#ff79c6">,</font> append<font color="#ff79c6">(</font> words<font color="#ff79c6">,</font> word <font color="#ff79c6">),</font> onSolution <font color="#ff79c6">);</font></font>
+<font color="#f8f8f2">            <font color="#ff79c6">}</font></font>
+<font color="#f8f8f2">        <font color="#ff79c6">}</font></font>
+<font color="#f8f8f2">    <font color="#ff79c6">}</font></font>
+<font color="#f8f8f2">    <font color="#ff79c6">if</font> <font color="#ff79c6">(</font> <font color="#ff79c6">!</font>foundWord <font color="#ff79c6">&amp;&amp;</font> <font color="#ff79c6">!</font>isLastItemDigit<font color="#ff79c6">(</font> words <font color="#ff79c6">)</font> <font color="#ff79c6">)</font> <font color="#ff79c6">{</font></font>
+<font color="#f8f8f2">        printTranslations<font color="#ff79c6">(</font> num<font color="#ff79c6">,</font> digits<font color="#ff79c6">,</font> start <font color="#ff79c6">+</font> 1<font color="#ff79c6">,</font></font>
+<font color="#f8f8f2">                append<font color="#ff79c6">(</font> words<font color="#ff79c6">,</font> Integer<font color="#ff79c6">.</font><font color="#50fa7b">toString</font><font color="#ff79c6">(</font> nthDigit<font color="#ff79c6">(</font> digits<font color="#ff79c6">,</font> start <font color="#ff79c6">)</font> <font color="#ff79c6">)</font> <font color="#ff79c6">),</font> onSolution <font color="#ff79c6">);</font></font>
+<font color="#f8f8f2">    <font color="#ff79c6">}</font></font>
+<font color="#ff79c6">}</font></pre>
+<p>
+Java определенно более неудобен, но не особо отличается.</p>
+
+<p>Я говорю об этом не для того, чтобы Java выглядела лучше, чем она есть на самом деле, 
+а для того, чтобы показать, как измерения LOC могут вводить в заблуждение и как Java на 
+самом деле прошла долгий путь с 1998 года.</p>
+
+<p>Для порта Rust требовалось 116 LOC (хотя он должен был использовать библиотеки 
+для того, что есть в стандартных библиотеках других языков), что неплохо для языка 
+более низкого уровня.</p>
+
+<p>Для сравнения с кодом Java и Lisp, показанным выше, вот самая важная функция в решении Rust: </p>
+
+<pre class="western" style="background: #282a36"><font color="#f8f8f2"><font color="#ff79c6">fn</font> <font color="#50fa7b">print_translations</font>(</font>
+<font color="#f8f8f2">    num: <font color="#ff79c6">&amp;</font><font color="#8be9fd">str</font>,</font>
+<font color="#f8f8f2">    digits: <font color="#ff79c6">&amp;</font><font color="#8be9fd"><i>Vec</i></font><font color="#ff79c6">&lt;</font>char<font color="#ff79c6">&gt;</font>,</font>
+<font color="#f8f8f2">    start: <font color="#8be9fd">usize</font>,</font>
+<font color="#f8f8f2">    words: <font color="#8be9fd"><i>Vec</i></font><font color="#ff79c6">&lt;&amp;</font><font color="#8be9fd"><i>String</i></font><font color="#ff79c6">&gt;</font>,</font>
+<font color="#f8f8f2">    dict: <font color="#ff79c6">&amp;</font><font color="#50fa7b">Dictionary</font>,</font>
+<font color="#f8f8f2">) -&gt; <font color="#50fa7b">io</font>::<font color="#8be9fd"><i>Result</i></font><font color="#ff79c6">&lt;</font>()<font color="#ff79c6">&gt;</font> {</font>
+<font color="#f8f8f2">    <font color="#ff79c6">if</font> start <font color="#ff79c6">&gt;=</font> digits.len() {</font>
+<font color="#f8f8f2">        print_solution(num, <font color="#ff79c6">&amp;</font>words);</font>
+<font color="#f8f8f2">        <font color="#ff79c6">return</font> <font color="#8be9fd"><i>Ok</i></font>(());</font>
+<font color="#f8f8f2">    }</font>
+<font color="#f8f8f2">    <font color="#8be9fd"><i>let</i></font> <font color="#ff79c6">mut</font> n <font color="#ff79c6">=</font> ONE.clone();</font>
+<font color="#f8f8f2">    <font color="#8be9fd"><i>let</i></font> <font color="#ff79c6">mut</font> found_word <font color="#ff79c6">=</font> <font color="#ff79c6">false</font>;</font>
+<font color="#f8f8f2">    <font color="#ff79c6">for</font> i <font color="#ff79c6">in</font> start..digits.len() {</font>
+<font color="#f8f8f2">        n <font color="#ff79c6">=</font> <font color="#ff79c6">&amp;</font>n <font color="#ff79c6">*</font> (<font color="#ff79c6">&amp;*</font>TEN) <font color="#ff79c6">+</font> <font color="#ff79c6">&amp;</font>nth_digit(digits, i);</font>
+<font color="#f8f8f2">        <font color="#ff79c6">if</font> <font color="#8be9fd"><i>let</i></font> <font color="#8be9fd"><i>Some</i></font>(found_words) <font color="#ff79c6">=</font> dict.get(<font color="#ff79c6">&amp;</font>n) {</font>
+<font color="#f8f8f2">            <font color="#ff79c6">for</font> word <font color="#ff79c6">in</font> found_words {</font>
+<font color="#f8f8f2">                found_word <font color="#ff79c6">=</font> <font color="#ff79c6">true</font>;</font>
+<font color="#f8f8f2">                <font color="#8be9fd"><i>let</i></font> <font color="#ff79c6">mut</font> partial_solution <font color="#ff79c6">=</font> words.clone();</font>
+<font color="#f8f8f2">                partial_solution.push(word);</font>
+<font color="#f8f8f2">                print_translations(num, digits, i <font color="#ff79c6">+</font> <font color="#bd93f9">1</font>, partial_solution, dict)<font color="#ff79c6">?</font>;</font>
+<font color="#f8f8f2">            }</font>
+<font color="#f8f8f2">        }</font>
+<font color="#f8f8f2">    }</font>
+<font color="#f8f8f2">    <font color="#ff79c6">if</font> <font color="#ff79c6">!</font>found_word <font color="#ff79c6">&amp;&amp;</font> <font color="#ff79c6">!</font>words.last().map(<font color="#ff79c6">|</font>w<font color="#ff79c6">|</font> is_digit(w)).unwrap_or(<font color="#ff79c6">false</font>) {</font>
+<font color="#f8f8f2">        <font color="#8be9fd"><i>let</i></font> <font color="#ff79c6">mut</font> partial_solution <font color="#ff79c6">=</font> words.clone();</font>
+<font color="#f8f8f2">        <font color="#8be9fd"><i>let</i></font> digit <font color="#ff79c6">=</font> nth_digit(digits, start).to_string();</font>
+<font color="#f8f8f2">        partial_solution.push(<font color="#ff79c6">&amp;</font>digit);</font>
+<font color="#f8f8f2">        print_translations(num, digits, start <font color="#ff79c6">+</font> <font color="#bd93f9">1</font>, partial_solution, dict)</font>
+<font color="#f8f8f2">    } <font color="#ff79c6">else</font> {</font>
+<font color="#f8f8f2">        <font color="#8be9fd"><i>Ok</i></font>(())</font>
+<font color="#f8f8f2">    }</font>
+<font color="#f8f8f2">}</font></pre>
+<p>
+Код Rust менее крикливый, чем Java, в основном из-за вывода типов и перегрузки операторов,
+но в остальном он также не сильно отличается от Lisp или Java, не считая несущественных 
+различий в синтаксисе.</p>
+
+<p>Интересно, что программа CL работает быстрее, чем Java или Rust, и потребляет 
+гораздо меньше памяти, чем Java, и не намного больше, чем Rust!</p>
+
+<blockquote>Кажется, что производительность решения Rust очень плохо масштабируется 
+с количеством входов. Я не эксперт по Rust, поэтому, к сожалению, я не смог точно определить, 
+что там происходит (я пытался улучшить его безуспешно), но я подозреваю, что ящик
+<code class="western">num-bigint</code> не так эффективно реализует 
+<code class="western">BigUint</code>, как Java и Lisp. </blockquote>
+<h2 class="western">Заключение</h2>
+
+<p>Что касается исследований, рассмотренных в этой статье, я считаю справедливым
+ сделать следующий вывод: </p>
+
+<h3 class="western"><em>Java VS C</em></h3>
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">в целом это была отличная статья.
+		</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">хорошие дискуссии о собственных слабостях.
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"> его выводы в целом были точными, 
+	но отражают положение дел в 1999 году.
+	</p>
+
+	<li/>
+
+<p><em> Программы Java обычно намного медленнее, чем C, и C ++</em> 
+	сегодня кажется неточным, по крайней мере, если мы согласимся с тем, 
+	что результаты Rust будут сопоставимы с C и C ++.
+	</p>
+
+</ul>
+
+<p>Будущая работа обязательно должна включать C и C ++ в сравнение и реализовывать 
+	подход Trie также на этих языках, поскольку, возможно, Rust не всегда может
+	использоваться в качестве прокси для производительности C и C ++, как я предполагал. </p>
+
+<h3 class="western"><em>Scripting VS Java/C</em></h3>
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">очень слабые результаты из-за разной методологии 
+	отбора и мониторинга участников. 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">не смогли в достаточной степени компенсировать тот факт, 
+	что большинство участников Java и C / C ++ были обучены определенной методике 
+	разработки программного обеспечения, которая повлияла на их результаты. 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">интересные наблюдения относительно скорости LOC/времени 
+	и того, как она не меняется между языками.
+	</p>
+
+	<li/>
+
+<p>его вывод о том, что надежность программ существенно не зависит от языка, 
+	кажется убедительным. 
+	</p>
+
+</ul>
+<h3 class="western"><em>Lisp VS Java</em></h3>
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">очень веские утверждения, которые, 
+	тем не менее, обычно требуют тщательной проверки.
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"> Отсутствие строгости при описании 
+	методологии значительно снижает репутацию статьи. 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">вывод о том, что Common Lisp имеет скорость, 
+	сравнимую с C/C++ (при условии, что Rust - хороший прокси), кажется верным, 
+	по крайней мере, для проблемы Прешельта.
+
+	</p>
+
+	<li/>
+
+<p>вывод о том, что он требует меньших усилий, 
+	чем Java, не так силен, как в 2000 году. 
+	</p>
+
+</ul>
+
+<p>Статья Гаррета, вероятно, выиграла бы, если бы не чувствовала себя неловко 
+в отношении Лиспа и была бы больше основана на веских доказательствах, 
+которых у нее действительно было. </p>
+
+<h3 class="western">Заключительные замечания</h3>
+
+<p>В целом, я считаю, что из этого обсуждения мы можем извлечь следующее:</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"> LOC во многом зависит от конкретного используемого 
+	алгоритма, поэтому сравнение языков, основанных на всех вместе взятых решениях, 
+	некорректно.
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">Выбор языка влияет на алгоритмы, 
+	которые обычно выбирают программисты (косвенно усиливая влияние 
+	языка на эффективность программы и требуемые усилия). 
+	</p>
+
+	<li/>
+
+<p>Различия в объеме усилий между программистами (особенно из-за их 
+	<em>aаприорных</em> знаний и способности выбирать подходящие 
+	решения проблемы) намного превосходят различия из-за выбранного языка. 
+	</p>
+
+</ul>
+
+<p>Учитывая все вышесказанное, я думаю, что у нас есть достаточно доказательств, 
+чтобы полагать, что выбор языка программирования имеет меньшее влияние, чем, 
+по-видимому, подразумевают обсуждаемые здесь статьи. Тем не менее, он оказывает 
+значительное влияние на многие факторы (например, Java работает быстро, 
+но требует много памяти, Rust не делает все автоматически быстрее, 
+но значительно снижает использование памяти, Lisp и языки сценариев помогают 
+программистам использовать алгоритмы более высокого уровня, которые легче 
+реализовать и, по крайней мере, в некоторых случаях, работают так же, 
+как языки более низкого уровня).</p>
+
+<p>Выбор подходящего алгоритма для решения проблемы обычно оказывает 
+гораздо большее влияние как на эффективность, так и на количество требуемых усилий, 
+чем использование определенного языка. Однако следует проявлять осторожность, 
+чтобы избежать выбора языка, ведущего программистов к использованию менее эффективных 
+(или более трудоемких, в зависимости от приоритетов проекта) алгоритмов/шаблонов. </p>
+
+<p>Языки с обширными библиотеками могут помочь как путем предоставления 
+готовых реализаций алгоритмов (например, готовых к использованию <code class="western">Trie</code>),
+которые являются высокоэффективными и не требуют усилий со стороны программиста 
+для использования, так и за счет того, что программистам не нужно даже делать 
+решения об алгоритмах в первую очередь (например, путем предоставления решения 
+проблемы более высокого уровня, которая может использовать различные алгоритмы/реализации 
+под капотом, без ведома программиста, использующего его, например, функции сортировки).</p>
+
+<p>На самом деле это может частично объяснить, почему Lisp так и не стал мейнстримом 
+(он делает библиотеки менее необходимыми, но это имеет неприятные последствия 
+в некоторых случаях, когда библиотека могла бы решить проблему лучше и быстрее, 
+чем то, что придумал бы программист на Lisp), но такой язык, как JavaScript, 
+который был в значительной степени ориентирован на совместное использование библиотек, 
+сделал это (игнорируя heads-up, который он имел из-за того, что долгое время 
+был единственным выбором в интерфейсной веб-разработке). </p>
+
+<p>Наконец, при выборе языка в более крупной компании, где многие разработчики должны 
+работать с одной и той же кодовой базой, факторы, рассматриваемые в обсуждаемых 
+документах и в этой статье, могут быть гораздо менее значимыми, чем факторы, 
+влияющие на способность языка облегчить крупномасштабные кодовые базы.</p>
+
+<p>Следовательно, выбор языка программирования требует учета не только 
+таких факторов, как его скорость, усилия одного разработчика и его 
+использование ресурсов (факторы, обсуждаемые здесь), но и такие вещи, 
+как его система типов (которая может помочь рассуждать о коде или 
+просто сделать все тоже трудно изменить), модульность (разделение задач), 
+простота (код легче читать, когда он простой), мощность выражений 
+(более сжатый код может быть преимуществом или проклятием) и так далее. </p>
+
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

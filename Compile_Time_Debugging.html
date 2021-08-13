@@ -1,0 +1,278 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-11T09:57:36.540310337"/>
+	<meta name="changed" content="2021-08-11T09:59:45.465237152"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h2 class="western"><a name="cdd2"></a>Отладка</h2>
+
+<p><img src="Compile_Time_Debugging_html_958a9d0a0a905f28.png" name="Image1" align="bottom" width="500" height="700" border="0"/>
+</p>
+
+<p><a name="c10d"></a>Давайте сосредоточимся на хитрости, которую мы внедрили 
+в макрос, чтобы угодить программистам на C, приняв «int» в качестве спецификатора 
+типа. Эти хаки всегда являются началом интересных сеансов отладки. </p>
+
+<pre class="western"><a name="db90"></a>(defmacro defunt (name (&amp;rest args) &amp;body body)
+  &quot;defun with optional type declarations&quot;
+  `(progn
+     (declaim (ftype  
+               (function
+                ,(let (declares)
+                   (dolist (arg args)
+                     (push
+                      (if (listp arg)
+                          ;; &lt;== HACK HERE, with typo
+                          (if (equalp (string (first arg)) &quot;intt&quot;)
+                              'fixnum
+                              (first arg))
+                          t)
+                      declares))
+                   declares)
+<a name="6337"></a>                t) ,name))...)</pre>
+<p>
+<a name="825d"></a>Как видите, сравнение пользовательской строки требует 
+тщательного выбора преобразований и правильного оператора сравнения. 
+Допустим, у вас есть проблема в том, что сравнение никогда не подходит, 
+и вы хотите это отладить.
+</p>
+
+<p><a name="db1c"></a>Первое, что нужно сделать - это macroexpand: </p>
+
+<pre class="western"><a name="f7c2"></a>(macroexpand '(defunt meh5 ((int p1) p2) (+ p1 p2)))
+==&gt;
+(PROGN                                                                          
+ (DECLAIM (FTYPE (FUNCTION (T INT) T) MEH5)) 
+ (DEFUN MEH5 (P1 P2) (+ P1 P2)))</pre>
+<p>
+<a name="f4fe"></a>Хорошо, но это мало что нам говорит. В нем говорится, 
+что int не был распознан, но мы не знаем почему.</p>
+
+<p><a name="a941"></a>Теперь, когда в нашем распоряжении есть весь 
+язык во время компиляции, мы можем использовать отладочную печать: </p>
+
+<pre class="western"><a name="aebb"></a>(defmacro defunt (name (&amp;rest args) &amp;body body)
+  &quot;defun with optional type declarations&quot;
+  `(progn
+     (declaim (ftype  
+               (function
+                ,(let (declares)
+                   (dolist (arg args)
+                     (push
+                      (if (listp arg)
+                          ;; &lt;== HACK HERE, with typo
+                          (if (equalp (string (print (first arg))) &quot;intt&quot;)
+                              'fixnum
+                              (first arg))
+                          t)
+                      declares))
+                   declares)
+<a name="5e8f"></a>                t) ,name))...)</pre>
+<p>
+<a name="b8d7"></a>Поэтому мы просто помещаем (печать …) вокруг значения,
+ о котором хотим знать. Оно будет напечатано во время макрорасширения. 
+(print…) возвращает собственный аргумент, поэтому вы можете просто вставить 
+его в поток программы.</p>
+
+<p><a name="8a52"></a>Более обширный: </p>
+
+<pre class="western"><a name="3d18"></a>(format t &quot;~%debug args: ~a ~a&quot; arg (type-of arg))
+(if (listp arg)
+     ;; &lt;== HACK HERE, with typo
+     ;;(if (equalp (string (print (first arg))) &quot;intt&quot;)</pre>
+<p>
+<a name="c350"></a>Это использует фактический оператор printf и дает вам как значение, 
+так и тип аргумента.</p>
+
+<pre class="western"><a name="7927"></a>(macroexpand '(defunt meh5 ((int p1) p2) (+ p1 p2)))
+==&gt;                                                               
+debug args: (INT P1) CONS                                                                   
+debug args: P2 SYMBOL
+;; expansion follows</pre>
+<p>
+<a name="82d2"></a>Таким образом, вы можете аннотировать поток макроса по своему усмотрению. 
+У вас есть полный язык.</p>
+
+<p><a name="d811"></a>Эта печать во время вызова макроса никак не влияет на результат. 
+Независимо от того, есть ли у вас оператор отладки в макросе или нет, результат правильно 
+передается в компилятор, в то время как операторы печати отладки просто переходят(выводят)
+в stdout, stderr или debugerr или что-то еще, что вы указали.</p>
+
+<p><a name="e3ef"></a>Фактически, вы также можете открыть файл во время 
+компиляции и поместить в него все операторы печати из макрорасширения 
+для дальнейшего использования. </p>
+
+<pre class="western"><a name="0153"></a>(defvar *expandlog* nil)
+(setf *expandlog*
+      (open &quot;expand.log&quot; :direction :output
+            :if-does-not-exist :create
+            :if-exists :append))
+(defmacro defunt (name (&amp;rest args) &amp;body body)
+  &quot;defun with optional type declarations&quot;
+  `(progn
+     (declaim (ftype
+               (function
+                ,(let (declares)
+                   (dolist (arg args)
+                     (format *expandlog*
+                             &quot;~%debug args: ~a ~a&quot; 
+                             arg (type-of arg))
+                     (push
+                      (if (listp arg)</pre>
+<p>
+<a name="6e2b"></a>Вы можете сделать это миллионами разных способов. 
+Например, если вам нужен журнал только для некоторых вызовов макросов: </p>
+
+<pre class="western"><a name="330a"></a>(defvar *expandlog* nil)
+(defmacro defunt (name (&amp;rest args) &amp;body body)
+  ;; as above)
+;; use macro without logfile printing
+(defunt2 meh6a (p1 p2)
+<a name="9f9e"></a>  (+ p1 p2));; use macro with logfile printing
+(setf *expandlog*
+      (open &quot;expand.log&quot; :direction :output
+            :if-does-not-exist :create
+            :if-exists :append))
+(defunt2 meh6b ((int p1) p2)
+  (+ p1 p2)))
+(close *expandlog*)
+;; important.  (format nil ...) works fine, print nothing
+;; (format closedfd ...) does not work
+(setf *expandlog* nil)</pre>
+<p>
+<a name="8bd2"></a>file âexpand.logâ contains:</p>
+
+<pre class="western"><a name="0504"></a>debug args: (INT P1) CONS
+debug args: P2 SYMBOL</pre>
+<p>
+<a name="68fd"></a>Это только результат второго вызова meh6b, 
+чего мы и хотим.</p>
+
+<p><a name="92e0"></a>Было бы лучше поместить (if *expandlog* (format *expandlog*…) 
+в макрос defunt2.  (format nil …)  работает, но выполняет форматирование, а затем 
+отправляет его в /dev/null. Форматирование может стоить Имейте в виду, что это время 
+берется не во время выполнения, а во время макрорасширения. Пользователь не пострадает 
+от замедления, только ленивый программист.</p>
+
+<p><a name="8d55"></a>Поскольку (format meh …) не работает, когда meh 
+не является ни открытым, ни рабочим дескриптором файла, ни nil, ни t, 
+вы должны защитить это в блоке, который гарантирует, что некоторые операторы 
+будут выполняться, даже если произойдет нелокальный выход. Это эквивалентно 
+предложениям :finally в других языках обработки: </p>
+
+<pre class="western"><a name="acd6"></a>(unwind-protect
+     (progn
+       ;; protected body
+       (setf *expandlog*
+             (open &quot;expand.log&quot; :direction :output
+                   :if-does-not-exist :create
+                   :if-exists :append))
+       (defunt2 meh6b ((int p1) p2)
+         (+ p1 p2)))
+  (progn
+    ;; these statements will be executed no matter what.
+    ;; If the protected body has a nonlocal exit (throws
+    ;; an exception through here, or if you interrupt
+    ;; it with Control-C then these statements are still
+    ;; executed like in a &quot;finally&quot; clause
+    (close *expandlog*)
+    (setf *expandlog* nil)</pre>
+<p>
+<a name="e5a5"></a>Итак, да, у вас есть полный язык во время компиляции, 
+даже обработка исключений во время компиляции.</p>
+
+<h2 class="western"><a name="bf57"></a>Быстрый взгляд на производительность </h2>
+<pre class="western"><a name="25a6"></a>(declaim (ftype (function (fixnum fixnum) fixnum) moo1)
+         (inline moo1))
+(defun moo1 (p1 p2)
+  (+ p1 p2))
+(defun caller1 ()
+  (let ((n 42)
+        (new (+ (moo1 1
+                      ;; disable compiler optimization
+                      (the fixnum
+                           (parse-integer &quot;2&quot;))))))
+    (declare (fixnum n new))
+    (if (= new 45)
+        (print 'yes)
+        (print 'no))))</pre>
+<p>
+<a name="a760"></a>Дизассемблируем его:</p>
+
+<pre class="western"><a name="18ff"></a>Yes, Master? CL-USER&gt; (disassemble 'caller1)
+
+; disassembly for CALLER1                                                                                                                                    
+; Size: 78 bytes. Origin: #x52E3FF56                                                                                                                         
+; 56:       4883EC10         SUB RSP, 16                      ; no-arg-parsing entry point                                                                   
+; 5A:       488B158FFFFFFF   MOV RDX, [RIP-113]               ; &quot;2&quot;                                                                                          
+; 61:       B902000000       MOV ECX, 2                                                                                                                      
+; 66:       48892C24         MOV [RSP], RBP                                                                                                                  
+; 6A:       488BEC           MOV RBP, RSP                                                                                                                    
+; 6D:       E8065BE6FF       CALL #x52CA5A78                  ; #&lt;FDEFN PARSE-INTEGER&gt;                                                                       
+; 72:       4883C202         ADD RDX, 2                                                                                                                      
+; 76:       4883FA5A         CMP RDX, 90                                                                                                                     
+; 7A:       7514             JNE L0                                                                                                                          
+; 7C:       488B157DFFFFFF   MOV RDX, [RIP-131]               ; 'YES                                                                                         
+; 83:       B902000000       MOV ECX, 2                                                                                                                      
+; 88:       FF7508           PUSH QWORD PTR [RBP+8]                                                                                                          
+; 8B:       E94831EBFF       JMP #x52CF30D8                   ; #&lt;FDEFN PRINT&gt;                                                                               
+; 90: L0:   488B1579FFFFFF   MOV RDX, [RIP-135]               ; 'NO                                                                                          
+; 97:       B902000000       MOV ECX, 2                                                                                                                      
+; 9C:       FF7508           PUSH QWORD PTR [RBP+8]                                                                                                          
+; 9F:       E93431EBFF       JMP #x52CF30D8                   ; #&lt;FDEFN PRINT&gt;                                                                               
+NIL                                                                                                                                                          
+Yes, Master? CL-USER&gt;</pre>
+<p>
+<a name="4f49"></a>О том, чего мы ожидали. Игнорируйте вызовы функций, 
+чтобы преобразовать целое число, и посмотрите на фактическую арифметику.
+Выглядит хорошо.</p>
+
+<p><a name="de30"></a>Обратите внимание, что хотя SBCL обычно использует 
+биты тегов для идентификации целых чисел, в этой ситуации не используется 
+тегирование типов, поскольку ни одно из задействованных целых чисел не экранирует 
+эту функцию. Так что это сырые машинные работы, без тегов. Если они поступают 
+как параметры или выходят как возвращаемые значения, их нужно будет пометить.</p>
+
+<p><a name="ec2c"></a>Это может быть очень важно, и я имею в виду импорт 
+для построения бизнеса, когда ваш код на Лиспе хочет получить доступ к данным 
+C в области отображения памяти. Скажем: </p>
+
+<pre class="western"><a name="2d1f"></a>struct foo {
+  int bar;
+  int baz;
+} array[1024];</pre>
+<p>
+<a name="d1c7"></a>SBCL и Clasp могут получить доступ к этим слотам в своих 
+экземплярах структуры внутри этого массива с помощью простого указателя, 
+а затем с помощью машинного слова. Здесь нет преобразования и, что более важно, 
+нет необходимости создавать какую-либо оболочку для «посторонних объектов»,
+ которая должна была бы выполнять выделение памяти и тому подобное. 
+Языки очень редко могут получить доступ к необработанным данным в областях памяти 
+таким образом. В большинстве случаев план «писать низкоуровневые части на C 
+и алгоритмы более высокого уровня в  &lt;foolang&gt; терпит неудачу из-за 
+необходимости конвертировать данные C, в большинстве случаев вовлекая что-то, 
+что вызывает выделение памяти. Это очень медленно. Вызов malloc или эквивалентные 
+GC alloc и dealloc невероятно дороже, чем определение указателя и арифметические 
+операции с необработанным словом. </p>
+
+<p><a name="88d7"></a>Вы не можете создать эти смешанные языковые системы так, 
+как это сделала ITA с QPX (данные C, алгоритм Lisp), без доступа к исходным словам 
+без накладных расходов. Даже необходимость выполнения вызова функции (в отличие от простого разыменования) возвращает вас на порядок назад. </p>
+
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>
