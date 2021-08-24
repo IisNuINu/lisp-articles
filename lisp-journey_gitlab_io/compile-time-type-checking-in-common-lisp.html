@@ -1,0 +1,212 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-14T12:46:50.172634533"/>
+	<meta name="changed" content="2021-08-14T12:48:54.899705481"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		pre.cjk { font-family: "Courier New", monospace }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		code.cjk { font-family: "Courier New", monospace }
+		a:link { so-language: zxx }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Проверка типа во время компиляции в Common Lisp</h1>
+
+<p>Мы часто слышим, что Common Lisp динамически типизируется, что не является 
+неправильным, но это приводит к убеждению, что Lisp так же плох в отношении типов, 
+как Python, что явно неверно. Мы недостаточно слышим о том, что CL - 
+это компилируемый язык, что мы можем добавлять аннотации типов и что SBCL выполняет 
+тщательную проверку типов. Следовательно, то, что у нас есть под рукой, 
+просто великолепно: мы можем скомпилировать целую программу или скомпилировать 
+одну функцию и получить предупреждения о типах. Еще раз, обратная связь мгновенная. 
+Мы можем определять наши собственные типы и получать предупреждения о типах 
+во время компиляции.</p>
+
+<p>Вы используете параметр, который должен быть списком строк длиной 3? 
+Хорошо, определите тип: </p>
+
+<pre class="western"><code class="western">(defun list-of-3tuples-strings-p (list)</code>
+<code class="western">  </code><code class="western">&quot;Return t if LIST is a list composed of 3-tuples, made only of strings.&quot;</code>
+<code class="western">  </code><code class="western">(and (consp list)</code>
+<code class="western">       </code><code class="western">(every (lambda (it)</code>
+<code class="western">                </code><code class="western">(and</code>
+<code class="western">                 </code><code class="western">(= 3 (length it))</code>
+<code class="western">                 </code><code class="western">(every #'stringp it)))</code>
+<code class="western">              </code><code class="western">list)))</code>
+
+<code class="western">(deftype alist-of-3tuples-strings ()</code>
+<code class="western">  </code><code class="western">`(satisfies list-of-3tuples-strings-p))</code></pre>
+<p>
+и введите переменную, как описано ниже.
+</p>
+
+<p>Это полезно для разработки, а также для обнаружения ошибок в файле 
+конфигурации пользователя. Проверки выполняются, когда мы загружаем файл, 
+и сообщения об ошибках явные. Мы используем это сейчас в браузере Next. </p>
+
+<p>Мы мало что слышим обо всем этом, может быть, потому, что информацию 
+было трудно найти, может быть, потому, что SBCL не существовало в то время, 
+когда писались книги по Lisp. Вот что было опубликовано в 
+<a href="https://lispcookbook.github.io/cl-cookbook/type.html">Common
+Lisp Cookbook /type.html</a> так что, надеюсь, проблема решена!</p>
+
+<p>По этой теме не пропустите:</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">статья Мартина Кракауэра  <a href="https://medium.com/@MartinCracauer/static-type-checking-in-the-programmable-programming-language-lisp-79bb79eb068a">«Статическая проверка типов в SBCL»</a> 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">статья <a href="https://alhassy.github.io/TypedLisp/">Typed
+	List, a Primer</a> - давайте исследуем детальную иерархию типов Lisp! с поверхностным сравнением с Haskell.
+	</p>
+
+	<li/>
+
+<p> библиотека  <a href="https://github.com/stylewarning/coalton">Coalton</a>
+	(пре-альфа): добавление проверки типов Хиндли-Милнера в Common Lisp, 
+	что позволяет постепенно внедрять такие же методы, как Typed Racket 
+	или Hack. Это как встроенный DSL в Lisp, который напоминает Standard ML 
+	или OCaml, но позволяет вам беспрепятственно взаимодействовать с 
+	нестатически типизированным кодом Lisp (и наоборот).  
+	</p>
+
+</ul>
+<h2 class="western"><a name="compile-time-type-checking"></a>Проверка типов во время компиляции</h2>
+
+<p>Вы можете предоставить информацию о типе переменных, аргументов функций 
+и т. Д. С помощью макроса <code class="western"><a href="http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm">declare</a></code> и <code class="western"><a href="https://www.xach.com/clhs?q=declaim">declaim</a></code>. Однако, подобно 
+<code class="western">:type</code> для слота, представленному в <a href="https://lisp-journey.gitlab.io/blog/compile-time-type-checking-in-common-lisp/clos.html">разделе CLOS</a>, эффекты объявления типов не определены в стандарте Lisp и зависят от реализации. 
+Таким образом, нет гарантии, что компилятор Lisp выполнит проверку типов во 
+время компиляции.
+</p>
+
+<p>Однако это возможно, и SBCL - это реализация, которая выполняет тщательную
+проверку типов.</p>
+
+<p>Напомним сначала, что Lisp уже предупреждает о предупреждениях простых типов. 
+Следующая функция ошибочно хочет объединить строку и число. Когда мы её компилируем, 
+мы получаем предупреждение о типе. </p>
+
+<pre class="western"><code class="western">(defconstant +foo+ 3)</code>
+<code class="western">(defun bar ()</code>
+<code class="western">  </code><code class="western">(concatenate 'string &quot;+&quot; +foo+))</code>
+<code class="western">; caught WARNING:</code>
+<code class="western">;   Constant 3 conflicts with its asserted type SEQUENCE.</code>
+<code class="western">;   See also:</code>
+<code class="western">;     The SBCL Manual, Node &quot;Handling of Types&quot;</code></pre>
+<p>
+Этот пример прост, но он уже показывает возможности, которых нет у некоторых 
+других языков, и это действительно полезно во время разработки;) Теперь мы 
+сделаем лучше.
+</p>
+
+<h3 class="western"><a name="declaring-the-type-of-variables"></a>Объявление типа переменных</h3>
+
+<p>Используйте макрос <code class="western"><a href="https://www.xach.com/clhs?q=declaim">declaim</a></code>.</p>
+
+<p>Давайте объявим, что наша глобальная переменная <code class="western">*name*</code>
+является строкой (вы можете ввести следующее в REPL в любом порядке): </p>
+
+<pre class="western"><code class="western">(declaim (type (string) *name*))</code>
+<code class="western">(defparameter *name* &quot;book&quot;)</code></pre>
+<p>
+Теперь, если мы попытаемся установить её с плохим типом, мы получим ошибку простого типа -
+ <code class="western">simple-type-error</code>:</p>
+
+<pre class="western"><code class="western">(setf *name* :me)</code>
+<code class="western">Value of :ME in (THE STRING :ME) is :ME, not a STRING.</code>
+<code class="western">   </code><code class="western">[Condition of type SIMPLE-TYPE-ERROR]</code></pre>
+<p>
+Мы можем сделать то же самое с нашими пользовательскими типами. 
+Давайте быстро объявим тип  <code class="western">list-of-strings</code>:</p>
+
+<pre class="western"><code class="western">(defun list-of-strings-p (list)</code>
+<code class="western">  </code><code class="western">&quot;Return t if LIST is non nil and contains only strings.&quot;</code>
+<code class="western">  </code><code class="western">(and (consp list)</code>
+<code class="western">       </code><code class="western">(every #'stringp list)))</code>
+
+<code class="western">(deftype list-of-strings ()</code>
+<code class="western">  </code><code class="western">`(satisfies list-of-strings-p))</code></pre>
+<p>
+Теперь давайте объявим, что наша переменная <code class="western">*all-names*</code> 
+представляет собой список строк:</p>
+
+<pre class="western"><code class="western">(declaim (type (list-of-strings) *all-names*))</code>
+<code class="western">(defparameter *all-names* &quot;&quot;)</code></pre>
+<p>
+Мы можем составлять типы:</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(declaim (type (or null list-of-strings) *all-names*))</code></pre><h3 class="western">
+<a name="declaring-the-input-and-output-types-of-functions"></a>Объявление входных и выходных типов функций</h3>
+
+<p>Мы снова используем макрос <code class="western">declaim</code> с 
+<code class="western">ftype (function …)</code> вместо простого 
+<code class="western">type</code>:</p>
+
+<pre class="western"><code class="western">(declaim (ftype (function (fixnum) fixnum) add))</code>
+<code class="western">;;                         ^^input ^^output [optional]</code>
+<code class="western">(defun add (n)</code>
+<code class="western">        </code><code class="western">(+ n  1))</code></pre>
+<p>
+Благодаря этому мы получаем приятные предупреждения о типах во время компиляции.</p>
+
+<p>Если мы изменим функцию, чтобы она ошибочно возвращала строку вместо 
+фиксированного числа, мы получим предупреждение: </p>
+
+<pre class="western"><code class="western">(defun add (n)</code>
+<code class="western">        </code><code class="western">(format nil &quot;~a&quot; (+ n  1)))</code>
+<code class="western">; caught WARNING:</code>
+<code class="western">;   Derived type of ((GET-OUTPUT-STREAM-STRING STREAM)) is</code>
+<code class="western">;     (VALUES SIMPLE-STRING &amp;OPTIONAL),</code>
+<code class="western">;   conflicting with the declared function return type</code>
+<code class="western">;     (VALUES FIXNUM &amp;REST T).</code></pre>
+<p>
+Если мы используем <code class="western">add</code> внутри другой функции в месте, 
+которое ожидает строку, мы получим предупреждение: </p>
+
+<pre class="western"><code class="western">(defun bad-concat (n)</code>
+<code class="western">    </code><code class="western">(concatenate 'string (add n)))</code>
+<code class="western">; caught WARNING:</code>
+<code class="western">;   Derived type of (ADD N) is</code>
+<code class="western">;     (VALUES FIXNUM &amp;REST T),</code>
+<code class="western">;   conflicting with its asserted type</code>
+<code class="western">;     SEQUENCE.</code></pre>
+<p>
+Если мы используем <code class="western">add</code> внутри другой функции, 
+и эта функция объявляет свои типы аргументов, которые кажутся несовместимыми 
+с типами <code class="western">add</code>, мы получаем предупреждение: </p>
+
+<pre class="western"><code class="western">(declaim (ftype (function (string)) bad-arg))</code>
+<code class="western">(defun bad-arg (n)</code>
+<code class="western">    </code><code class="western">(add n))</code>
+<code class="western">; caught WARNING:</code>
+<code class="western">;   Derived type of N is</code>
+<code class="western">;     (VALUES STRING &amp;OPTIONAL),</code>
+<code class="western">;   conflicting with its asserted type</code>
+<code class="western">;     FIXNUM.</code></pre>
+<p>
+Все это действительно происходит <em>во время компиляции</em>, либо в REPL, 
+либо с помощью простого <code class="western">C-c C-c</code> в Slime, 
+либо когда мы загружаем файл с помощью <code class="western">load</code>. </p>
+
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

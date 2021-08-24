@@ -1,0 +1,612 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-14T12:42:05.003508762"/>
+	<meta name="changed" content="2021-08-14T12:46:35.719071997"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		pre.cjk { font-family: "Courier New", monospace }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		td p { margin-bottom: 0cm }
+		th p { margin-bottom: 0cm }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Макросы Common Lisp учебник на примерах</h1>
+
+<p>Я недавно отредактировал и несколько расширил страницу макросов в 
+Common Lisp Cookbook. Я считаю, что она может быть более разборчивой 
+и удобной для читателя, поэтому воспроизведу её ниже (однако я вырезал две части, 
+чтобы вы поняли основное).</p>
+
+<p>Вам лучше прочитать это в Поваренной книге:
+<a href="https://lispcookbook.github.io/cl-cookbook/macros.html">https://lispcookbook.github.io/cl-cookbook/macros.html</a></p>
+
+<hr/>
+
+<p>Слово <em>макрос</em> обычно используется в информатике для обозначения 
+синтаксического расширения языка программирования. (Примечание. Название 
+происходит от слова «макро-инструкция», которое было полезной функцией 
+многих языков ассемблера второго поколения. Макро-инструкция выглядела 
+как отдельная инструкция, но была расширяема до последовательности 
+реальных инструкций. Основная идея с тех пор использовалась много раз, 
+особенно в препроцессоре C. Название «макрос», возможно, не идеально, 
+поскольку оно не означает ничего, имеющего отношение к тому, что он называет, 
+но мы застряли на нем.) Хотя многие языки имеют возможность макроса, ни один из них 
+не является таким мощным, как Lisp. Базовый механизм макросов Lisp прост, 
+но имеет тонкую сложность, поэтому изучение его работы требует некоторой практики. </p>
+
+<h1 class="western"><a name="how-macros-work"></a>Как работают макросы</h1>
+
+<p>Макрос - это обычный фрагмент кода Лиспа, который оперирует
+с <em>другим фрагментом предполагаемого кода Лиспа</em>, переводя 
+его в (более близкую к) версию исполняемого Лиспа. Это может показаться 
+немного сложным, поэтому приведем простой пример. Предположим, вам нужна 
+версия code class="western"><a href="http://www.lispworks.com/documentation/HyperSpec/Body/s_setq.htm">setq</a></code>, которая устанавливает для двух переменных 
+одно и то же значение. Итак, если вы напишете </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(setq2 x y (+ z 3))</code></pre>
+<p>
+когда <code class="western">z</code>=8, то и <code class="western">x</code>, 
+и <code class="western">y</code> равны 11. (я не могу придумать, как это можно 
+использовать, но это всего лишь пример). </p>
+
+<p>Должно быть очевидно, что мы не можем определить <code class="western">setq2</code> 
+как функцию. Если <code class="western">x</code>=50 и
+<code class="western">y</code>=<em>-5</em>, эта функция получит значения 50, <em>-5</em> и 11; 
+она не знала бы, какие переменные должны были быть установлены. Мы действительно 
+хотим сказать, когда вы (система Lisp) видите: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(setq2 v1 v2 e)</code></pre>
+<p>
+затем трактуете это как к эквивалент:</p>
+
+<pre class="western"><code class="western">(progn</code>
+<code class="western">  </code><code class="western">(setq v1 e)</code>
+<code class="western">  </code><code class="western">(setq v2 e))</code></pre>
+<p>
+Вообще-то, это не совсем так, но пока подойдет. Макрос позволяет нам сделать 
+именно это, указав программу для преобразования входного шаблона 
+<code class="western">(setq2 </code><code class="western"><i>v</i></code><code class="western"><sub><i>1</i></sub></code><code class="western">
+</code><code class="western"><i>v</i></code><code class="western"><sub><i>2</i></sub></code><code class="western">
+</code><code class="western"><i>e</i></code><code class="western">)</code> в выходной шаблон <code class="western">(progn ...)</code>.</p>
+
+<h2 class="western"><a name="quote"></a>Quote(цитата/кавычка)</h2>
+
+<p>Вот как мы можем определить макрос  <code class="western">setq2</code>:</p>
+
+<pre class="western"><code class="western">(defmacro setq2 (v1 v2 e)</code>
+<code class="western">  </code><code class="western">(list 'progn (list 'setq v1 e) (list 'setq v2 e)))</code></pre>
+<p>
+Он принимает в качестве параметров две переменные и одно выражение.</p>
+
+<p>Затем он возвращает фрагмент кода. В Лиспе, поскольку код представлен 
+в виде списков, мы можем просто вернуть список, представляющий код.</p>
+
+<p>Мы также используем <em>quote</em>(кавычку/цитату): каждый <em>quoted</em>
+(цитируемый)  символ вычисляет сам себя, иначе говоря, он возвращается как есть: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><code class="western">(quote foo
+	bar baz)</code> вернет <code class="western">(foo bar baz)</code> 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">символный знак кавычки, <code class="western">'</code>, 
+	является сокращением для <code class="western">quote</code>, 
+	<em>специального оператора</em> (не функции или макроса, а одного из 
+	нескольких специальных операторов, составляющих ядро Lisp).. 
+	</p>
+
+	<li/>
+
+<p>итак, <code class="western">'foo</code> вычисляется в <code class="western">foo</code>.
+		</p>
+
+</ul>
+
+<p>Итак, наш макрос возвращает следующие биты: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">символ <code class="western">progn</code>,
+		</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">второй список, содержащий
+	</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm">символ <code class="western">setq</code>
+				</p>
+
+		<li/>
+<p style="margin-bottom: 0cm">переменную <code class="western">v1</code>: обратите внимание, 
+	что переменная не вычисляется внутри макроса!
+
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm">выражение <code class="western">e</code>: 
+	оно тоже не вычисляется! 
+		</p>
+
+	</ul>
+	<li/>
+
+<p>второй список с  <code class="western">v2</code>. 
+	</p>
+
+</ul>
+
+<p>Мы можем использовать это так: </p>
+
+<pre class="western"><code class="western">(defparameter v1 1)</code>
+<code class="western">(defparameter v2 2)</code>
+<code class="western">(setq2 v1 v2 3)</code>
+<code class="western">;; 3</code></pre>
+<p>
+Мы можем проверить, <code class="western">v1</code> и <code class="western">v2</code> 
+были установлены в <code class="western">3</code>.</p>
+
+<h2 class="western"><a name="macroexpand"></a>Macroexpand(Макрорасширение/расширение макроса)</h2>
+
+<p>Мы должны начать писать макрос, когда знаем, какой код хотим сгенерировать. 
+Как только мы начнем его писать, становится очень полезным эффективно проверять, 
+какой код генерирует макрос. Для этого используется функция 
+<code class="western">macroexpand</code>. Это функция, и мы даем ей некоторый код 
+в виде списка (для этого, цитируем фрагмент кода, который мы ей даем): </p>
+
+<pre class="western"><code class="western">(macroexpand '(setq2 v1 v2 3))</code>
+<code class="western">;; (PROGN (SETQ V1 3) (SETQ V2 3))</code>
+<code class="western">;; T</code></pre>
+<p>
+Ура, наш макрос расширяется до кода, который мы хотели!
+</p>
+
+<p>Еще Интереснее:</p>
+
+<pre class="western"><code class="western">(macroexpand '(setq2 v1 v2 (+ z 3)))</code>
+<code class="western">;; (PROGN (SETQ V1 (+ z 3)) (SETQ V2 (+ z 3)))</code>
+<code class="western">;; T</code></pre>
+<p>
+Мы можем подтвердить, что наше выражение <code class="western">e</code>, здесь 
+<code class="western">(+ z 3)</code>, не было вычислено. Мы увидим, 
+как управлять вычислением аргументов с помощью запятой: 
+<code class="western">,</code>.</p>
+
+<p>Примечание: с помощью Slime вы можете вызвать macroexpand, поместив курсор 
+слева от скобки s-expr, чтобы развернуть и вызвать функцию 
+ <code class="western">M-x slime-macroexpand-[1,all]</code>,
+или <code class="western">C-c M-m</code>:</p>
+
+<pre class="western"><code class="western">[|](setq2 v1 v2 3)</code>
+<code class="western">;^ cursor</code>
+<code class="western">; C-c M-m</code>
+<code class="western">; =&gt;</code>
+<code class="western">; (PROGN (SETQ V1 3) (SETQ V2 3))</code></pre><h2 class="western">
+<a name="macros-vs-functions"></a>Макросы против функций</h2>
+
+<p>Наш макрос очень близок к следующему определению функции: </p>
+
+<pre class="western"><code class="western">(defun setq2-function (v1 v2 e)</code>
+<code class="western">  </code><code class="western">(list 'progn (list 'setq v1 e) (list 'setq v2 e)))</code></pre>
+<p>
+Если бы мы вычислили <code class="western">(setq2-function 'x 'y '(+ z 3))</code> 
+(обратите внимание, что каждый аргумент заключен в кавычки, поэтому он 
+не вычисляется, когда мы вызываем функцию), мы получили бы </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(progn (setq x (+ z 3)) (setq y (+ z 3)))</code></pre>
+<p>
+Это совершенно обычное вычисление на Лиспе, единственное, что 
+в нем интересного - это то, что его вывод представляет собой фрагмент 
+исполняемого кода на Лиспе. Что делает <code class="western">defmacro</code>, 
+так это неявно создает эту функцию и гарантирует, что всякий раз, когда 
+отображается выражение формы <code class="western">(setq2 x y (+ z 3))</code>, 
+вызывается <code class="western">setq2-function</code> с частями формы 
+в качестве аргументов, а именно <code class="western">x</code>, 
+<code class="western">y</code> и <code class="western">(+ z 3)</code>. 
+Полученный фрагмент кода затем заменяет вызов <code class="western">setq2</code>, 
+и выполнение возобновляется, как если бы новый фрагмент кода возник изначально. 
+Говорят, что форма макроса <em>expand</em>(расширяется) в новый фрагмент кода.</p>
+
+<h2 class="western"><a name="evaluation-context"></a>Контекст вычисления</h2>
+
+<p>Вот и все, за исключением, конечно, множества тонких последствий. 
+Основным следствием этого является то, что <em>время выполнения</em> 
+макроса <em><code class="western">setq2</code></em><em> - это время 
+компиляции его контекста. То есть предположим, что система Lisp компилирует 
+функцию и на полпути находит выражение <code class="western">(setq2 x y (+ z 3))</code>. 
+Работа компилятора, конечно, состоит в том, чтобы преобразовать исходный код 
+во что-то исполняемое, например, машинный язык или, возможно, байтовый код. 
+Следовательно, он не выполняет исходный код, а работает с ним различными 
+загадочными способами. Однако, как только компилятор видит выражение 
+<code class="western">setq2</code>, он должен внезапно переключиться на 
+выполнение тела макроса <code class="western">setq2</code>. Как я уже сказал, 
+это обычный фрагмент кода на Лиспе, который в принципе может делать все, 
+что может делать любой другой фрагмент кода на Лиспе. Это означает, что 
+когда компилятор работает, должна присутствовать вся система Lisp (времени выполнения). </p>
+
+<p>Подчеркнем еще раз: во время компиляции в вашем распоряжении полный язык.</p>
+
+<p>Новички часто совершают следующие ошибки. Предположим, что макросу 
+<code class="western">setq2</code> необходимо выполнить сложное 
+преобразование своего аргумента <code class="western">e</code> перед тем, 
+как вставить его в результат. Предположим, что это преобразование можно 
+записать как процедуру Лиспа <code class="western">some-computation</code>. 
+Новичок будет часто писать: </p>
+
+<pre class="western"><code class="western">(defmacro setq2 (v1 v2 e)</code>
+<code class="western">  </code><code class="western">(let ((e1 (some-computation e)))</code>
+<code class="western">    </code><code class="western">(list 'progn (list 'setq v1 e1) (list 'setq v2 e1))))</code>
+
+<code class="western">(defmacro some-computation (exp) ...) ;; _Wrong!_</code></pre>
+<p>
+Ошибка состоит в том, чтобы предполагать, что после вызова макроса система Lisp 
+входит в «макро-мир», поэтому, естественно, все в этом мире должно быть определено 
+с помощью <code class="western">defmacro</code>. Это неправильная картина. 
+Правильная картина - это то, что <code class="western">defmacro</code> позволяет шагнуть 
+в <em>обычный мир Лиспа</em>, но в котором основным объектом манипуляции является 
+код Лиспа. После того, как этот шаг сделан, можно использовать обычные определения 
+функций Лиспа: </p>
+
+<pre class="western"><code class="western">(defmacro setq2 (v1 v2 e)</code>
+<code class="western">  </code><code class="western">(let ((e1 (some-computation e)))</code>
+<code class="western">    </code><code class="western">(list 'progn (list 'setq v1 e1) (list 'setq v2 e1))))</code>
+
+<code class="western">(defun some-computation (exp) ...) ;; _Right!_</code></pre>
+<p>
+Одним из возможных объяснений этой ошибки может быть то, что в других языках, 
+таких как C, вызов макроса препроцессора действительно переносит вас в другой мир; 
+вы не можете запустить произвольную программу на C. Возможно, стоит остановиться и 
+подумать о том, что это может означать - иметь возможность.
+</p>
+
+<p>Еще одно неуловимое следствие состоит в том, что мы должны разъяснить, 
+как аргументы макроса распределяются между гипотетической скрытой функцией 
+(в моем примере она называется <code class="western">setq2-function</code>). 
+В большинстве случаев это легко сделать: при определении макроса мы используем 
+весь обычный синтаксис <code class="western">lambda</code>-списков, такой как 
+ <code class="western">&amp;optional</code>, <code class="western">&amp;rest</code>,
+<code class="western">&amp;key</code>, но то, что связано с формальными параметрами, 
+- это части формы макроса, а не их значения (которые в основном неизвестны, 
+во время компиляции макроформы). Итак, если мы определили макрос так: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(defmacro foo (x &amp;optional y &amp;key (cxt 'null)) ...)</code></pre>
+<p>
+тогда</p>
+
+<table cellpadding="2" cellspacing="2">
+	<thead>
+		<tr>
+			<th style="border: none; padding: 0cm">
+
+<p><em>Если мы вызовем это так …</em></p>
+
+			</th>
+			<th style="border: none; padding: 0cm">
+
+<p><em>Значения параметров …</em></p>
+
+			</th>
+		</tr>
+
+	</thead>
+	<tbody>
+		<tr>
+			<td style="border: none; padding: 0cm">
+
+<p><code class="western">(foo a)</code></p>
+
+			</td>
+			<td style="border: none; padding: 0cm">
+
+<p><code class="western">x=a</code>, <code class="western">y=nil</code>,
+				<code class="western">cxt=null</code></p>
+
+			</td>
+		</tr>
+
+		<tr>
+			<td style="border: none; padding: 0cm">
+
+<p><code class="western">(foo (+ a 1) (- y 1))</code></p>
+
+			</td>
+			<td style="border: none; padding: 0cm">
+
+<p><code class="western">x=(+ a 1)</code>, <code class="western">y=(-
+				y 1)</code>, <code class="western">cxt=null</code></p>
+
+			</td>
+		</tr>
+
+		<tr>
+			<td style="border: none; padding: 0cm">
+
+<p><code class="western">(foo a b :cxt (zap zip))</code></p>
+
+			</td>
+			<td style="border: none; padding: 0cm">
+
+<p><code class="western">x=a</code>, <code class="western">y=b</code>,
+				<code class="western">cxt=(zap zip)</code></p>
+
+			</td>
+		</tr>
+
+	</tbody>
+</table>
+
+<p><br/>
+<br/>
+
+</p>
+
+<p>Обратите внимание, что значения переменных являются фактически
+выражениями <code class="western">(+ a 1)</code> и
+ <code class="western">(zap zip)</code>. Не требуется, чтобы значения 
+этих выражений были известны или даже имели значения. Макрос может делать 
+с ними все, что угодно. Например, вот еще более бесполезный вариант 
+<code class="western">setq</code>: <code class="western">(setq-reversible
+</code><code class="western"><i>e</i></code><code class="western"><sub><i>1</i></sub></code><code class="western">
+</code><code class="western"><i>e</i></code><code class="western"><sub><i>2</i></sub></code><code class="western">
+</code><code class="western"><i>d</i></code><code class="western">)</code> 
+ведет себя как <code class="western">(setq </code><code class="western"><i>e</i></code><code class="western"><sub><i>1</i></sub></code><code class="western">
+</code><code class="western"><i>e</i></code><code class="western"><sub><i>2</i></sub></code><code class="western">)</code>
+если <i>d=</i><code class="western">:normal</code>, и ведет себя как 
+<code class="western">(setq </code><code class="western"><i>e</i></code><code class="western"><sub><i>2</i></sub></code><code class="western">
+</code><code class="western"><i>e</i></code><code class="western"><sub><i>1</i></sub></code><code class="western">)</code>
+если <em>d=</em><code class="western">:backward</code>. 
+Его можно было бы определить так: </p>
+
+<pre class="western"><code class="western">(defmacro setq-reversible (e1 e2 direction)</code>
+<code class="western">  </code><code class="western">(case direction</code>
+<code class="western">    </code><code class="western">(:normal (list 'setq e1 e2))</code>
+<code class="western">    </code><code class="western">(:backward (list 'setq e2 e1))</code>
+<code class="western">    </code><code class="western">(t (error &quot;Unknown direction: ~a&quot; direction))))</code></pre>
+<p>
+Вот как он расширяется: </p>
+
+<pre class="western"><code class="western">(macroexpand '(setq-reversible x y :normal))</code>
+<code class="western">(SETQ X Y)</code>
+<code class="western">T</code>
+<code class="western">(macroexpand '(setq-reversible x y :backward))</code>
+<code class="western">(SETQ Y X)</code>
+<code class="western">T</code></pre>
+<p>
+И с неверным направлением(direction):</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(macroexpand '(setq-reversible x y :other-way-around))</code></pre>
+<p>
+Получаем ошибку и запрашиваем в отладчике!
+</p>
+
+<p>Мы увидим механизм обратной кавычки(backquote) и запятой(comma) 
+в следующем разделе, но вот исправление: </p>
+
+<pre class="western"><code class="western">(defmacro setq-reversible (v1 v2 direction)</code>
+<code class="western">  </code><code class="western">(case direction</code>
+<code class="western">    </code><code class="western">(:normal (list 'setq v1 v2))</code>
+<code class="western">    </code><code class="western">(:backward (list 'setq v2 v1))</code>
+<code class="western">    </code><code class="western">(t `(error &quot;Unknown direction: ~a&quot; ,direction))))</code>
+<code class="western">    </code><code class="western">;; ^^ обратная кавычка             ^^ запятая:получает значение внутри обратной кавычки.</code>
+
+<code class="western">(macroexpand '(SETQ-REVERSIBLE v1 v2 :other-way-around))</code>
+<code class="western">;; (ERROR &quot;Unknown direction: ~a&quot; :OTHER-WAY-AROUND)</code>
+<code class="western">;; T</code></pre>
+<p>
+Теперь, когда мы вызываем <code class="western">(setq-reversible v1 v2
+:other-way-around)</code>, мы по-прежнему получаем ошибку и отладчик, 
+но, по крайней мере, не при использовании  <code class="western">macroexpand</code>.</p>
+
+<h1 class="western"><a name="2-backquote"></a><a name="backquote-and-comma"></a>
+Обратная кавычка(Backquote) и запятая(comma)</h1>
+
+<p>Прежде чем сделать следующий шаг, нам нужно ввести часть нотации Lisp, 
+которая необходима для определения макросов, хотя технически она совершенно 
+не зависит от макросов. Это средство обратного цитирования(<em>backquote facility</em>). 
+Как мы видели выше, основная задача макроса, когда все сказано и сделано, 
+состоит в том, чтобы определить фрагмент кода Lisp, а это означает вычисление 
+таких выражений, как <code class="western">(list 'prog (list 'setq ...) ...)</code>. 
+По мере того, как эти выражения становятся сложнее, их становится трудно читать и писать. 
+Нам нужна нотация, обеспечивающая скелет выражения, с некоторыми частями, 
+заполняемыми новыми выражениями. Это то, что дает обратная кавычка. Вместо 
+приведенного выше выражения <code class="western">list</code> пишут </p>
+
+<pre class="western"><code class="western">  </code><code class="western">`(progn (setq ,v1 ,e) (setq ,v2 ,e))</code>
+<code class="western">;;^ backquote   ^   ^         ^   ^ commas</code></pre>
+<p>
+Символьный знак обратной кавычки (`) указывает на то, что в последующем выражении 
+каждое подвыражение <em>без</em> запятой должно быть заключено в кавычки, 
+а каждое подвыражение, которому предшествует запятая, должно быть вычислено.
+</p>
+
+<p>Вы можете думать об этом и использовать его как интерполяцию данных: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">`(v1 = ,v1) ;; =&gt; (V1 = 3)</code></pre>
+<p>
+Это в основном все, что нужно для обратной кавычки. Следует отметить всего два дополнительных момента. </p>
+
+<h3 class="western"><a name="comma-splice"></a>Соединяющая/сращивающая запятая(Comma-splice) ,@</h3>
+
+<p>Во-первых, если вы напишете «<code class="western">,@e</code>» вместо 
+«<code class="western">,e</code>», тогда значение <em>e</em> будет объединено(<em>spliced</em>) 
+(или «соединено», «объединено», «встроено») в результат. 
+Итак, если <code class="western">v</code> равно <code class="western">(oh boy)</code>, 
+тогда </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(zap ,@v ,v)</code></pre>
+<p>
+вычисляпется в</p>
+
+<pre class="western"><code class="western">(zap oh boy (oh boy))</code>
+<code class="western">;;   ^^^^^ элементы v (два элемента), встроены.</code>
+<code class="western">;;          ^^ сам v(список)</code></pre>
+<p>
+Второе вхождение  <code class="western">v</code> заменяется его значением. 
+Первое заменяется элементами его значения. Если бы <code class="western">v</code> 
+имел значение <code class="western">()</code>, он бы полностью исчез: 
+значение <code class="western">(zap ,@v ,v)</code> было бы 
+<code class="western">(zap ())</code>, что совпадает с  
+<code class="western">(zap nil)</code>.</p>
+
+<h3 class="western"><a name="quote-comma"></a>Кавычка-запятая ',</h3>
+
+<p>Когда мы находимся внутри контекста обратной кавычки и хотим буквально 
+вывести/напечатать выражение, у нас нет другого выбора, кроме как использовать 
+комбинацию кавычки и запятой: </p>
+
+<pre class="western"><code class="western">(defmacro explain-exp (exp)</code>
+<code class="western">  </code><code class="western">`(format t &quot;~S = ~S&quot; ',exp ,exp))</code>
+<code class="western">  </code><code class="western">;;                   ^^</code>
+
+<code class="western">(explain-exp (+ 2 3))</code>
+<code class="western">;; (+ 2 3) = 5</code></pre>
+<p>
+Смотрите сами:</p>
+
+<pre class="western"><code class="western">;; Defmacro with no quote at all:</code>
+<code class="western">(defmacro explain-exp (exp)</code>
+<code class="western">  </code><code class="western">(format t &quot;~a = ~a&quot; exp exp))</code>
+<code class="western">(explain-exp v1)</code>
+<code class="western">;; V1 = V1</code>
+
+<code class="western">;; OK, with a backquote and a comma to get the value of exp:</code>
+<code class="western">(defmacro explain-exp (exp)</code>
+<code class="western">  </code><code class="western">;; WRONG example</code>
+<code class="western">  </code><code class="western">`(format t &quot;~a = ~a&quot; exp ,exp))</code>
+<code class="western">(explain-exp v1)</code>
+<code class="western">;; =&gt; error: The variable EXP is unbound.</code>
+
+<code class="western">;; We then must use quote-comma:</code>
+<code class="western">(defmacro explain-exp (exp)</code>
+<code class="western">  </code><code class="western">`(format t &quot;~a = ~a&quot; ',exp ,exp))</code>
+<code class="western">(explain-exp (+ 1 2))</code>
+<code class="western">;; (+ 1 2) = 3</code></pre><h3 class="western">
+<a name="nested-backquotes"></a>Вложенные обратные кавычки</h3>
+
+<p>Во-вторых, можно задаться вопросом, что происходит, если выражение 
+обратной кавычки встречается внутри другой обратной кавычки. Ответ заключается в том, 
+что обратная кавычка становится по существу нечитаемой и незаписываемой; 
+использование вложенных обратных кавычек обычно является утомительным занятием отладки. 
+Причина, по моему не столь скромному мнению, в том, что обратная цитата определена 
+неправильно. Запятая соединяется с самой внутренней обратной кавычкой, 
+тогда как по умолчанию она должна быть соединена с самой внешней кавычкой. 
+Но здесь не место для разглагольствования; обратитесь к вашему любимому справочнику Lisp, 
+чтобы узнать точное поведение вложенных обратных кавычек, а также посмотрите 
+некоторые примеры.</p>
+
+<h3 class="western"><a name="building-lists-with-backquote"></a>Создание списков с обратной кавычкой </h3>
+
+<p>[â¦]</p>
+
+<h1 class="western"><a name="getting-macros-right"></a>Получение правильных макросов</h1>
+
+<p>В первом разделе я сказал, что мое определение <code class="western">setq2</code> 
+было неправильным, и теперь пришло время исправить это.</p>
+
+<p>Предположим, мы напишем <code class="western">(setq2 x y (+ x 2))</code>, 
+когда <code class="western">x</code><em>=8</em>. Затем, согласно приведенному 
+выше определению, эта форма расширится до </p>
+
+<pre class="western"><code class="western">(progn</code>
+<code class="western">  </code><code class="western">(setq x (+ x 2))</code>
+<code class="western">  </code><code class="western">(setq y (+ x 2)))</code></pre>
+<p>
+так что <code class="western">x</code> будет иметь значение 10, а 
+<code class="western">y</code> будет иметь значение 12. 
+В самом деле, вот его макрорасширение: </p>
+
+<pre class="western"><code class="western">(macroexpand '(setq2 x y (+ x 2)))</code>
+<code class="western">;;(PROGN (SETQ X (+ X 2)) (SETQ Y (+ X 2)))</code></pre>
+<p>
+Скорее всего, это не то, что ожидается от макроса (хотя вы никогда этогомне знаете). 
+Другой проблемный случай - <code class="western">(setq2 x y (pop l))</code>, 
+в котором <code class="western">l</code> появляется дважды; опять же, наверное, 
+не правильно.</p>
+
+<p>Решение состоит в том, чтобы вычислить выражение <code class="western">e</code> 
+только один раз, сохранить его во временной переменной, а затем установить 
+её для  <code class="western">v1</code> и <code class="western">v2</code> </p>
+
+<h2 class="western"><a name="gensym"></a>Gensym(генератор имени символа)</h2>
+
+<p>Чтобы создать временные переменные, мы используем функцию 
+<code class="western">gensym</code>, которая возвращает новую переменную, 
+которая гарантированно больше нигде не появится. 
+Вот как должен выглядеть макрос:  </p>
+
+<pre class="western"><code class="western">(defmacro setq2 (v1 v2 e)</code>
+<code class="western">  </code><code class="western">(let ((tempvar (gensym)))</code>
+<code class="western">    </code><code class="western">`(let ((,tempvar ,e))</code>
+<code class="western">       </code><code class="western">(progn (setq ,v1 ,tempvar)</code>
+<code class="western">              </code><code class="western">(setq ,v2 ,tempvar)))))</code></pre>
+<p>
+Сейчас <code class="western">(setq2 x y (+ x 2))</code> расширяется в</p>
+
+<pre class="western"><code class="western">(let ((#:g2003 (+ x 2)))</code>
+<code class="western">  </code><code class="western">(progn (setq x #:g2003) (setq y #:g2003)))</code></pre>
+<p>
+Здесь <code class="western">gensym</code> вернул символ <code class="western">#:g2003</code>,
+который печатается таким забавным образом, потому что лисп считыватель не распознает его. 
+(Считывателю также не нужно его узнавать, поскольку он существует достаточно долго, 
+чтобы код, содержащий его, был скомпилирован.)</p>
+
+<p>Упражнение: убедитесь, что эта новая версия работает правильно 
+для случая <code class="western">(setq2 x y (pop l1))</code>.</p>
+
+<p>Упражнение: попробуйте написать новую версию макроса без использования 
+обратной кавычки. Если вы не можете этого сделать, значит, вы выполнили 
+упражнение правильно и узнали, для чего нужна обратная кавычка!</p>
+
+<p><a name="LtohTOCentry-4"></a>Мораль этого раздела - тщательно продумать, 
+какие выражения в макросе будут вычисляться и когда. Следите за ситуациями, 
+когда одно и то же выражение дважды вставляется в вывод (как было с
+ <code class="western">e</code> в моем первоначальном макете). Для сложных 
+макросов обратите внимание на случаи, когда порядок вычисления выражений 
+отличается от порядка их написания. Это обязательно сбивает с толку 
+некоторых пользователей макроса - даже если вы единственный пользователь. </p>
+
+<h1 class="western"><a name="what-macros-are-for"></a>Для чего нужны макросы </h1>
+
+<p>[â¦]</p>
+
+<h1 class="western"><a name="see-also"></a>См. также</h1>
+
+<p><a href="https://medium.com/@MartinCracauer/a-gentle-introduction-to-compile-time-computing-part-1-d4d96099cea0">A
+gentle introduction to Compile-Time Computing â Part 1</a></p>
+
+<p><a href="https://medium.com/@MartinCracauer/a-gentle-introduction-to-compile-time-computing-part-3-scientific-units-8e41d8a727ca">Safely
+dealing with scientific units of variables at compile time (a gentle
+introduction to Compile-Time Computing â part 3)</a></p>
+
+<p>The following video, from the series <a href="https://www.youtube.com/user/CBaggers/playlists">âLittle
+bits of Lispâ</a> by <a href="https://github.com/cbaggers/">cbaggers</a>,
+is a two hours long talk on macros, showing simple to advanced
+concepts such as compiler macros:
+<a href="https://www.youtube.com/watch?v=ygKXeLKhiTI">https://www.youtube.com/watch?v=ygKXeLKhiTI</a>
+It also shows how to manipulate macros (and their expansion) in
+Emacs.</p>
+
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

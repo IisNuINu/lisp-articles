@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-14T13:16:36.428942312"/>
+	<meta name="changed" content="2021-08-14T13:18:03.689883281"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		address.cjk { font-style: italic }
+		address.ctl { font-style: italic }
+		pre.cjk { font-family: "Courier New", monospace }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Отладка Common Lisp в Slime</h1>
+<p style="margin-bottom: 0cm">by 
+</p>
+
+<address class="western">kqr</address>
+<p style="margin-bottom: 0cm">, published 
+</p>
+
+<p>Tags: 
+</p>
+
+<ul>
+	<li/>
+
+<p><a href="https://two-wrongs.com/tags.html#lisp">lisp</a></p>
+
+</ul>
+
+<p>Я сделал небольшую «игру» на Лиспе, чтобы помочь мне лучше понять концепцию. 
+По сути, она показывает мне сетку из X, O и _. Я убираю по одному каждый ход, 
+а затем окончательная конфигурация должна соответствовать некоторым правилам. 
+Цель игры состоит не в том, чтобы достичь такой окончательной конфигурации, 
+а в том, чтобы определить за как можно меньшее количество ходов, возможна ли 
+такая конфигурация.
+</p>
+
+<p>However, the following happened. 
+</p>
+
+<pre class="western">Remove? e
+_ (a)    O (b)    X (c)
+
+X (d)    _ (e)    X (f)
+
+X (g)    O (h)    X (i)
+
+Remove?</pre>
+<p>
+Видите, все столбцы имеют либо <code class="western">_</code>, либо 
+одну и ту же букву? Предполагалось, что это будет победа, но она ее не считала. 
+Это просто позволяло мне продолжать играть.
+</p>
+
+<h1 class="western"><a name="org952e4f4"></a>Интерактивная трассировка стека </h1>
+<div id="text-org952e4f4" dir="ltr">
+
+<p><a name="fnr.1"></a>Однако отладка этого способа Lisp была удовольствием. 
+	Я нажимаю C-c C-c, чтобы вызвать условие в текущей точке вычисления, 
+	которое, естественно, бросает меня в отладчик. Он представил мне этот экран
+	<sup><a href="https://two-wrongs.com/debugging-common-lisp-in-slime.html#fn.1">1</a>1</sup>, 		который я сократил в основном потому, что его трудно читать без правильной 
+	типографики…. 
+	</p>
+
+	<pre class="western">Interrupt from Emacs
+   [Condition of type SIMPLE-ERROR]
+
+Restarts:
+ 0: [CONTINUE] Continue from break.
+ 1: [ABORT-READ] Abort reading input from Emacs.
+ 2: [RETRY] Retry SLIME REPL evaluation request.
+ 3: [*ABORT] Return to SLIME's top level.
+ 4: [ABORT] abort thread (#&lt;THREAD &quot;repl-thread&quot; RUNNING {1001A8FFA3}&gt;)
+
+Backtrace:
+  1: (SWANK::DEBUG-IN-EMACS #&lt;SIMPLE-ERROR &quot;Interrupt from Emacs&quot; {10057293D3}&gt;)
+  2: (SWANK:INVOKE-SLIME-DEBUGGER #&lt;SIMPLE-ERROR &quot;Interrupt from Emacs&quot; {10057293D3}&gt;)
+  3: (SWANK:SIMPLE-BREAK &quot;Interrupt from Emacs&quot;)
+  4: (SWANK/BACKEND:CHECK-SLIME-INTERRUPTS)
+ ...
+ 13: ((:METHOD STREAM-READ-CHAR (SWANK/GRAY::SLIME-INPUT-STREAM)) #&lt;SWANK/GRAY::SLIME-INPUT-STREAM {1001997A13}&gt;) [fast-method]
+ 14: (READ-CHAR #&lt;SWANK/GRAY::SLIME-INPUT-STREAM {1001997A13}&gt; NIL NIL #&lt;unused argument&gt;)
+ 15: (READ-LINE #&lt;TWO-WAY-STREAM :INPUT-STREAM #&lt;SWANK/GRAY::SLIME-INPUT-STREAM {1001997A13}&gt; :OUTPUT-STREAM #&lt;SWANK/GRAY::SLIME-OUTPUT-STREAM {1001A77973}&gt;&gt; T NIL #&lt;unused argument&gt;)
+ 16: (GAME-ROUND 3 3)
+ 17: (PLAY 3 3)
+ 18: (SB-INT:SIMPLE-EVAL-IN-LEXENV (PLAY 3 3) #&lt;NULL-LEXENV&gt;)
+ 19: (EVAL (PLAY 3 3))
+ 20: (SWANK::EVAL-REGION &quot;(play 3 3) ..)&quot;
+ 21: ((LAMBDA NIL :IN SWANK-REPL::REPL-EVAL))
+ ...</pre>
+<p>
+	Я знаю, что проверка выигрыша в игре происходит в функции <code class="western">game-round</code>, поэтому я расширил этот кадр стека в трассировке, показанной выше. 
+	Он показал мне локальные переменные, ни одна из которых не вызвала особого удивления. 
+	</p>
+
+	<pre class="western">16: (GAME-ROUND 3 3)
+     Locals:
+       BOARD = #2A((_ O X) (X _ X) (X O X))
+       M = 3
+       N = 3
+       REMOVALS = 2</pre>
+<p>
+	Чтобы разобраться в корне проблемы, я хотел запустить проверку 
+	выигранной игры вручную со значениями в этом кадре стека. 
+	Сделать это просто: я просто помещаю курсор где-нибудь в кадре и 
+	нажимаю <code class="western">e</code> для вычисления(eval). 
+	Я ввел <code class="western">(print (unit-columns? board))</code>, 
+	и она вернула мне <code class="western">NIL</code>, что означает, 
+	что она не распознала ситуацию должным образом.
+	</p>
+
+<p>Быстрый взгляд на функцию,  
+	</p>
+
+	<pre class="western">(defun unit-columns? (board)
+  &quot;If all columns are single-coloured, the game is won!&quot;
+  (loop for i from 0 below (array-dimension board 0)
+     always
+       (loop
+          for j from 0 below (array-dimension board 1)
+          for elem = (aref board i j)
+          for previous = elem then
+            (if (tile? previous) previous elem)
+          always (same-colour previous elem))))</pre>
+<p>
+	и было ясно, что я случайно поменял размеры игровой доски 
+	для этой проверки! Обычно я перебираю доску в порядке строк, 
+	но это был единственный случай, когда мне нужно было сделать 
+	это в порядке столбцов. Я поменял местами две строки <code class="western">(loop for i … board 0)</code> и <code class="western">(цикл для j… плата 1)</code> и нажал 
+	<code class="western">C-c C-c</code>, 
+	чтобы перекомпилировать функцию и заменить старую. 
+	</p>
+
+<p>В отладчике старый кадр стека все еще был выделен, поэтому просто чтобы убедиться, 
+	что я снова нажал <code class="western">e</code> и вычислил тот же отпечаток, 
+	что и раньше. На этот раз она правильно определила ситуацию! 
+	</p>
+
+<p>Теперь остается только продолжить выполнение программы с правильной функцией. 
+	Все еще удерживая курсор на интересующем кадре стека, я нажимаю <code class="western">r</code>, и она перезапускает <i>этот конкретный кадр стека</i>, но теперь с 
+	правильными определениями.
+	</p>
+
+<p>Потом случилось это.
+	</p>
+
+	<pre class="western">Remove? e
+_ (a)    O (b)    X (c)
+
+X (d)    _ (e)    X (f)
+
+X (g)    O (h)    X (i)
+
+You won the game! It took 2 removals.</pre>
+<p>
+	Я думаю, это работает! 
+	</p>
+
+</div>
+<h1 class="western"><a name="orgbd6bbb6"></a>Эпилог</h1>
+<div id="text-orgbd6bbb6" dir="ltr">
+
+<p>Что делает это таким приятным, так это интерактивная трассировка стека, 
+	управляемая клавиатурой. С помощью вы не просто смотрите на трассировку стека; 
+	вы играете с ним. Вы проверяете каждую часть текущего состояния программы, 
+	вычисляете выражения внутри различных фреймов стека, переназначаете локальные 
+	переменные, а затем перезапускаете выполнение с произвольного фрейма стека. 
+	</p>
+
+<p>Обычно это невозможно в языках, управляемых исключениями, потому что к тому времени, 
+	когда выражение попало в отладчик, <i>стек уже будет развернут</i>. Его все еще 
+	можно наблюдать, но он больше не связан с вашей программой.
+	</p>
+
+<p>В Common Lisp с его системой условий трассировка формирует оперативный снимок 
+	текущего состояния выполнения программы, который можно изменить к вашему 
+	удовольствию, прежде чем продолжить выполнение программы.
+	</p>
+
+</div>
+
+<p>Feel free to <a href="https://buymeacoff.ee/kqr">show your support
+by buying me a coffee</a>, <em>iff</em> you want to.<br/>
+Or <a href="https://two-wrongs.com/about">send
+me an email</a>. Emails show nearly as much support as coffee.</p>
+
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

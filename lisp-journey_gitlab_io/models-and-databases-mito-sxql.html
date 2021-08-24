@@ -1,0 +1,914 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-22T21:58:57.812815251"/>
+	<meta name="changed" content="2021-08-22T22:02:31.260472092"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		h4.cjk { font-family: "Noto Sans CJK SC" }
+		h4.ctl { font-family: "Lohit Devanagari" }
+		h5.cjk { font-family: "Noto Sans CJK SC" }
+		h5.ctl { font-family: "Lohit Devanagari" }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western"><a name="title-non-xs"></a><a href="https://lispcookbook.github.io/cl-cookbook/">Поваренная книга Common Lisp</a> - доступ к базе данных и Persistence(постоянство)</h1>
+
+<p><br/>
+<br/>
+
+</p>
+
+<div id="content" dir="ltr">
+
+<p>The <a href="https://github.com/CodyReichert/awesome-cl#database">Раздел «База данных» 
+в списке Awesome-cl</a> - это ресурс, в котором перечислены популярные библиотеки 
+для работы с различными типами баз данных. Мы можем сгруппировать их примерно в 
+четыре категории:</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm">оболочки для одного движка базы данных 
+		(cl-sqlite, postmodern, cl-redis,…), 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm">интерфейсы с несколькими 
+	движками БД (clsql, sxql,â¦), 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm">базы данных постоянных/хранимых на диске объектов 
+	(bknr.datastore (см. главу 21 «Common Lisp Recipes»), повсеместно,…),
+ 
+		</p>
+
+		<li/>
+
+<p><a href="https://en.wikipedia.org/wiki/Object-relational_mapping">объектно-реляционное 		отображение(преобразование)(Object Relational Mappers - ORM)</a> (Mito), 
+		</p>
+
+	</ul>
+
+<p>и другие инструменты, связанные с БД (pgloader).</p>
+
+<p>Начнем с обзора Mito. Если вам необходимо работать с существующей БД, 
+	вы можете взглянуть на cl-dbi и clsql. Если вам не нужна база данных SQL 
+	и вы хотите автоматически сохранять объекты Lisp, у вас также есть выбор библиотек. </p>
+
+	<h2 class="western"><a name="the-mito-orm-and-sxql"></a>Mito ORM
+	и SxQL</h2>
+
+<p>Mito в Quicklisp:</p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(ql:quickload &quot;mito&quot;)</code></pre><h3 class="western">
+	<a name="overview"></a>Обзор</h3>
+
+<p><a href="https://github.com/fukamachi/mito">Mito</a> - это 
+	«ORM для Common Lisp с миграциями, связями и поддержкой PostgreSQL».</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm">она <strong> поддерживает MySQL,
+		PostgreSQL и SQLite3</strong>, 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"> при определении модели она по умолчанию добавляет 
+	поля <code class="western">id</code> (серийный/последовательный первичный ключ), 
+	<code class="western">created_at</code>
+	и <code class="western">updated_at</code>, например ActiveRecord или Django в Ruby,
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"> обрабатывает  <strong>миграции </strong> БД 
+	для поддерживаемых бэкэндов, 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm">разрешает управление <strong>версиями схемы</strong> БД, 
+		</p>
+
+		<li/>
+
+<p> протестирована под SBCL и CCL. 
+		</p>
+
+	</ul>
+
+<p>Как ORM, она позволяет писать определения классов, указывать отношения и 
+	предоставляет функции для запросов к базе данных. Для пользовательских 
+	запросов она использует SxQL, генератор SQL, который предоставляет один 
+	и тот же интерфейс для нескольких бэкэндов.</p>
+
+<p>Работа с Mito обычно включает следующие шаги: </p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm">подключение к  DB 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"> написание классов <a href="https://lispcookbook.github.io/cl-cookbook/clos.html">CLOS</a> для определения моделей 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"> выполнение миграций для создания 
+	или изменения таблиц
+		</p>
+
+		<li/>
+
+<p> создание объектов, сохранение их в БД,
+		</p>
+
+	</ul>
+
+<p>и повторение. </p>
+
+	<h3 class="western"><a name="connecting-to-a-db"></a>Подключение к БД</h3>
+
+<p>Mito предоставляет функцию <code class="western">connect-toplevel</code>
+	 для установления соединения с RDBMs: </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(mito:connect-toplevel :mysql :database-name &quot;myapp&quot; :username &quot;fukamachi&quot; :password &quot;c0mon-1isp&quot;)</code></pre>
+<p>
+	Тип драйвера может быть <code class="western">:mysql</code>,
+	<code class="western">:sqlite3</code> и <code class="western">:postgres</code>.</p>
+
+<p>С sqlite вам не нужны имя пользователя и пароль: </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(mito:connect-toplevel :sqlite3 :database-name &quot;myapp&quot;)</code></pre>
+<p>
+	Как обычно, вам необходимо заранее создать базу данных MySQL или PostgreSQL. 
+	Обратитесь к их документации.
+</p>
+
+<p>Соединение устанавливает <code class="western">mito:*connection*</code> 
+	на новое соединение и возвращает его.</p>
+
+<p>Отключение с  <code class="western">disconnect-toplevel</code>.</p>
+
+<p>Вы могли бы хорошо использовать функцию-оболочку: </p>
+
+	<pre class="western"><code class="western">(defun connect ()</code>
+<code class="western">  </code><code class="western">&quot;Connect to the DB.&quot;</code>
+<code class="western">  </code><code class="western">(mito:connect-toplevel :sqlite3 :database-name &quot;myapp&quot;))</code></pre><h3 class="western">
+	<a name="models"></a>Модели</h3>
+	<h4 class="western"><a name="defining-models"></a>Определение моделей</h4>
+
+<p>В Mito вы можете определить класс, соответствующий таблице базы данных, 
+	с помощью макроса <code class="western">deftable</code>: </p>
+
+	<pre class="western"><code class="western">(mito:deftable user ()</code>
+<code class="western">  </code><code class="western">((name :col-type (:varchar 64))</code>
+<code class="western">   </code><code class="western">(email :col-type (or (:varchar 128) :null)))</code></pre>
+<p>
+	В качестве альтернативы вы можете указать 
+	<code class="western">(:metaclass mito:dao-table-class)</code> 
+	в определении обычного класса.</p>
+
+<p>Макрос <code class="western">deftable</code> автоматически добавляет несколько слотов: 
+	первичный ключ с именем <code class="western">id</code>, 
+	если первичного ключа нет, и <code class="western">created_at</code>
+	и <code class="western">updated_at</code> для записи временных меток. 
+	Указание <code class="western">(:auto-pk nil)</code>
+	и <code class="western">(:record-timestamps nil)</code> в гибкой форме отключит 
+	это поведение. Класс <code class="western">deftable</code> также будет 
+	иметь инициализаторы, именуемые после слота, и средства доступа в форме 
+	<code class="western">&lt;class-name&gt;-&lt;slot-name&gt;</code> для каждого
+	именованного слота. Например, для слота <code class="western">name</code> в 
+	приведенном выше определении таблицы, аргумент инициализации(initarg)
+	<code class="western">:name</code>
+	будет добавлен в конструктор, и будет создано  средства доступа
+	<code class="western">user-name</code>.</p>
+
+<p>Вы можете проинспектировать(осмотреть) новый класс: </p>
+
+	<pre class="western"><code class="western">(mito.class:table-column-slots (find-class 'user))</code>
+<code class="western">;=&gt; (#&lt;MITO.DAO.COLUMN:DAO-TABLE-COLUMN-CLASS MITO.DAO.MIXIN::ID&gt;</code>
+<code class="western">;    #&lt;MITO.DAO.COLUMN:DAO-TABLE-COLUMN-CLASS COMMON-LISP-USER::NAME&gt;</code>
+<code class="western">;    #&lt;MITO.DAO.COLUMN:DAO-TABLE-COLUMN-CLASS COMMON-LISP-USER::EMAIL&gt;</code>
+<code class="western">;    #&lt;MITO.DAO.COLUMN:DAO-TABLE-COLUMN-CLASS MITO.DAO.MIXIN::CREATED-AT&gt;</code>
+<code class="western">;    #&lt;MITO.DAO.COLUMN:DAO-TABLE-COLUMN-CLASS MITO.DAO.MIXIN::UPDATED-AT&gt;)</code></pre>
+<p>
+	Класс неявно наследует <code class="western">mito:dao-class</code>. 
+</p>
+
+	<pre class="western"><code class="western">(find-class 'user)</code>
+<code class="western">;=&gt; #&lt;MITO.DAO.TABLE:DAO-TABLE-CLASS COMMON-LISP-USER::USER&gt;</code>
+
+<code class="western">(c2mop:class-direct-superclasses *)</code>
+<code class="western">;=&gt; (#&lt;STANDARD-CLASS MITO.DAO.TABLE:DAO-CLASS&gt;)</code></pre>
+<p>
+	Это может быть полезно при определении методов, которые можно 
+	применять для всех классов таблиц.</p>
+
+<p>Для получения дополнительной информации об использовании объектной системы 
+	Common Lisp, см. страницу <a href="https://lispcookbook.github.io/cl-cookbook/clos.html">clos</a>.</p>
+
+	<h4 class="western"><a name="creating-the-tables"></a>Создание таблиц</h4>
+
+<p>После определения моделей необходимо создать таблицы: </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(mito:ensure-table-exists 'user)</code></pre>
+<p>
+	Итак, вспомогательная функция:</p>
+
+	<pre class="western"><code class="western">(defun ensure-tables ()</code>
+<code class="western">  </code><code class="western">(mapcar #'mito:ensure-table-exists '(user foo bar)))</code></pre>
+<p>
+	См. <a href="https://github.com/fukamachi/mito#generating-table-definitions">Документацию Mito</a>, чтобы узнать о других способах.</p>
+
+<p>Когда вы измените модель, вам нужно будет запустить миграцию БД, 
+	см. Следующий раздел.</p>
+
+	<h4 class="western"><a name="fields"></a>Поля</h4>
+	<h5 class="western"><a name="fields-types"></a>Типы полей</h5>
+
+<p>Типы полей бывают:</p>
+
+<p><code class="western">(:varchar &lt;integer&gt;)</code> ,</p>
+
+<p><code class="western">:serial</code>, <code class="western">:bigserial</code>,
+	<code class="western">:integer</code>, <code class="western">:bigint</code>,
+	<code class="western">:unsigned</code>,</p>
+
+<p><code class="western">:timestamp</code>, <code class="western">:timestamptz</code>,</p>
+
+<p><code class="western">:bytea</code>,</p>
+
+	<h5 class="western"><a name="optional-fields"></a>Необязательные поля(Optional fields)</h5>
+
+<p>Используйте <code class="western">(or &lt;real type&gt; :null)</code>:</p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">   </code><code class="western">(email :col-type (or (:varchar 128) :null))</code></pre><h5 class="western">
+	<a name="field-constraints"></a>Ограничения (налагаемые на) поля</h5>
+
+<p><code class="western">:unique-keys</code> можно использовать так: </p>
+
+	<pre class="western"><code class="western">(mito:deftable user ()</code>
+<code class="western">  </code><code class="western">((name :col-type (:varchar 64))</code>
+<code class="western">   </code><code class="western">(email :col-type (:varchar 128))</code>
+<code class="western">  </code><code class="western">(:unique-keys email))</code></pre>
+<p>
+	Мы уже видели:  <code class="western">:primary-key</code>.</p>
+
+<p>Вы можете изменить имя таблицы с помощью <code class="western">:table-name</code>.</p>
+
+	<h4 class="western"><a name="relationships"></a>Отношения(Relationships)</h4>
+
+<p>Вы можете определить отношение, указав внешний класс с помощью 
+	<code class="western">:col-type</code>:</p>
+
+	<pre class="western"><code class="western">(mito:deftable tweet ()</code>
+<code class="western">  </code><code class="western">((status :col-type :text)</code>
+<code class="western">   </code><code class="western">;; This slot refers to USER class</code>
+<code class="western">   </code><code class="western">(user :col-type user))</code>
+
+<code class="western">(table-definition (find-class 'tweet))</code>
+<code class="western">;=&gt; (#&lt;SXQL-STATEMENT: CREATE TABLE tweet (</code>
+<code class="western">;        id BIGSERIAL NOT NULL PRIMARY KEY,</code>
+<code class="western">;        status TEXT NOT NULL,</code>
+<code class="western">;        user_id BIGINT NOT NULL,</code>
+<code class="western">;        created_at TIMESTAMP,</code>
+<code class="western">;        updated_at TIMESTAMP</code>
+<code class="western">;    )&gt;)</code></pre>
+<p>
+	Теперь вы можете создать или получить <code class="western">TWEET</code> 
+	с помощью объекта <code class="western">USER</code>, а не
+	идентификатора <code class="western">USER-ID</code>.</p>
+
+	<pre class="western"><code class="western">(defvar *user* (mito:create-dao 'user :name &quot;Eitaro Fukamachi&quot;))</code>
+<code class="western">(mito:create-dao 'tweet :user *user*)</code>
+
+<code class="western">(mito:find-dao 'tweet :user *user*)</code></pre>
+<p>
+	Mito не добавляет ограничений внешнего ключа(foreign key) для 
+	ссылок на таблицы.</p>
+
+	<h5 class="western"><a name="one-to-one"></a>Один-к-одному(One-to-one)</h5>
+
+<p>Отношения «один-к-одному» просто представлены простым внешним ключом в слоте 
+	(как: <code class="western">:col-type user</code> в классе
+	<code class="western">tweet</code>). Кроме того, мы можем добавить ограничение
+	уникальности, как в случае с <code class="western">(:unique-keys email)</code>.
+</p>
+
+	<h5 class="western"><a name="one-to-many-many-to-one"></a>Один-ко-многим(One-to-many),
+	Много-к-одному(many-to-one)</h5>
+
+<p>В приведенном выше примере tweet(твита) показана связь/отношение
+	 «один ко многим» между пользователем(user) и его твитами: 
+	пользователь(user) может написать много твитов(tweets), 
+	а твит принадлежит только одному пользователю.</p>
+
+<p>Отношение определяется внешним ключом(foreign key) на стороне «многие», 
+	возвращающейся(устанавливающим связь назад) к стороне «один». 
+	Здесь класс <code class="western">tweet</code>(твита) определяет 
+	внешний ключ <code class="western">user</code>(пользователя), 
+	поэтому твит может иметь только одного пользователя. Вам не нужно 
+	было редактировать класс <code class="western">user</code>(пользователя).</p>
+
+<p>Отношения «многие к одному» на самом деле противоположны отношениям «один ко многим». 
+	Вы должны поместить внешний ключ на соответствующую сторону. </p>
+
+	<h5 class="western"><a name="many-to-many"></a>Многие-ко-многим(Many-to-many)</h5>
+
+<p>Отношение «многие ко многим» требует промежуточной таблицы, которая будет 
+	стороной «многие» для двух таблиц, посредником которых она является.</p>
+
+<p>И благодаря таблице соединений(join table) мы можем хранить больше информации 
+	об отношениях.
+</p>
+
+<p>Давайте определим класс  <code class="western">book</code>:</p>
+
+	<pre class="western"><code class="western">(mito:deftable book ()</code>
+<code class="western">    </code><code class="western">((title :col-type (:varchar 128))</code>
+<code class="western">     </code><code class="western">(ean :col-type (or (:varchar 128) :null))))</code></pre>
+<p>
+	У пользователя может быть много книг, и книга (как название, а не физическая копия), 
+	скорее всего, будет в библиотеке многих людей. Вот промежуточный класс: :</p>
+
+	<pre class="western"><code class="western">(mito:deftable user-books ()</code>
+<code class="western">    </code><code class="western">((user :col-type user)</code>
+<code class="western">     </code><code class="western">(book :col-type book)))</code></pre>
+<p>
+	Каждый раз, когда мы хотим добавить книгу в коллекцию пользователя 
+	(например, в функции <code class="western">add-book</code>), 
+	мы создаем новый объект <code class="western">user-books</code>.</p>
+
+<p>Но у кого-то вполне может быть много экземпляров одной книги. Это информация, 
+	которую мы можем сохранить в таблице соединений: </p>
+
+	<pre class="western"><code class="western">(mito:deftable user-books ()</code>
+<code class="western">    </code><code class="western">((user :col-type user)</code>
+<code class="western">     </code><code class="western">(book :col-type book)</code>
+<code class="western">    </code><code class="western">;; Set the quantity, 1 by default:</code>
+<code class="western">     </code><code class="western">(quantity :col-type :integer)))</code></pre><h4 class="western">
+	<a name="inheritance-and-mixin"></a>Наследование и подмешивание(mixin)</h4>
+
+<p>Подкласс DAO-CLASS может быть унаследован. Это может быть полезно, 
+	когда вам нужны классы с похожими столбцами: </p>
+
+	<pre class="western"><code class="western">(mito:deftable user ()</code>
+<code class="western">  </code><code class="western">((name :col-type (:varchar 64))</code>
+<code class="western">   </code><code class="western">(email :col-type (:varchar 128)))</code>
+<code class="western">  </code><code class="western">(:unique-keys email))</code>
+
+<code class="western">(mito:deftable temporary-user (user)</code>
+<code class="western">  </code><code class="western">((registered-at :col-type :timestamp)))</code>
+
+<code class="western">(mito:table-definition 'temporary-user)</code>
+<code class="western">;=&gt; (#&lt;SXQL-STATEMENT: CREATE TABLE temporary_user (</code>
+<code class="western">;        id BIGSERIAL NOT NULL PRIMARY KEY,</code>
+<code class="western">;        name VARCHAR(64) NOT NULL,</code>
+<code class="western">;        email VARCHAR(128) NOT NULL,</code>
+<code class="western">;        registered_at TIMESTAMP NOT NULL,</code>
+<code class="western">;        created_at TIMESTAMP,</code>
+<code class="western">;        updated_at TIMESTAMP,</code>
+<code class="western">;        UNIQUE (email)</code>
+<code class="western">;    )&gt;)</code></pre>
+<p>
+	Если вам нужен «шаблон» для таблиц, которые не связаны ни с какими 
+	таблицами базы данных, вы можете использовать 
+	<code class="western">DAO-TABLE-MIXIN</code> в форме 
+	<code class="western">defclass</code>. Приведенный ниже класс
+	<code class="western">has-email</code> не создает таблицу. </p>
+
+	<pre class="western"><code class="western">(defclass has-email ()</code>
+<code class="western">  </code><code class="western">((email :col-type (:varchar 128)</code>
+<code class="western">          </code><code class="western">:initarg :email</code>
+<code class="western">          </code><code class="western">:accessor object-email))</code>
+<code class="western">  </code><code class="western">(:metaclass mito:dao-table-mixin)</code>
+<code class="western">  </code><code class="western">(:unique-keys email))</code>
+<code class="western">;=&gt; #&lt;MITO.DAO.MIXIN:DAO-TABLE-MIXIN COMMON-LISP-USER::HAS-EMAIL&gt;</code>
+
+<code class="western">(mito:deftable user (has-email)</code>
+<code class="western">  </code><code class="western">((name :col-type (:varchar 64))))</code>
+<code class="western">;=&gt; #&lt;MITO.DAO.TABLE:DAO-TABLE-CLASS COMMON-LISP-USER::USER&gt;</code>
+
+<code class="western">(mito:table-definition 'user)</code>
+<code class="western">;=&gt; (#&lt;SXQL-STATEMENT: CREATE TABLE user (</code>
+<code class="western">;       id BIGSERIAL NOT NULL PRIMARY KEY,</code>
+<code class="western">;       name VARCHAR(64) NOT NULL,</code>
+<code class="western">;       email VARCHAR(128) NOT NULL,</code>
+<code class="western">;       created_at TIMESTAMP,</code>
+<code class="western">;       updated_at TIMESTAMP,</code>
+<code class="western">;       UNIQUE (email)</code>
+<code class="western">;   )&gt;)</code></pre>
+<p>
+	Смотрите больше примеров использования в. 
+	<a href="https://github.com/fukamachi/mito-auth/">mito-auth</a>.</p>
+
+	<h4 class="western"><a name="troubleshooting"></a>Исправление проблем</h4>
+	<h5 class="western"><a name="cannot-change-class-objects-into-class-metaobjects"></a>
+	«Невозможно ИЗМЕНИТЬ объекты КЛАССА в метаобъекты КЛАССА»
+	(Cannot CHANGE-CLASS objects into CLASS metaobjects)</h5>
+
+<p>Если вы получили следующее сообщение об ошибке: </p>
+
+	<pre class="western"><code class="western">Cannot CHANGE-CLASS objects into CLASS metaobjects.</code>
+<code class="western">   </code><code class="western">[Condition of type SB-PCL::METAOBJECT-INITIALIZATION-VIOLATION]</code>
+<code class="western">See also:</code>
+<code class="western">  </code><code class="western">The Art of the Metaobject Protocol, CLASS [:initialization]</code></pre>
+<p>
+	это определенно потому, что вы сначала написали определение класса, 
+	а затем добавили метакласс Mito и снова попытались вычислить определение 
+	класса.
+</p>
+
+<p>В этом случае необходимо удалить определение класса из текущего пакета: </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(setf (find-class 'foo) nil)</code></pre>
+<p>
+	или с помощью инспектора Slime, щелкните класс и найдите кнопку «удалить»(remove).</p>
+
+<p>Больше информации <a href="https://stackoverflow.com/questions/38811931/how-to-change-classs-metaclass"> здесь</a>.</p>
+
+	<h3 class="western"><a name="migrations"></a>Миграции</h3>
+
+<p>Мы можем запускать миграции базы данных вручную, как показано ниже, 
+	или мы можем запускать миграции автоматически после изменения определений модели. 
+	Чтобы включить автоматическую миграцию, установите 
+	<code class="western">mito:*auto-migration-mode*</code> в
+	<code class="western">t</code>.</p>
+
+<p>Первым шагом является создание таблиц, если это необходимо: </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(ensure-table-exists 'user)</code></pre>
+<p>
+	затем измените таблицы: </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(mito:migrate-table 'user)</code></pre>
+<p>
+	Вы можете проверить сгенерированный SQL код с помощью 
+	<code class="western">migration-expressions 'class</code>.
+	Например, создаем таблицу <code class="western">user</code>: </p>
+
+	<pre class="western"><code class="western">(ensure-table-exists 'user)</code>
+<code class="western">;-&gt; ;; CREATE TABLE IF NOT EXISTS &quot;user&quot; (</code>
+<code class="western">;       &quot;id&quot; BIGSERIAL NOT NULL PRIMARY KEY,</code>
+<code class="western">;       &quot;name&quot; VARCHAR(64) NOT NULL,</code>
+<code class="western">;       &quot;email&quot; VARCHAR(128),</code>
+<code class="western">;       &quot;created_at&quot; TIMESTAMP,</code>
+<code class="western">;       &quot;updated_at&quot; TIMESTAMP</code>
+<code class="western">;   ) () [0 rows] | MITO.DAO:ENSURE-TABLE-EXISTS</code></pre>
+<p>
+	Нет никаких изменений по сравнению с предыдущим определением пользователя:</p>
+
+	<pre class="western"><code class="western">(mito:migration-expressions 'user)</code>
+<code class="western">;=&gt; NIL</code></pre>
+<p>
+	Теперь давайте добавим уникальное поле <code class="western">email</code>: </p>
+
+	<pre class="western"><code class="western">(mito:deftable user ()</code>
+<code class="western">  </code><code class="western">((name :col-type (:varchar 64))</code>
+<code class="western">   </code><code class="western">(email :col-type (:varchar 128)))</code>
+<code class="western">  </code><code class="western">(:unique-keys email))</code></pre>
+<p>
+	При миграции будет выполнен следующий код: </p>
+
+	<pre class="western"><code class="western">(mito:migration-expressions 'user)</code>
+<code class="western">;=&gt; (#&lt;SXQL-STATEMENT: ALTER TABLE user ALTER COLUMN email TYPE character varying(128), ALTER COLUMN email SET NOT NULL&gt;</code>
+<code class="western">;    #&lt;SXQL-STATEMENT: CREATE UNIQUE INDEX unique_user_email ON user (email)&gt;)</code></pre>
+<p>
+	так что давайте применим его:</p>
+
+	<pre class="western"><code class="western">(mito:migrate-table 'user)</code>
+<code class="western">;-&gt; ;; ALTER TABLE &quot;user&quot; ALTER COLUMN &quot;email&quot; TYPE character varying(128), ALTER COLUMN &quot;email&quot; SET NOT NULL () [0 rows] | MITO.MIGRATION.TABLE:MIGRATE-TABLE</code>
+<code class="western">;   ;; CREATE UNIQUE INDEX &quot;unique_user_email&quot; ON &quot;user&quot; (&quot;email&quot;) () [0 rows] | MITO.MIGRATION.TABLE:MIGRATE-TABLE</code>
+<code class="western">;-&gt; (#&lt;SXQL-STATEMENT: ALTER TABLE user ALTER COLUMN email TYPE character varying(128), ALTER COLUMN email SET NOT NULL&gt;</code>
+<code class="western">;    #&lt;SXQL-STATEMENT: CREATE UNIQUE INDEX unique_user_email ON user (email)&gt;)</code></pre><h3 class="western">
+	<a name="queries"></a>Запросы</h3>
+	<h4 class="western"><a name="creating-objects"></a>Создание объектов</h4>
+
+<p>Мы можем создавать пользовательские объекты с помощью обычного
+<code class="western">make-instance</code>:</p>
+
+	<pre class="western"><code class="western">(defvar me</code>
+<code class="western">  </code><code class="western">(make-instance 'user :name &quot;Eitaro Fukamachi&quot; :email &quot;e.arrows@gmail.com&quot;))</code>
+<code class="western">;=&gt; USER</code></pre>
+<p>
+	Чтобы сохранить его в БД, используйте <code class="western">insert-dao</code>:</p>
+
+	<pre class="western"><code class="western">(mito:insert-dao me)</code>
+<code class="western">;-&gt; ;; INSERT INTO `user` (`name`, `email`, `created_at`, `updated_at`) VALUES (?, ?, ?, ?) (&quot;Eitaro Fukamachi&quot;, &quot;e.arrows@gmail.com&quot;, &quot;2016-02-04T19:55:16.365543Z&quot;, &quot;2016-02-04T19:55:16.365543Z&quot;) [0 rows] | MITO.DAO:INSERT-DAO</code>
+<code class="western">;=&gt; #&lt;USER {10053C4453}&gt;</code></pre>
+<p>
+	Так выполняются сразу два вышеуказанных шага: </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(mito:create-dao 'user :name &quot;Eitaro Fukamachi&quot; :email &quot;e.arrows@gmail.com&quot;)</code></pre>
+<p>
+	Вы не должны экспортировать класс <code class="western">user</code> и 
+	создавать объекты вне его пакета (в любом случае рекомендуется хранить 
+	все операции, связанные с базой данных, например, в пакете и файле 
+	<code class="western">models</code>). Вместо этого вы должны использовать 
+	вспомогательную функцию: </p>
+
+	<pre class="western"><code class="western">(defun make-user (&amp;key name)</code>
+<code class="western">  </code><code class="western">(make-instance 'user :name name))</code></pre><h4 class="western">
+	<a name="updating-fields"></a>Обновление полей</h4>
+	<pre class="western"><code class="western">(setf (slot-value me 'name) &quot;nitro_idiot&quot;)</code>
+<code class="western">;=&gt; &quot;nitro_idiot&quot;</code></pre>
+<p>
+	и сохраним это:</p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(mito:save-dao me)</code></pre><h4 class="western">
+	<a name="deleting"></a>Удаление</h4>
+	<pre class="western"><code class="western">(mito:delete-dao me)</code>
+<code class="western">;-&gt; ;; DELETE FROM `user` WHERE (`id` = ?) (1) [0 rows] | MITO.DAO:DELETE-DAO</code>
+
+<code class="western">;; or:</code>
+<code class="western">(mito:delete-by-values 'user :id 1)</code>
+<code class="western">;-&gt; ;; DELETE FROM `user` WHERE (`id` = ?) (1) [0 rows] | MITO.DAO:DELETE-DAO</code></pre><h4 class="western">
+	<a name="get-the-primary-key-value"></a>Получить значение первичного ключа </h4>
+	<pre class="western"><code class="western">(mito:object-id me)</code>
+<code class="western">;=&gt; 1</code></pre><h4 class="western">
+	<a name="count"></a>Подсчет</h4>
+	<pre class="western"><code class="western">(mito:count-dao 'user)</code>
+<code class="western">;=&gt; 1</code></pre><h4 class="western">
+	<a name="find-one"></a>Найти одного </h4>
+	<pre class="western"><code class="western">(mito:find-dao 'user :id 1)</code>
+<code class="western">;-&gt; ;; SELECT * FROM `user` WHERE (`id` = ?) LIMIT 1 (1) [1 row] | MITO.DB:RETRIEVE-BY-SQL</code>
+<code class="western">;=&gt; #&lt;USER {10077C6073}&gt;</code></pre>
+<p>
+	Итак, вот возможность общих помощников найти объект по заданному ключу: </p>
+
+	<pre class="western"><code class="western">(defgeneric find-user (key-name key-value)</code>
+<code class="western">  </code><code class="western">(:documentation &quot;Retrieves an user from the data base by one of the unique</code>
+<code class="western">keys.&quot;))</code>
+
+<code class="western">(defmethod find-user ((key-name (eql :id)) (key-value integer))</code>
+<code class="western">  </code><code class="western">(mito:find-dao 'user key-value))</code>
+
+<code class="western">(defmethod find-user ((key-name (eql :name)) (key-value string))</code>
+<code class="western">  </code><code class="western">(first (mito:select-dao 'user</code>
+<code class="western">                          </code><code class="western">(sxql:where (:= :name key-value)))))</code></pre><h4 class="western">
+	<a name="find-all"></a>Найти Все</h4>
+
+<p>Используйте макрос <code class="western">select-dao</code>.</p>
+
+<p>Получим список всех пользователей:</p>
+
+	<pre class="western"><code class="western">(mito:select-dao 'user)</code>
+<code class="western">;(#&lt;USER {10077C6073}&gt;)</code>
+<code class="western">;#&lt;SXQL-STATEMENT: SELECT * FROM user&gt;</code></pre><h4 class="western">
+	<a name="find-by-relationship"></a>Найти по отношению</h4>
+
+<p>Как видно выше: </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(mito:find-dao 'tweet :user *user*)</code></pre><h4 class="western">
+	<a name="custom-queries"></a>Пользовательские запросы</h4>
+
+<p>Именно с помощью <code class="western">select-dao</code> вы можете писать 
+	более точные запросы, задавая ему операторы 
+	<a href="https://github.com/fukamachi/sxql">SxQL</a>.</p>
+
+<p>Пример: </p>
+
+	<pre class="western"><code class="western">(select-dao 'tweet</code>
+<code class="western">    </code><code class="western">(where (:like :status &quot;%Japan%&quot;)))</code></pre>
+<p>
+	Другой:</p>
+
+	<pre class="western"><code class="western">(select (:id :name :sex)</code>
+<code class="western">  </code><code class="western">(from (:as :person :p))</code>
+<code class="western">  </code><code class="western">(where (:and (:&gt;= :age 18)</code>
+<code class="western">               </code><code class="western">(:&lt; :age 65)))</code>
+<code class="western">  </code><code class="western">(order-by (:desc :age)))</code></pre>
+<p>
+	Вы можете составлять свои запросы с помощью обычного кода Lisp:</p>
+
+	<pre class="western"><code class="western">(defun find-tweets (&amp;key user)</code>
+<code class="western">  </code><code class="western">(select-dao 'tweet</code>
+<code class="western">    </code><code class="western">(when user</code>
+<code class="western">      </code><code class="western">(where (:= :user user)))</code>
+<code class="western">    </code><code class="western">(order-by :object-created)))</code></pre>
+<p>
+	<code class="western">select-dao</code> - это макрос, который расширяется 
+	до нужной вещи .</p>
+
+<p><strong>Примечание:</strong> если вы не <code class="western">использовали</code> SXQL, 
+	напишите <code class="western">(sxql:where …)</code> и
+	<code class="western">(sxql:order-by …)</code>. 
+	</p>
+
+<p><br/>
+<br/>
+
+	</p>
+
+<p>Вы можете составить свои запросы с помощью синтаксиса обратных кавычек.</p>
+
+<p>Представьте, что вы получаете строку  <code class="western">query</code>(запроса), 
+	которая может состоять из слов, разделенных пробелами, и хотите найти книги, 
+	в названии которых есть одно из этих слов или имя автора. Поиск по запросу 
+	«bob adventure» вернет книгу, в названии которой есть «adventure/приключения» 
+	и «bob» в имени автора или и то, и другое в названии.</p>
+
+<p>Для примера, автор - это строка, а не ссылка на другую таблицу: </p>
+
+	<pre class="western"><code class="western">(mito:deftable book ()</code>
+<code class="western">    </code><code class="western">((title :col-type (:varchar 128))</code>
+<code class="western">     </code><code class="western">(author :col-type (:varchar 128))</code>
+<code class="western">     </code><code class="western">(ean :col-type (or (:varchar 128) :null))))</code></pre>
+<p>
+	Вы хотите добавить предложение, которое ищет каждое слово в обоих полях.</p>
+
+	<pre class="western"><code class="western">(defun find-books (&amp;key query (order :desc))</code>
+<code class="western">  </code><code class="western">&quot;Return a list of books. If a query string is given, search on both the title and the author fields.&quot;</code>
+<code class="western">  </code><code class="western">(mito:select-dao 'book</code>
+<code class="western">    </code><code class="western">(when (str:non-blank-string-p query)</code>
+<code class="western">      </code><code class="western">(sxql:where</code>
+<code class="western">       </code><code class="western">`(:and</code>
+<code class="western">         </code><code class="western">,@(loop for word in (str:words query)</code>
+<code class="western">              </code><code class="western">:collect `(:or (:like :title ,(str:concat &quot;%&quot; word &quot;%&quot;))</code>
+<code class="western">                             </code><code class="western">(:like :authors ,(str:concat &quot;%&quot; word &quot;%&quot;)))))))</code>
+<code class="western">       </code><code class="western">(sxql:order-by `(,order :created-at))))</code></pre>
+<p>
+	Между прочим, мы все еще используем оператор <code class="western">LIKE</code>, 
+	но с не-маленьким набором данных вы захотите использовать систему полнотекстового 
+	поиска своей базы данных</p>
+
+	<h4 class="western"><a name="clauses"></a>Предложения(Clauses)</h4>
+
+<p>См. <a href="https://github.com/fukamachi/sxql#sql-clauses">
+	Документацию по SxQL</a>.</p>
+
+<p>Примеры:</p>
+
+	<pre class="western"><code class="western">(select-dao 'foo</code>
+<code class="western">  </code><code class="western">(where (:and (:&gt; :age 20) (:&lt;= :age 65))))</code>
+<code class="western">(order-by :age (:desc :id))</code>
+<code class="western">(group-by :sex)</code>
+<code class="western">(having (:&gt;= (:sum :hoge) 88))</code>
+<code class="western">(limit 0 10)</code></pre>
+<p>
+	и соединяем(<code class="western">join</code>) и т. д.</p>
+
+	<h4 class="western"><a name="operators"></a>Операторы</h4>
+	<pre class="western"><code class="western">:not</code>
+<code class="western">:is-null, :not-null</code>
+<code class="western">:asc, :desc</code>
+<code class="western">:distinct</code>
+<code class="western">:=, :!=</code>
+<code class="western">:&lt;, :&gt;, :&lt;= :&gt;=</code>
+<code class="western">:a&lt;, :a&gt;</code>
+<code class="western">:as</code>
+<code class="western">:in, :not-in</code>
+<code class="western">:like</code>
+<code class="western">:and, :or</code>
+<code class="western">:+, :-, :* :/ :%</code>
+<code class="western">:raw</code></pre><h3 class="western">
+	<a name="triggers"></a>Триггеры</h3>
+
+<p>Поскольку <code class="western">insert-dao</code>, <code class="western">update-dao</code>
+	и <code class="western">delete-dao</code> определены как обобщенные функции, 
+	вы можете определить для них методы <code class="western">:before</code>,
+	<code class="western">:after</code> или <code class="western">:around</code>, 
+	как и обычную <a href="https://lispcookbook.github.io/cl-cookbook/clos.html#qualifiers-and-method-combination">комбинацию методов</a>.</p>
+
+	<pre class="western"><code class="western">(defmethod mito:insert-dao :before ((object user))</code>
+<code class="western">  </code><code class="western">(format t &quot;~&amp;Adding ~S...~%&quot; (user-name object)))</code>
+
+<code class="western">(mito:create-dao 'user :name &quot;Eitaro Fukamachi&quot; :email &quot;e.arrows@gmail.com&quot;)</code>
+<code class="western">;-&gt; Adding &quot;Eitaro Fukamachi&quot;...</code>
+<code class="western">;   ;; INSERT INTO &quot;user&quot; (&quot;name&quot;, &quot;email&quot;, &quot;created_at&quot;, &quot;updated_at&quot;) VALUES (?, ?, ?, ?) (&quot;Eitaro Fukamachi&quot;, &quot;e.arrows@gmail.com&quot;, &quot;2016-02-16 21:13:47&quot;, &quot;2016-02-16 21:13:47&quot;) [0 rows] | MITO.DAO:INSERT-DAO</code>
+<code class="western">;=&gt; #&lt;USER {100835FB33}&gt;</code></pre><h3 class="western">
+	<a name="inflationdeflation"></a>Инфляция(Inflation)/дефляция(Deflation)</h3>
+
+<p> Инфляция/дефляция - это функция для преобразования значений 
+	между Mito и СУБД. </p>
+
+	<pre class="western"><code class="western">(mito:deftable user-report ()</code>
+<code class="western">  </code><code class="western">((title :col-type (:varchar 100))</code>
+<code class="western">   </code><code class="western">(body :col-type :text</code>
+<code class="western">         </code><code class="western">:initform &quot;&quot;)</code>
+<code class="western">   </code><code class="western">(reported-at :col-type :timestamp</code>
+<code class="western">                </code><code class="western">:initform (local-time:now)</code>
+<code class="western">                </code><code class="western">:inflate #'local-time:universal-to-timestamp</code>
+<code class="western">                </code><code class="western">:deflate #'local-time:timestamp-to-universal)))</code></pre><h3 class="western">
+	<a name="eager-loading"></a>Нетерпеливая/энергичная загрузка</h3>
+
+<p>Одна из головных болей при использовании ORM - это проблема 
+	«N + 1 запроса». </p>
+
+	<pre class="western"><code class="western">;; BAD EXAMPLE</code>
+
+<code class="western">(use-package '(:mito :sxql))</code>
+
+<code class="western">(defvar *tweets-contain-japan*</code>
+<code class="western">  </code><code class="western">(select-dao 'tweet</code>
+<code class="western">    </code><code class="western">(where (:like :status &quot;%Japan%&quot;))))</code>
+
+<code class="western">;; Getting names of tweeted users.</code>
+<code class="western">(mapcar (lambda (tweet)</code>
+<code class="western">          </code><code class="western">(user-name (tweet-user tweet)))</code>
+<code class="western">        </code><code class="western">*tweets-contain-japan*)</code></pre>
+<p>
+	В этом примере отправляется запрос на получение user(пользователя)
+	 типа «SELECT * FROM user WHERE id =?» на каждой итерации.</p>
+
+<p>Чтобы предотвратить эту проблему с производительностью, 
+	добавьте <code class="western">includes</code> в приведенный выше запрос, 
+	который отправит только один запрос WHERE IN вместо N запросов: </p>
+
+	<pre class="western"><code class="western">;; GOOD EXAMPLE with eager loading</code>
+
+<code class="western">(use-package '(:mito :sxql))</code>
+
+<code class="western">(defvar *tweets-contain-japan*</code>
+<code class="western">  </code><code class="western">(select-dao 'tweet</code>
+<code class="western">    </code><code class="western">(includes 'user)</code>
+<code class="western">    </code><code class="western">(where (:like :status &quot;%Japan%&quot;))))</code>
+<code class="western">;-&gt; ;; SELECT * FROM `tweet` WHERE (`status` LIKE ?) (&quot;%Japan%&quot;) [3 row] | MITO.DB:RETRIEVE-BY-SQL</code>
+<code class="western">;-&gt; ;; SELECT * FROM `user` WHERE (`id` IN (?, ?, ?)) (1, 3, 12) [3 row] | MITO.DB:RETRIEVE-BY-SQL</code>
+<code class="western">;=&gt; (#&lt;TWEET {1003513EC3}&gt; #&lt;TWEET {1007BABEF3}&gt; #&lt;TWEET {1007BB9D63}&gt;)</code>
+
+<code class="western">;; No additional SQLs will be executed.</code>
+<code class="western">(tweet-user (first *))</code>
+<code class="western">;=&gt; #&lt;USER {100361E813}&gt;</code></pre><h3 class="western">
+	<a name="schema-versioning"></a>Управление версиями схемы </h3>
+	<pre class="western"><code class="western">$ ros install mito</code>
+<code class="western">$ mito</code>
+<code class="western">Usage: mito command [option...]</code>
+
+<code class="western">Команды:</code>
+<code class="western">    </code><code class="western">generate-migrations</code>
+<code class="western">    </code><code class="western">migrate</code>
+
+<code class="western">Опции:</code>
+<code class="western">    </code><code class="western">-t, --type DRIVER-TYPE          DBI driver type (one of &quot;mysql&quot;, &quot;postgres&quot; or &quot;sqlite3&quot;)</code>
+<code class="western">    </code><code class="western">-d, --database DATABASE-NAME    Database name to use</code>
+<code class="western">    </code><code class="western">-u, --username USERNAME         Username for RDBMS</code>
+<code class="western">    </code><code class="western">-p, --password PASSWORD         Password for RDBMS</code>
+<code class="western">    </code><code class="western">-s, --system SYSTEM             ASDF system to load (several -s's allowed)</code>
+<code class="western">    </code><code class="western">-D, --directory DIRECTORY       Directory path to keep migration SQL files (default: &quot;/Users/nitro_idiot/Programs/lib/mito/db/&quot;)</code>
+<code class="western">    </code><code class="western">--dry-run                       List SQL expressions to migrate</code></pre><h3 class="western">
+	<a name="introspection"></a>Самоанализ(Introspection)</h3>
+
+<p>Mito предоставляет несколько функций для самоанализа.</p>
+
+<p>Мы можем получить доступ к информации о <strong>columns</strong>(столбцах)
+	 с помощью функций в <code class="western">(mito.class.column:...)</code>:</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm"><code class="western">table-column-[class,
+		name, info, not-null-p,...]</code> 
+		</p>
+
+		<li/>
+
+<p><code class="western">primary-key-p</code> 
+		</p>
+
+	</ul>
+
+<p>и то же самое для таблиц с помощью
+	<code class="western">(mito.class.table:...)</code>.</p>
+
+<p>Учитывая, что мы получаем список слотов нашего класса: </p>
+
+	<pre class="western"><code class="western">(ql:quickload &quot;closer-mop&quot;)</code>
+
+<code class="western">(closer-mop:class-direct-slots (find-class 'user))</code>
+<code class="western">;; (#&lt;MITO.DAO.COLUMN:DAO-TABLE-COLUMN-CLASS NAME&gt;</code>
+<code class="western">;;  #&lt;MITO.DAO.COLUMN:DAO-TABLE-COLUMN-CLASS EMAIL&gt;)</code>
+
+<code class="western">(defparameter user-slots *)</code></pre>
+<p>
+	Мы можем ответить на следующие вопросы:</p>
+
+	<h4 class="western"><a name="what-is-the-type-of-this-column-"></a>Какого типа эта
+	колонка(column) ?</h4>
+	<pre class="western"><code class="western">(mito.class.column:table-column-type (first user-slots))</code>
+<code class="western">;; (:VARCHAR 64)</code></pre><h4 class="western">
+	<a name="is-this-column-nullable-"></a>Допускается ли в этом столбце NULL? </h4>
+	<pre class="western"><code class="western">(mito.class.column:table-column-not-null-p</code>
+<code class="western">  </code><code class="western">(first user-slots))</code>
+<code class="western">;; T</code>
+<code class="western">(mito.class.column:table-column-not-null-p</code>
+<code class="western">  </code><code class="western">(second user-slots))</code>
+<code class="western">;; NIL</code></pre><h3 class="western">
+	<a name="testing"></a>Тестирование</h3>
+
+<p>Мы не хотим проверять операции с БД на производственной БД. Нам нужно 
+	создавать временную базу данных перед каждым тестом.</p>
+
+<p>Приведенный ниже макрос создает временную базу данных со случайным именем, 
+	создает таблицы, запускает код и подключается обратно к исходному подключению 
+	к базе данных.</p>
+
+	<pre class="western"><code class="western">(defpackage my-test.utils</code>
+<code class="western">  </code><code class="western">(:use :cl)</code>
+<code class="western">  </code><code class="western">(:import-from :my.models</code>
+<code class="western">                </code><code class="western">:*db*</code>
+<code class="western">                </code><code class="western">:*db-name*</code>
+<code class="western">                </code><code class="western">:connect</code>
+<code class="western">                </code><code class="western">:ensure-tables-exist</code>
+<code class="western">                </code><code class="western">:migrate-all)</code>
+<code class="western">  </code><code class="western">(:export :with-empty-db))</code>
+
+<code class="western">(in-package my-test.utils)</code>
+
+<code class="western">(defun random-string (length)</code>
+<code class="western">  </code><code class="western">;; thanks 40ants/hacrm.</code>
+<code class="western">  </code><code class="western">(let ((chars &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;))</code>
+<code class="western">    </code><code class="western">(coerce (loop repeat length</code>
+<code class="western">                  </code><code class="western">collect (aref chars (random (length chars))))</code>
+<code class="western">            </code><code class="western">'string)))</code>
+
+<code class="western">(defmacro with-empty-db (&amp;body body)</code>
+<code class="western">  </code><code class="western">&quot;Run `body` with a new temporary DB.&quot;</code>
+<code class="western">  </code><code class="western">`(let* ((*random-state* (make-random-state t))</code>
+<code class="western">          </code><code class="western">(prefix (concatenate 'string</code>
+<code class="western">                               </code><code class="western">(random-string 8)</code>
+<code class="western">                               </code><code class="western">&quot;/&quot;))</code>
+<code class="western">          </code><code class="western">;; Save our current DB connection.</code>
+<code class="western">          </code><code class="western">(connection mito:*connection*))</code>
+<code class="western">     </code><code class="western">(uiop:with-temporary-file (:pathname name :prefix prefix)</code>
+<code class="western">       </code><code class="western">;; Bind our *db-name* to a new name, so as to create a new DB.</code>
+<code class="western">       </code><code class="western">(let* ((*db-name* name))</code>
+<code class="western">         </code><code class="western">;; Always re-connect to our real DB even in case of error in body.</code>
+<code class="western">         </code><code class="western">(unwind-protect</code>
+<code class="western">           </code><code class="western">(progn</code>
+<code class="western">             </code><code class="western">;; our functions to connect to the DB, create the tables and run the migrations.</code>
+<code class="western">             </code><code class="western">(connect)</code>
+<code class="western">             </code><code class="western">(ensure-tables-exist)</code>
+<code class="western">             </code><code class="western">(migrate-all)</code>
+<code class="western">             </code><code class="western">,@body)</code>
+
+<code class="western">           </code><code class="western">(setf mito:*connection* connection))))))</code></pre>
+<p>
+	Используйте это так: </p>
+
+	<pre class="western"><code class="western">(prove:subtest &quot;Creation in a temporary DB.&quot;</code>
+<code class="western">  </code><code class="western">(with-empty-db</code>
+<code class="western">    </code><code class="western">(let ((user (make-user :name &quot;Cookbook&quot;)))</code>
+<code class="western">      </code><code class="western">(save-user user)</code>
+
+<code class="western">      </code><code class="western">(prove:is (name user)</code>
+<code class="western">                </code><code class="western">&quot;Cookbook&quot;</code>
+<code class="western">                </code><code class="western">&quot;Test username in a temp DB.&quot;))))</code>
+<code class="western">;; Creation in a temporary DB</code>
+<code class="western">;;  CREATE TABLE &quot;user&quot; (</code>
+<code class="western">;;       id BIGSERIAL NOT NULL PRIMARY KEY,</code>
+<code class="western">;;       name VARCHAR(64) NOT NULL,</code>
+<code class="western">;;       email VARCHAR(128) NOT NULL,</code>
+<code class="western">;;       created_at TIMESTAMP,</code>
+<code class="western">;;       updated_at TIMESTAMP,</code>
+<code class="western">;;       UNIQUE (email)</code>
+<code class="western">;; ) () [0 rows] | MITO.DB:EXECUTE-SQL</code>
+<code class="western">;; â Test username in a temp DB.</code></pre><h2 class="western">
+	<a name="see-also"></a>Смотрите также </h2>
+	<ul>
+		<li/>
+
+<p><a href="https://sites.google.com/site/sabraonthehill/postmodern-examples/exploring-a-database">exploring
+		an existing (PostgreSQL) database with postmodern</a></p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://github.com/fukamachi/mito-attachment">mito-attachment</a>
+				</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://github.com/fukamachi/mito-auth">mito-auth</a>
+				</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://github.com/fukamachi/can/">can</a>
+		a role-based access right control library 
+		</p>
+
+		<li/>
+
+<p>an advanced <a href="https://lispcookbook.github.io/cl-cookbook/drafts/defmodel.lisp.html">âdefmodelâ
+		macro</a>. 
+		</p>
+
+	</ul>
+</div>
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

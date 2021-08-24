@@ -1,0 +1,1872 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-14T12:54:15.807147575"/>
+	<meta name="changed" content="2021-08-14T13:09:42.297885361"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Учебник по CLOS</h1>
+
+<p><em>Мы только что обновили страницу <a href="https://lispcookbook.github.io/cl-cookbook/clos.html">CLOS в Поваренной книге Common Lisp</a>. Вам следует обращаться к ней за обновлениями.
+</em></p>
+
+<p>CLOS - это «объектная система Common Lisp», возможно, одна из самых мощных объектных систем, доступных на любом языке.</p>
+
+<p>Некоторые из её функций включают: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">она <strong>динамична</strong>, поэтому работать 
+	с ней в Lisp REPL очень приятно. Например, изменение определения класса обновит 
+	существующие объекты с учетом определенных правил, которые мы контролируем. 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">поддерживает 
+	<strong>множественную отправку(multiple dispatch)</strong> и 
+	<strong>множественное наследование</strong>, 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">она отличается от большинства объектных систем тем, 
+	что определения классов и методов не связаны друг с другом, 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"> обладает отличными способностями к 
+	<strong>introspection</strong>(самоанализу), 
+	</p>
+
+	<li/>
+
+<p> она предоставляется <strong>метаобъектным протоколом</strong>, который 
+	обеспечивает стандартный интерфейс для CLOS и может использоваться 
+	для создания новых объектных систем. 
+	</p>
+
+</ul>
+
+<p>Функциональность, принадлежащая этому названию, была добавлена к 
+языку Common Lisp в период между публикацией первого издания Стила 
+«Common Lisp, the Language» в 1984 году и формализацией языка в качестве 
+стандарта ANSI десять лет спустя.</p>
+
+<p>Эта страница призвана дать хорошее представление о том, как использовать CLOS, 
+но только краткое введение в MOP.
+</p>
+
+<p>Для углубленного изучения предметов вам понадобятся две книги: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="http://www.communitypicks.com/r/lisp/s/17592186046723-object-oriented-programming-in-common-lisp-a-programmer">Object-Oriented
+	Programming in Common Lisp: a Programmerâs Guide to CLOS</a>, by
+	Sonya Keene, 
+	</p>
+
+	<li/>
+
+<p><a href="http://www.communitypicks.com/r/lisp/s/17592186045709-the-art-of-the-metaobject-protocol">the
+	Art of the Metaobject Protocol</a>, by Gregor Kiczales, Jim des
+	RiviÃ¨res et al. 
+	</p>
+
+</ul>
+
+<p>Но Также смотрите</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">введение в <a href="http://www.gigamonkeys.com/book/object-reorientation-generic-functions.html">Practical
+	Common Lisp</a> (online), by Peter Seibel. 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node260.html#SECTION003200000000000000000">Common
+	Lisp, the Language</a> 
+	</p>
+
+	<li/>
+
+<p> и для справки, полные  <a href="https://clos-mop.hexstreamsoft.com/">CLOS-MOP
+	спецификации</a>. 
+	</p>
+
+</ul>
+
+<p><strong>Оглавление</strong></p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#classes-and-instances"> Классы и экземпляры</a> 
+	</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#diving-in">Погружение в</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#creating-objects-make-instance">Создание объектов (make-instance)</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#slots"> Слоты</a>
+				</p>
+
+		<ul>
+			<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#a-function-that-always-works-slot-value"> Функция, которая всегда работает (slot-value)</a> 
+			</p>
+
+			<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#initial-and-default-values-initarg-initform">Начальные значения и значения по умолчанию (initarg, initform)</a> 
+			</p>
+
+			<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#getters-and-setters-accessor-reader-writer"> Геттеры(Getters) и сеттеры(setters) 
+	(аксессор(accessor), считыватель(reader), писатель(writer))</a> 
+			</p>
+
+			<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#class-vs-instance-slots">Класс против слотов экземпляра</a> 
+			</p>
+
+			<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#slot-documentation"> Документация по слоту</a> 
+			</p>
+
+			<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#slot-type">Тип слота </a> 
+			</p>
+
+		</ul>
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#find-class-class-name-class-of">find-class,
+		class-name, class-of</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#subclasses-and-inheritance">Подклассы и наследование</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#multiple-inheritance">Множественное наследование</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#redefining-and-changing-a-class">Переопределение и изменение класса</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#pretty-printing">Красивая печать</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#classes-of-traditional-lisp-types">Классы традиционных типов lisp</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#introspection">Самоанализ(Introspection)</a>
+				</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#see-also">Смотрите также</a> 
+		</p>
+
+		<ul>
+			<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#defclassstd-write-shorter-classes">defclass/std: писать более короткие классы </a> 
+			</p>
+
+		</ul>
+	</ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#methods">Методы</a>
+		</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#diving-in">Погружение в</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#generic-functions-defgeneric-defmethod"> Обобщенные функции (defgeneric, defmethod)</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#multimethods"> Мультиметоды</a>
+				</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#controlling-setters-setf-ing-methods">Управление сеттерами (методы setf)</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#dispatch-mechanism-and-next-methods">Механизм отправки и методы next(следующий)
+</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#method-qualifiers-before-after-around">Квалификаторы метода (before(до), after(после), around(вокруг))</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#other-method-combinations">Другие комбинации методов</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#debugging-tracing-method-combination">Отладка: трассировка комбинации методов </a> 
+		</p>
+
+	</ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#mop">MOP</a>
+		</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#metaclasses">Метаклассы</a>
+				</p>
+
+		<li/>
+
+<p><a href="https://lisp-journey.gitlab.io/blog/clos-tutorial/#controlling-the-initialization-of-instances-initialize-instance">  Управление инициализацией экземпляров (initialize-instance)</a> 
+		</p>
+
+	</ul>
+</ul>
+<h1 class="western"><a name="classes-and-instances"></a>Классы и экземпляры</h1>
+<h2 class="western"><a name="diving-in"></a>Погружение в</h2>
+
+<p>Давайте рассмотрим пример, показывающий определение класса, создание объектов, доступ к слотам, методы специализированные для данного класса, и наследование.</p>
+
+<pre class="western"><code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name</code>
+<code class="western">    </code><code class="western">:initarg :name</code>
+<code class="western">    </code><code class="western">:accessor name)</code>
+<code class="western">   </code><code class="western">(lisper</code>
+<code class="western">    </code><code class="western">:initform nil</code>
+<code class="western">    </code><code class="western">:accessor lisper)))</code>
+
+<code class="western">;; =&gt; #&lt;STANDARD-CLASS PERSON&gt;</code>
+
+<code class="western">(defvar p1 (make-instance 'person :name &quot;me&quot; ))</code>
+<code class="western">;;                                 ^^^^ initarg</code>
+<code class="western">;; =&gt; #&lt;PERSON {1006234593}&gt;</code>
+
+<code class="western">(name p1)</code>
+<code class="western">;;^^^ accessor</code>
+<code class="western">;; =&gt; &quot;me&quot;</code>
+
+<code class="western">(lisper p1)</code>
+<code class="western">;; =&gt; nil</code>
+<code class="western">;;    ^^ initform (slot unbound by default)</code>
+
+<code class="western">(setf (lisper p1) t)</code>
+
+<code class="western">(defclass child (person)</code>
+<code class="western">  </code><code class="western">())</code>
+
+<code class="western">(defclass child (person)</code>
+<code class="western">  </code><code class="western">((can-walk-p</code>
+<code class="western">     </code><code class="western">:accessor can-walk-p</code>
+<code class="western">     </code><code class="western">:initform t)))</code>
+<code class="western">;; #&lt;STANDARD-CLASS CHILD&gt;</code>
+
+<code class="western">(can-walk-p (make-instance 'child))</code>
+<code class="western">;; T</code></pre><h2 class="western">
+<a name="defining-classes-defclass"></a>Определение классов (defclass)</h2>
+
+<p>Макрос, используемый для определения новых типов данных в CLOS, - это 
+ <code class="western">defclass</code>.</p>
+
+<p>Мы использовали его так: </p>
+
+<pre class="western"><code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name</code>
+<code class="western">    </code><code class="western">:initarg :name</code>
+<code class="western">    </code><code class="western">:accessor name)</code>
+<code class="western">   </code><code class="western">(lisper</code>
+<code class="western">    </code><code class="western">:initform nil</code>
+<code class="western">    </code><code class="western">:accessor lisper)))</code></pre>
+<p>
+Это дает нам тип (или класс) CLOS с именем <code class="western">person</code> и два слота с именами  <code class="western">name</code> и <code class="western">lisper</code>.</p>
+
+<pre class="western"><code class="western">(class-of p1)</code>
+<code class="western">#&lt;STANDARD-CLASS PERSON&gt;</code>
+
+<code class="western">(type-of p1)</code>
+<code class="western">PERSON</code></pre>
+<p>
+Общая форма  <code class="western">defclass</code> это:</p>
+
+<pre class="western"><code class="western">(defclass &lt;class-name&gt; (list of super classes)</code>
+<code class="western">  </code><code class="western">((slot-1</code>
+<code class="western">     </code><code class="western">:slot-option slot-argument)</code>
+<code class="western">   </code><code class="western">(slot-2, etc))</code>
+<code class="western">  </code><code class="western">(:optional-class-option</code>
+<code class="western">   </code><code class="western">:another-optional-class-option))</code></pre>
+<p>
+Итак, наш класс <code class="western">person</code> не наследуется явно от другого класса 
+(это видно по пустым круглым скобкам <code class="western">()</code>). Однако он 
+по-прежнему наследуется по умолчанию от класса <code class="western">t</code> и от 
+<code class="western">standard-object</code> См. Ниже в разделе «наследование».</p>
+
+<p>Мы могли бы написать минимальное определение класса без таких опций слотов,
+как здесь: </p>
+
+<pre class="western"><code class="western">(defclass point ()</code>
+<code class="western">  </code><code class="western">(x y z))</code></pre>
+<p>
+или даже без спецификаторов слотов: <code class="western">(defclass
+point () ())</code>.</p>
+
+<h2 class="western"><a name="creating-objects-make-instance"></a>Создение Объектов (make-instance)</h2>
+
+<p>Мы создаем экземпляры класса с помощью  <code class="western">make-instance</code>:</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(defvar p1 (make-instance 'person :name &quot;me&quot; ))</code></pre>
+<p>
+Обычно рекомендуется определять конструктор: </p>
+
+<pre class="western"><code class="western">(defun make-person (name &amp;key lisper)</code>
+<code class="western">  </code><code class="western">(make-instance 'person :name name :lisper lisper))</code></pre>
+<p>
+Это дает прямое преимущество в том, что вы можете контролировать требуемые аргументы. 
+Теперь вы должны экспортировать конструктор из вашего пакета, а не сам класс. </p>
+
+<h2 class="western"><a name="slots"></a>Слоты</h2>
+<h3 class="western"><a name="a-function-that-always-works-slot-value"></a>
+Функция, которая всегда работает (slot-value)</h3>
+
+<p>Функция для доступа к любому слоту в любое время:  <code class="western">(slot-value
+&lt;object&gt; &lt;slot-name&gt;)</code>.</p>
+
+<p>Учитывая наш вышеупомянутый класс <code class="western">point</code>, который не 
+определял никаких способов доступа к слотам(акцессоров/accessors): </p>
+
+<pre class="western"><code class="western">(defvar pt (make-instance 'point))</code>
+
+<code class="western">(inspect pt)</code>
+<code class="western">The object is a STANDARD-OBJECT of type POINT.</code>
+<code class="western">0. X: &quot;unbound&quot;</code>
+<code class="western">1. Y: &quot;unbound&quot;</code>
+<code class="western">2. Z: &quot;unbound&quot;</code></pre>
+<p>
+У нас есть объект типа <code class="western">POINT</code>, но  <strong>по умолчанию 
+слоты не связаны</strong>(не имеют связаного значения): попытка доступа к ним вызовет 
+условие <code class="western">UNBOUND-SLOT</code>: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(slot-value pt 'x) ;; =&gt; condition: the slot is unbound</code></pre>
+<p>
+<code class="western">slot-value</code>  является доступной для <code class="western">setf</code>:</p>
+
+<pre class="western"><code class="western">(setf (slot-value pt 'x) 1)</code>
+<code class="western">(slot-value pt 'x) ;; =&gt; 1</code></pre><h3 class="western">
+<a name="initial-and-default-values-initarg-initform"></a>Начальные значения и
+значения по умолчанию (initarg, initform)</h3>
+<ul>
+	<li/>
+
+<p><code class="western">:initarg :foo</code>  - ключевое слово, которое мы 
+	можем передать <code class="western">make-instance</code>, чтобы присвоить 
+	значение этому слоту:  
+	</p> 
+
+</ul>
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(make-instance 'person :name &quot;me&quot;)</code></pre>
+<p>
+(еще раз: слоты по умолчанию не связаны)</p>
+
+<ul>
+	<li/>
+
+<p><code class="western">:initform &lt;val&gt;</code> - <em>значение по умолчанию</em>, 
+	если мы не указали initarg. Эта форма вычисляется каждый раз, когда это необходимо, 
+	в лексической окружении <code class="western">defclass</code>. 
+	</p>
+
+</ul>
+
+<p>Иногда мы видим следующий трюк, чтобы явно потребовать слот: </p>
+
+<pre class="western"><code class="western">(defclass foo ()</code>
+<code class="western">    </code><code class="western">((a</code>
+<code class="western">      </code><code class="western">:initarg :a</code>
+<code class="western">      </code><code class="western">:initform (error &quot;you didn't supply an initial value for slot a&quot;))))</code>
+<code class="western">;; #&lt;STANDARD-CLASS FOO&gt;</code>
+
+<code class="western">(make-instance 'foo) ;; =&gt; enters the debugger.</code></pre><h3 class="western">
+<a name="getters-and-setters-accessor-reader-writer"></a>Геттеры-функции выдающие значение
+слота(Getters) и сеттеры-функции устанавливающи(привязывающие) значения слотов(setters) 
+(аксессор(accessor), считыватель(reader), писатель(writer))</h3>
+<ul>
+	<li/>
+
+<p><code class="western">:accessor foo</code>: Аксессор является одновременно 
+	<strong>геттером/getter</strong> и <strong>setter/сеттером</strong>. 
+	Его аргумент - это имя, которое станет <strong>обобщенной функцией/generic function</strong>.
+		</p>
+
+</ul>
+<pre class="western"><code class="western">(name p1) ;; =&gt; &quot;me&quot;</code>
+
+<code class="western">(type-of #'name)</code>
+<code class="western">STANDARD-GENERIC-FUNCTION</code></pre>
+<ul>
+	<li/>
+
+<p><code class="western">:reader</code> и <code class="western">:writer</code>
+	делают то, что вы ожидаете. Только <code class="western">:writer</code> 
+	может быть использован в <code class="western">:writer</code>
+	<code class="western">setf</code>. 
+	</p>
+
+</ul>
+
+<p>Если вы не укажете ни один из них, вы все равно можете использовать значение  
+<code class="western">slot-value</code>.</p>
+
+<p>Вы можете назначить слоту более одного <code class="western">:accessor</code>,
+<code class="western">:reader</code> или <code class="western">:initarg</code>.
+.</p>
+
+<p>Мы вводим два макроса, чтобы в некоторых ситуациях сделать доступ к слотам короче: </p>
+
+<p>1- <code class="western">with-slots</code> позволяет сокращать несколько 
+обращений к slot-value. Первый аргумент - это список имён слотов. Второй аргумент 
+вычисляется как экземпляр CLOS. За этим следуют необязательные объявления и неявный  progn.
+Лексически во время вычисления тела доступ к любому из этих имен в качестве переменной 
+эквивалентен доступу к соответствующему слоту экземпляра с помощью 
+<code class="western">slot-value</code>.</p>
+
+<pre class="western"><code class="western">(with-slots (name lisper)</code>
+<code class="western">    </code><code class="western">c1</code>
+<code class="western">  </code><code class="western">(format t &quot;got ~a, ~a~&amp;&quot; name lisper))</code></pre>
+<p>
+или</p>
+
+<pre class="western"><code class="western">(with-slots ((n name)</code>
+<code class="western">             </code><code class="western">(l lisper))</code>
+<code class="western">    </code><code class="western">c1</code>
+<code class="western">  </code><code class="western">(format t &quot;got ~a, ~a~&amp;&quot; n l))</code></pre>
+<p>
+2- <code class="western">with-accessors</code> эквивалентен, но вместо списка слотов 
+он принимает список функций доступа. Любая ссылка на переменную внутри макроса эквивалентна 
+вызову функции доступа. </p>
+
+<pre class="western"><code class="western">(with-accessors ((name        name)</code>
+<code class="western">                  </code><code class="western">^^variable  ^^accessor</code>
+<code class="western">                 </code><code class="western">(lisper lisper))</code>
+<code class="western">            </code><code class="western">p1</code>
+<code class="western">          </code><code class="western">(format t &quot;name: ~a, lisper: ~a&quot; name lisper))</code></pre><h3 class="western">
+<a name="class-vs-instance-slots"></a>Слоты класса и слоты экземпляра</h3>
+
+<p><code class="western">:allocation</code> указывает, является ли этот слот <em>local</em>(локальным) или <em>shared</em>(общим).</p>
+
+<ul>
+	<li/>
+
+<p>по умолчанию слот является <em>local</em>(локальным), это означает, 
+что он может быть индивидуальным для каждого экземпляра класса. В этом случае 
+<code class="western">:allocation</code> равно <code class="western">:instance</code>.</p>
+
+	<li/>
+
+<p> общий слот(<em>shared</em>) всегда будет одинаковым для всех экземпляров класса. 
+Мы устанавливаем его с помощью  <code class="western">:allocation
+	:class</code>.</p>
+
+</ul>
+
+<p>В следующем примере обратите внимание, как изменение значения 
+<code class="western">p2</code> указанного как слот класса влияет 
+на все экземпляры класса (независимо от того, существуют ли эти экземпляры). </p>
+
+<pre class="western"><code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name :initarg :name :accessor name)</code>
+<code class="western">   </code><code class="western">(species</code>
+<code class="western">      </code><code class="western">:initform 'homo-sapiens</code>
+<code class="western">      </code><code class="western">:accessor species</code>
+<code class="western">      </code><code class="western">:allocation :class)))</code>
+
+<code class="western">;; Note that the slot &quot;lisper&quot; was removed in existing instances.</code>
+<code class="western">(inspect p1)</code>
+<code class="western">;; The object is a STANDARD-OBJECT of type PERSON.</code>
+<code class="western">;; 0. NAME: &quot;me&quot;</code>
+<code class="western">;; 1. SPECIES: HOMO-SAPIENS</code>
+<code class="western">;; &gt; q</code>
+
+<code class="western">(defvar p2 (make-instance 'person))</code>
+
+<code class="western">(species p1)</code>
+<code class="western">(species p2)</code>
+<code class="western">;; HOMO-SAPIENS</code>
+
+<code class="western">(setf (species p2) 'homo-numericus)</code>
+<code class="western">;; HOMO-NUMERICUS</code>
+
+<code class="western">(species p1)</code>
+<code class="western">;; HOMO-NUMERICUS</code>
+
+<code class="western">(species (make-instance 'person))</code>
+<code class="western">;; HOMO-NUMERICUS</code>
+
+<code class="western">(let ((temp (make-instance 'person)))</code>
+<code class="western">    </code><code class="western">(setf (species temp) 'homo-lisper))</code>
+<code class="western">;; HOMO-LISPER</code>
+<code class="western">(species (make-instance 'person))</code>
+<code class="western">;; HOMO-LISPER</code></pre><h3 class="western">
+<a name="slot-documentation"></a>Документация по слоту</h3>
+
+<p>Каждый слот принимает одну опцию  <code class="western">:documentation</code>.
+</p>
+
+<h3 class="western"><a name="slot-type"></a>Тип Слота</h3>
+
+<p>Параметр слота <code class="western">:type</code> может не работать так, как вы ожидаете. 
+Если вы новичок в CLOS, мы предлагаем вам пропустить этот раздел и использовать свои 
+собственные конструкторы для проверки типов слотов вручную.
+</p>
+
+<p>Действительно, проверяются ли типы слотов или нет, не определено. 
+См. <a href="http://www.lispworks.com/documentation/HyperSpec/Body/m_defcla.htm#defclass">Hyperspec</a>.</p>
+
+<p>Несколько реализаций будут делать это. Clozure CL делает это, 
+SBCL делает это, когда безопасность высока 
+ (<code class="western">(declaim (optimize safety))</code>).</p>
+
+<p>Чтобы сделать это в противном случае, см.  
+<a href="https://stackoverflow.com/questions/51723992/how-to-force-slots-type-to-be-checked-during-make-instance">Этот ответ на Stack-Overflow</a>, а также см. библиотеку программирования контрактов - <a href="https://github.com/sellout/quid-pro-quo">quid-pro-quo</a>. </p>
+
+<h2 class="western"><a name="find-class-class-name-class-of"></a>find-class,
+class-name, class-of</h2>
+<pre class="western"><code class="western">(find-class 'point)</code>
+<code class="western">;; #&lt;STANDARD-CLASS POINT 275B78DC&gt;</code>
+
+<code class="western">(class-name (find-class 'point))</code>
+<code class="western">;; POINT</code>
+
+<code class="western">(class-of my-point)</code>
+<code class="western">;; #&lt;STANDARD-CLASS POINT 275B78DC&gt;</code>
+
+<code class="western">(typep my-point (class-of my-point))</code>
+<code class="western">;; T</code></pre>
+<p>
+Классы CLOS также являются экземплярами  CLOS class, и мы можем узнать, 
+что это за класс, как в примере ниже: </p>
+
+<pre class="western"><code class="western">(class-of (class-of my-point))</code>
+<code class="western">;; #&lt;STANDARD-CLASS STANDARD-CLASS 20306534&gt;</code></pre>
+<p>
+<u>Примечание</u>: это ваше первое знакомство с MOP. Для начала работы с ООП оно не обязательно!</p>
+
+<p>Объект <code class="western">my-point</code> является экземпляром класса 
+с именем <code class="western">point</code>, и класс с именем <code class="western">point</code>
+сам является экземпляром класса с именем <code class="western">standard-class</code>. 
+Мы говорим, что класс с именем <code class="western">standard-class</code> является 
+метаклассом (т. е. Классом класса) <code class="western">my-point</code>. 
+Мы можем эффективно использовать метаклассы, как мы увидим позже. </p>
+
+<h2 class="western"><a name="subclasses-and-inheritance"></a>Подклассы и наследование</h2>
+
+<p>Как показано выше,  <code class="western">child</code>- это подкласс
+<code class="western">person</code>.</p>
+
+<p>Все объекты наследуются от класса  <code class="western">standard-object</code> и
+<code class="western">t</code>.</p>
+
+<p>Каждый дочерний экземпляр также является экземпляром
+ <code class="western">person</code>.</p>
+
+<pre class="western"><code class="western">(type-of c1)</code>
+<code class="western">;; CHILD</code>
+
+<code class="western">(subtypep (type-of c1) 'person)</code>
+<code class="western">;; T</code>
+
+<code class="western">(ql:quickload &quot;closer-mop&quot;)</code>
+<code class="western">;; ...</code>
+
+<code class="western">(closer-mop:subclassp (class-of c1) 'person)</code>
+<code class="western">;; T</code></pre>
+<p>
+Библиотека <a href="https://github.com/pcostanza/closer-mop">closer-mop</a> - 
+это портативный способ выполнения операций CLOS/MOP.</p>
+
+<p>Подкласс наследует все свои родительские слоты и может переопределить 
+любые параметры их слотов. Common Lisp делает этот процесс динамичным, 
+отлично подходит для сеанса REPL, и мы даже можем контролировать его части 
+(например, делать что-то, когда данный слот удаляется/обновляется/добавляется и т. Д.).</p>
+
+<p>Таким образом, <strong>class precedence list</strong>(список предшествования класса) для
+<code class="western">child</code>: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">child &lt;- person &lt;-- standard-object &lt;- t</code></pre>
+<p>
+Который мы можем получить с помощью: </p>
+
+<pre class="western"><code class="western">(closer-mop:class-precedence-list (class-of c1))</code>
+<code class="western">;; (#&lt;standard-class child&gt;</code>
+<code class="western">;;  #&lt;standard-class person&gt;</code>
+<code class="western">;;  #&lt;standard-class standard-object&gt;</code>
+<code class="western">;;  #&lt;sb-pcl::slot-class sb-pcl::slot-object&gt;</code>
+<code class="western">;;  #&lt;sb-pcl:system-class t&gt;)</code></pre>
+<p>
+Однако <strong>direct superclass</strong>(непосредственным/прямым суперклассом) для
+ <code class="western">child</code> является только: </p>
+
+<pre class="western"><code class="western">(closer-mop:class-direct-superclasses (class-of c1))</code>
+<code class="western">;; (#&lt;standard-class person&gt;)</code></pre>
+<p>
+Мы можем дополнительно проверить наши классы с помощью 
+<code class="western">class-direct-[subclasses, slots, default-initargs]</code> и 
+многих других функций.</p>
+
+<p>Слоты комбинируются по следующим некоторым правилам: </p>
+
+<ul>
+	<li/>
+
+<p><code class="western">:accessor</code> и <code class="western">:reader</code>
+	комбинируются путем <strong>union</strong>(объединения) средств доступа(accessor) 
+	и чтения(readers) из всех унаследованных слотов.
+</p>
+
+	<li/>
+
+<p><code class="western">:initarg</code>:  объединяются(<strong>union</strong>)
+	аргументы инициализации от всех унаследованных слотов.</p>
+
+	<li/>
+
+<p><code class="western">:initform</code>: мы получаем <strong>наиболее конкретную форму</strong>
+	начального значения по умолчанию, то есть первую форму 
+	<code class="western">:initform</code> для этого слота в списке предшествования.
+</p>
+
+	<li/>
+
+<p><code class="western">:allocation</code>  не наследуется. Она контролируется 
+	исключительно определяемым классом и по умолчанию
+	<code class="western">:instance</code>.</p>
+
+</ul>
+
+<p>И последнее, но не менее важное: имейте в виду, что наследованием 
+довольно легко злоупотребить, а множественное наследование умножает(это злоупотребление), 
+поэтому, пожалуйста, будьте осторожны. Спросите себя, действительно ли 
+<code class="western">foo</code> хочет наследовать от <code class="western">bar</code> 
+или экземплярам <code class="western">foo</code> нужен слот, содержащий 
+<code class="western">bar</code>. Хорошее общее руководство состоит в том, 
+что если  <code class="western">foo</code> и <code class="western">bar</code> - 
+это «вещи одного типа», то правильно смешивать их вместе посредством наследования, 
+но если это действительно отдельные концепции, то вы должны использовать слоты, 
+чтобы разделять их. </p>
+
+<h2 class="western"><a name="multiple-inheritance"></a>Множественное наследование</h2>
+
+<p>CLOS поддерживает множественное наследование.</p>
+
+<pre class="western"><code class="western">(defun baby (child person)</code>
+<code class="western">  </code><code class="western">())</code></pre>
+<p>
+Первый класс в списке родительских классов является наиболее конкретным, 
+<code class="western">child</code>(дочерние) слоты будут иметь приоритет 
+<code class="western">person</code></p>
+
+<p>TODO (но помните, как объединяются слоты).</p>
+
+<h2 class="western"><a name="redefining-and-changing-a-class"></a>Переопределение и изменение класса</h2>
+
+<p>В этом разделе кратко рассматриваются две темы:</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">переопределение существующего класса, 
+	которое вы, возможно, уже сделали, следуя нашим фрагментам кода, 
+	и то, что мы делаем естественным образом во время разработки, и 
+	</p>
+
+	<li/>
+
+<p>преобразование экземпляра одного класса в экземпляр другого - 
+	мощная функция CLOS, которую вы, вероятно, не будете использовать очень часто.  
+	</p>
+
+</ul>
+
+<p>Мы не будем останавливаться на достигнутом. Достаточно сказать, 
+что все настраивается путем реализации методов, предоставляемых MOP.</p>
+
+<p>Чтобы переопределить класс, просто вычислите новую форму 
+<code class="western">defclass</code>. Затем она заменяет старое определение, 
+существующий объект класса обновляется, и <strong>все экземпляры класса</strong> 
+(и, рекурсивно, его подклассы) <strong>лениво обновляются, чтобы отразить 
+новое определение</strong>. Вам не нужно перекомпилировать что-либо, 
+кроме нового <code class="western">defclass</code>, или делать 
+недействительными какие-либо из ваших объектов. Задумайтесь на секунду: 
+это круто!</p>
+
+<p>Например, с нашим классом <code class="western">person</code>:</p>
+
+<pre class="western"><code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name</code>
+<code class="western">    </code><code class="western">:initarg :name</code>
+<code class="western">    </code><code class="western">:accessor name)</code>
+<code class="western">   </code><code class="western">(lisper</code>
+<code class="western">    </code><code class="western">:initform nil</code>
+<code class="western">    </code><code class="western">:accessor lisper)))</code>
+
+<code class="western">(setf p1 (make-instance 'person :name &quot;me&quot; ))</code></pre>
+<p>
+Изменение, добавление, удаление слотов, …</p>
+
+<pre class="western"><code class="western">(lisper p1)</code>
+<code class="western">;; NIL</code>
+
+<code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name</code>
+<code class="western">    </code><code class="western">:initarg :name</code>
+<code class="western">    </code><code class="western">:accessor name)</code>
+<code class="western">   </code><code class="western">(lisper</code>
+<code class="western">    </code><code class="western">:initform t        ;; &lt;-- from nil to t</code>
+<code class="western">    </code><code class="western">:accessor lisper)))</code>
+
+<code class="western">(lisper p1)</code>
+<code class="western">;; NIL (of course!)</code>
+
+<code class="western">(lisper (make-instance 'person :name &quot;You&quot;))</code>
+<code class="western">;; T</code>
+
+<code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name</code>
+<code class="western">    </code><code class="western">:initarg :name</code>
+<code class="western">    </code><code class="western">:accessor name)</code>
+<code class="western">   </code><code class="western">(lisper</code>
+<code class="western">    </code><code class="western">:initform nil</code>
+<code class="western">    </code><code class="western">:accessor lisper)</code>
+<code class="western">   </code><code class="western">(age</code>
+<code class="western">    </code><code class="western">:initarg :arg</code>
+<code class="western">    </code><code class="western">:initform 18</code>
+<code class="western">    </code><code class="western">:accessor age)))</code>
+
+<code class="western">(age p1)</code>
+<code class="western">;; =&gt; slot unbound error. This is different from &quot;slot missing&quot;:</code>
+
+<code class="western">(slot-value p1 'bwarf)</code>
+<code class="western">;; =&gt; &quot;the slot bwarf is missing from the object #&lt;personâ¦&gt;&quot;</code>
+
+<code class="western">(setf (age p1) 30)</code>
+<code class="western">(age p1) ;; =&gt; 30</code>
+
+<code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name</code>
+<code class="western">    </code><code class="western">:initarg :name</code>
+<code class="western">    </code><code class="western">:accessor name)))</code>
+
+<code class="western">(slot-value p1 'lisper) ;; =&gt; slot lisper is missing.</code>
+<code class="western">(lisper p1) ;; =&gt; there is no applicable method for the generic function lisper when called with arguments #(lisper).</code></pre>
+<p>
+Чтобы изменить класс экземпляра, используйте <code class="western">change-class</code>:</p>
+
+<pre class="western"><code class="western">(change-class p1 'child)</code>
+<code class="western">;; we can also set slots of the new class:</code>
+<code class="western">(change-class p1 'child :can-walk-p nil)</code>
+
+<code class="western">(class-of p1)</code>
+<code class="western">;; #&lt;STANDARD-CLASS CHILD&gt;</code>
+
+<code class="western">(can-walk-p p1)</code>
+<code class="western">;; T</code></pre>
+<p>
+В приведенном выше примере p1 стал <code class="western">child</code> и 
+унаследовал слот <code class="western">can-walk-p</code>, который
+по умолчанию true. </p>
+
+<h2 class="western"><a name="pretty-printing"></a>Красивая печать</h2>
+
+<p>Каждый раз, когда мы печатали объект, мы получали такой результат, как </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">#&lt;PERSON {1006234593}&gt;</code></pre>
+<p>
+что мало что говорит.</p>
+
+<p>Что, если мы захотим показать больше информации? Что-то типа </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">#&lt;PERSON me lisper: t&gt;</code></pre>
+<p>
+Красивая печать выполняется путем специализации обобщенного метода печати объекта -
+<code class="western">print-object</code> для этого класса: </p>
+
+<pre class="western"><code class="western">(defmethod print-object ((obj person) stream)</code>
+<code class="western">      </code><code class="western">(print-unreadable-object (obj stream :type t)</code>
+<code class="western">        </code><code class="western">(with-accessors ((name name)</code>
+<code class="western">                         </code><code class="western">(lisper lisper))</code>
+<code class="western">            </code><code class="western">obj</code>
+<code class="western">          </code><code class="western">(format stream &quot;~a, lisper: ~a&quot; name lisper))))</code></pre>
+<p>
+Это дает: :</p>
+
+<pre class="western"><code class="western">p1</code>
+<code class="western">;; #&lt;PERSON me, lisper: T&gt;</code></pre>
+<p>
+<code class="western">print-unreadable-object</code>  печатает
+<code class="western">#&lt;...&gt;</code>, который сообщает читателю, что этот 
+объект не может быть прочитан обратно. Его аргумент <code class="western">:type
+t</code> просит напечатать префикс типа объекта, то есть <code class="western">PERSON</code>.
+Без него мы получим <code class="western">#&lt;me,lisper: T&gt;</code></p>
+
+<p>Мы использовали макрос <code class="western">with-accessors</code>, но, конечно, 
+для простых случаев этого достаточно: </p>
+
+<pre class="western"><code class="western">(defmethod print-object ((obj person) stream)</code>
+<code class="western">  </code><code class="western">(print-unreadable-object (obj stream :type t)</code>
+<code class="western">    </code><code class="western">(format stream &quot;~a, lisper: ~a&quot; (name obj) (lisper obj))))</code></pre>
+<p>
+Внимание: попытка доступа к слоту, который не связан по умолчанию, приведет к ошибке. 
+Используйте  <code class="western">slot-boundp</code>.</p>
+
+<p>Для справки, следующий код воспроизводит поведение по умолчанию: </p>
+
+<pre class="western"><code class="western">(defmethod print-object ((obj person) stream)</code>
+<code class="western">  </code><code class="western">(print-unreadable-object (obj stream :type t :identity t)))</code></pre>
+<p>
+Здесь <code class="western">:identity</code> для <code class="western">t</code>
+печатает его адрес <code class="western">{1006234593}</code>.</p>
+
+<h2 class="western"><a name="classes-of-traditional-lisp-types"></a>Классы традиционных типов lisp
+</h2>
+
+<p>В тех случаях, когда мы приближаемся к тому, что нам не нужны объекты 
+CLOS для использования CLOS.</p>
+
+<p>В общем, функции, представленные в последнем разделе, также работают с объектами lisp, 
+которые <u>не являются</u> экземплярами CLOS: </p>
+
+<pre class="western"><code class="western">(find-class 'symbol)</code>
+<code class="western">;; #&lt;BUILT-IN-CLASS SYMBOL&gt;</code>
+<code class="western">(class-name *)</code>
+<code class="western">;; SYMBOL</code>
+<code class="western">(eq ** (class-of 'symbol))</code>
+<code class="western">;; T</code>
+<code class="western">(class-of ***)</code>
+<code class="western">;; #&lt;STANDARD-CLASS BUILT-IN-CLASS&gt;</code></pre>
+<p>
+Здесь мы видим, что символы являются экземплярами системного класса 
+<code class="western">symbol</code>. Это один из 75 случаев, когда язык требует 
+существования класса с тем же именем, что и соответствующий тип lisp. 
+Многие из этих случаев связаны с самим CLOS (например, соответствием между 
+типом <code class="western">standard-class</code>(стандартного класса) и 
+классом CLOS с этим именем) или с системой условий (которая может быть 
+построена или не построена с использованием классов CLOS в любой 
+данной реализации) . Тем не менее, 33 соответствия остаются относящимися к 
+«традиционным» типам lisp: </p>
+
+<p>|<code class="western">array</code>|<code class="western">hash-table</code>|<code class="western">readtable</code>|
+|<code class="western">bit-vector</code>|<code class="western">integer</code>|<code class="western">real</code>|
+|<code class="western">broadcast-stream</code>|<code class="western">list</code>|<code class="western">sequence</code>|
+|<code class="western">character</code>|<code class="western">logical-pathname</code>|<code class="western">stream</code>|
+|<code class="western">complex</code>|<code class="western">null</code>|<code class="western">string</code>|
+|<code class="western">concatenated-stream</code>|<code class="western">number</code>|<code class="western">string-stream</code>|
+|<code class="western">cons</code>|<code class="western">package</code>|<code class="western">symbol</code>|
+|<code class="western">echo-stream</code>|<code class="western">pathname</code>|<code class="western">synonym-stream</code>|
+|<code class="western">file-stream</code>|<code class="western">random-state</code>|<code class="western">t</code>|
+|<code class="western">float</code>|<code class="western">ratio</code>|<code class="western">two-way-stream</code>|
+|<code class="western">function</code>|<code class="western">rational</code>|<code class="western">vector</code>|</p>
+
+<p>Обратите внимание, что не все «традиционные» типы lisp включены в этот список. 
+(Рассмотрим: <code class="western">atom</code>, <code class="western">fixnum</code>,
+<code class="western">short-float</code> и любой тип, не обозначенный символом.)</p>
+
+<p>Наличие <code class="western">t</code> интересно. Так же, как каждый объект 
+lisp имеет тип <code class="western">t</code>, каждый объект lisp также является 
+членом класса с именем <code class="western">t</code>. Это простой пример членства 
+более чем в одном классе одновременно, и он ставит под сомнение проблему <em>наследования</em>,
+которую мы более подробно рассмотрим позже. </p>
+
+<pre class="western"><code class="western">(find-class t)</code>
+<code class="western">;; #&lt;BUILT-IN-CLASS T 20305AEC&gt;</code></pre>
+<p>
+В дополнение к классам, соответствующим типам lisp, существует также 
+класс CLOS для каждого определяемого вами структурного типа: </p>
+
+<pre class="western"><code class="western">(defstruct foo)</code>
+<code class="western">FOO</code>
+
+<code class="western">(class-of (make-foo))</code>
+<code class="western">;; #&lt;STRUCTURE-CLASS FOO 21DE8714&gt;</code></pre>
+<p>
+Метаклассом <code class="western">structure-object</code> является класс
+<code class="western">structure-class</code>. Это зависит от реализации, 
+является ли метакласс «традиционного» объекта Lisp 
+<code class="western">standard-class</code>(стандартным классом),
+<code class="western">structure-class</code>(классом структуры) или 
+<code class="western">built-in-class</code>(встроенным классом). Ограничения:
+</p>
+
+<p>|<code class="western">built-in-class</code>| Не может использовать 
+<code class="western">make-instance</code>, не может использовать 
+<code class="western">slot-value</code>, не может использовать <code class="western">defclass</code> для модификации, не может создавать подклассы. 
+|<code class="western">structure-class</code>(структурный класс) | Может не использовать 
+<code class="western">make-instance</code>, может работать с 
+<code class="western">slot-value</code> (зависит от реализации). 
+Используйте <code class="western">defstruct</code> для создания подклассов 
+структрных типов приложения. Последствия изменения существующего 
+<code class="western">structure-class</code> структурного класса 
+не определены: может потребоваться полная перекомпиляция. 
+| <code class="western">standard-class</code>(стандартный класс) | Ни одно из этих ограничений. 
+</p>
+
+<h2 class="western"><a name="introspection"></a>Самоанализ(Introspection)</h2>
+
+<p>мы уже видели некоторые функции самоанализа</p>
+
+<p>Лучший вариант - открыть для себя библиотеку 
+<a href="https://github.com/pcostanza/closer-mop">closer-mop</a> и держать под рукой 
+<a href="https://clos-mop.hexstreamsoft.com/">CLOS &amp; MOP specifications</a>
+(спецификации CLOS & MOP).</p>
+
+<p>Дополнительные функции: </p>
+
+<pre class="western"><code class="western">closer-mop:class-default-initargs</code>
+<code class="western">closer-mop:class-direct-default-initargs</code>
+<code class="western">closer-mop:class-direct-slots</code>
+<code class="western">closer-mop:class-direct-subclasses</code>
+<code class="western">closer-mop:class-direct-superclasses</code>
+<code class="western">closer-mop:class-precedence-list</code>
+<code class="western">closer-mop:class-slots</code>
+<code class="western">closer-mop:classp</code>
+<code class="western">closer-mop:extract-lambda-list</code>
+<code class="western">closer-mop:extract-specializer-names</code>
+<code class="western">closer-mop:generic-function-argument-precedence-order</code>
+<code class="western">closer-mop:generic-function-declarations</code>
+<code class="western">closer-mop:generic-function-lambda-list</code>
+<code class="western">closer-mop:generic-function-method-class</code>
+<code class="western">closer-mop:generic-function-method-combination</code>
+<code class="western">closer-mop:generic-function-methods</code>
+<code class="western">closer-mop:generic-function-name</code>
+<code class="western">closer-mop:method-combination</code>
+<code class="western">closer-mop:method-function</code>
+<code class="western">closer-mop:method-generic-function</code>
+<code class="western">closer-mop:method-lambda-list</code>
+<code class="western">closer-mop:method-specializers</code>
+<code class="western">closer-mop:slot-definition</code>
+<code class="western">closer-mop:slot-definition-allocation</code>
+<code class="western">closer-mop:slot-definition-initargs</code>
+<code class="western">closer-mop:slot-definition-initform</code>
+<code class="western">closer-mop:slot-definition-initfunction</code>
+<code class="western">closer-mop:slot-definition-location</code>
+<code class="western">closer-mop:slot-definition-name</code>
+<code class="western">closer-mop:slot-definition-readers</code>
+<code class="western">closer-mop:slot-definition-type</code>
+<code class="western">closer-mop:slot-definition-writers</code>
+<code class="western">closer-mop:specializer-direct-generic-functions</code>
+<code class="western">closer-mop:specializer-direct-methods</code>
+<code class="western">closer-mop:standard-accessor-method</code></pre><h2 class="western">
+<a name="see-also"></a>See also</h2>
+<h3 class="western"><a name="defclass-std-write-shorter-classes"></a>defclass/std:
+короткая запись классов</h3>
+
+<p>Библиотека <a href="https://github.com/EuAndreh/defclass-std">defclass/std</a> 
+предоставляет макрос для написания более коротких форм <code class="western">defclass</code>.</p>
+
+<p>По умолчанию она добавляет accessor(средство доступа), initarg и initform в 
+<code class="western">nil</code> к определению вашего слота:
+</p>
+
+<p>Здесь:</p>
+
+<pre class="western"><code class="western">(defclass/std example ()</code>
+<code class="western">  </code><code class="western">((slot1 slot2 slot3)))</code></pre>
+<p>
+расширяется в:</p>
+
+<pre class="western"><code class="western">(defclass example ()</code>
+<code class="western">  </code><code class="western">((slot1</code>
+<code class="western">    </code><code class="western">:accessor slot1</code>
+<code class="western">    </code><code class="western">:initarg :slot1</code>
+<code class="western">    </code><code class="western">:initform nil)</code>
+<code class="western">   </code><code class="western">(slot2</code>
+<code class="western">     </code><code class="western">:accessor slot2</code>
+<code class="western">     </code><code class="western">:initarg :slot2</code>
+<code class="western">     </code><code class="western">:initform nil)</code>
+<code class="western">   </code><code class="western">(slot3</code>
+<code class="western">     </code><code class="western">:accessor slot3</code>
+<code class="western">     </code><code class="western">:initarg :slot3</code>
+<code class="western">     </code><code class="western">:initform nil)))</code></pre>
+<p>
+Она делает гораздо больше и очень гибока, однако она редко используется 
+сообществом Common Lisp: используйте её на свой страх и риск ©.</p>
+
+<h1 class="western"><a name="methods"></a>Методы</h1>
+<h2 class="western"><a name="diving-in-1"></a>Погружение в</h2>
+
+<p>Вспомним наши классы <code class="western">person</code> и
+<code class="western">child</code> с самого начала: </p>
+
+<pre class="western"><code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name</code>
+<code class="western">    </code><code class="western">:initarg :name</code>
+<code class="western">    </code><code class="western">:accessor name)))</code>
+<code class="western">;; =&gt; #&lt;STANDARD-CLASS PERSON&gt;</code>
+
+<code class="western">(defclass child (person)</code>
+<code class="western">  </code><code class="western">())</code>
+<code class="western">;; #&lt;STANDARD-CLASS CHILD&gt;</code>
+
+<code class="western">(setf p1 (make-instance 'person :name &quot;me&quot;))</code>
+<code class="western">(setf c1 (make-instance 'child :name &quot;Alice&quot;))</code></pre>
+<p>
+Ниже мы создаем методы, специализируем их, используем комбинацию методов 
+(before, after, around) и квалификаторы. </p>
+
+<pre class="western"><code class="western">(defmethod greet (obj)</code>
+<code class="western">  </code><code class="western">(format t &quot;Are you a person ? You are a ~a.~&amp;&quot; (type-of obj)))</code>
+<code class="western">;; style-warning: Implicitly creating new generic function common-lisp-user::greet.</code>
+<code class="western">;; #&lt;STANDARD-METHOD GREET (t) {1008EE4603}&gt;</code>
+
+<code class="western">(greet :anything)</code>
+<code class="western">;; Are you a person ? You are a KEYWORD.</code>
+<code class="western">;; NIL</code>
+<code class="western">(greet p1)</code>
+<code class="western">;; Are you a person ? You are a PERSON.</code>
+
+<code class="western">(defgeneric greet (obj)</code>
+<code class="western">  </code><code class="western">(:documentation &quot;say hello&quot;))</code>
+<code class="western">;; STYLE-WARNING: redefining COMMON-LISP-USER::GREET in DEFGENERIC</code>
+<code class="western">;; #&lt;STANDARD-GENERIC-FUNCTION GREET (2)&gt;</code>
+
+<code class="western">(defmethod greet ((obj person))</code>
+<code class="western">  </code><code class="western">(format t &quot;Hello ~a !~&amp;&quot; (name obj)))</code>
+<code class="western">;; #&lt;STANDARD-METHOD GREET (PERSON) {1007C26743}&gt;</code>
+
+<code class="western">(greet p1) ;; =&gt; &quot;Hello me !&quot;</code>
+<code class="western">(greet c1) ;; =&gt; &quot;Hello Alice !&quot;</code>
+
+<code class="western">(defmethod greet ((obj child))</code>
+<code class="western">  </code><code class="western">(format t &quot;ur so cute~&amp;&quot;))</code>
+<code class="western">;; #&lt;STANDARD-METHOD GREET (CHILD) {1008F3C1C3}&gt;</code>
+
+<code class="western">(greet p1) ;; =&gt; &quot;Hello me !&quot;</code>
+<code class="western">(greet c1) ;; =&gt; &quot;ur so cute&quot;</code>
+
+<code class="western">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</code>
+<code class="western">;;; Комбинация методов: before, after, around.</code>
+<code class="western">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</code>
+
+<code class="western">(defmethod greet :before ((obj person))</code>
+<code class="western">  </code><code class="western">(format t &quot;-- before person~&amp;&quot;))</code>
+<code class="western">#&lt;STANDARD-METHOD GREET :BEFORE (PERSON) {100C94A013}&gt;</code>
+
+<code class="western">(greet p1)</code>
+<code class="western">;; -- before person</code>
+<code class="western">;; Hello me</code>
+
+<code class="western">(defmethod greet :before ((obj child))</code>
+<code class="western">  </code><code class="western">(format t &quot;-- before child~&amp;&quot;))</code>
+<code class="western">;; #&lt;STANDARD-METHOD GREET :BEFORE (CHILD) {100AD32A43}&gt;</code>
+<code class="western">(greet c1)</code>
+<code class="western">;; -- before child</code>
+<code class="western">;; -- before person</code>
+<code class="western">;; ur so cute</code>
+
+<code class="western">(defmethod greet :after ((obj person))</code>
+<code class="western">  </code><code class="western">(format t &quot;-- after person~&amp;&quot;))</code>
+<code class="western">;; #&lt;STANDARD-METHOD GREET :AFTER (PERSON) {100CA2E1A3}&gt;</code>
+<code class="western">(greet p1)</code>
+<code class="western">;; -- before person</code>
+<code class="western">;; Hello me</code>
+<code class="western">;; -- after person</code>
+
+<code class="western">(defmethod greet :after ((obj child))</code>
+<code class="western">  </code><code class="western">(format t &quot;-- after child~&amp;&quot;))</code>
+<code class="western">;; #&lt;STANDARD-METHOD GREET :AFTER (CHILD) {10075B71F3}&gt;</code>
+<code class="western">(greet c1)</code>
+<code class="western">;; -- before child</code>
+<code class="western">;; -- before person</code>
+<code class="western">;; ur so cute</code>
+<code class="western">;; -- after person</code>
+<code class="western">;; -- after child</code>
+
+<code class="western">(defmethod greet :around ((obj child))</code>
+<code class="western">  </code><code class="western">(format t &quot;Hello my dear~&amp;&quot;))</code>
+<code class="western">;; #&lt;STANDARD-METHOD GREET :AROUND (CHILD) {10076658E3}&gt;</code>
+<code class="western">(greet c1) ;; Hello my dear</code>
+
+<code class="western">;; call-next-method</code>
+
+<code class="western">(defmethod greet :around ((obj child))</code>
+<code class="western">  </code><code class="western">(format t &quot;Hello my dear~&amp;&quot;)</code>
+<code class="western">  </code><code class="western">(when (next-method-p)</code>
+<code class="western">    </code><code class="western">(call-next-method)))</code>
+<code class="western">;; #&lt;standard-method greet :around (child) {100AF76863}&gt;</code>
+
+<code class="western">(greet c1)</code>
+<code class="western">;; Hello my dear</code>
+<code class="western">;; -- before child</code>
+<code class="western">;; -- before person</code>
+<code class="western">;; ur so cute</code>
+<code class="western">;; -- after person</code>
+<code class="western">;; -- after child</code>
+
+<code class="western">;;;;;;;;;;;;;;;;;</code>
+<code class="western">;; Добавление в &amp;key</code>
+<code class="western">;;;;;;;;;;;;;;;;;</code>
+
+<code class="western">;; In order to add &quot;&amp;key&quot; to our generic method, we need to remove its definition first.</code>
+<code class="western">(fmakunbound 'greet)  ;; with Slime: C-c C-u (slime-undefine-function)</code>
+<code class="western">(defmethod greet ((obj person) &amp;key talkative)</code>
+<code class="western">  </code><code class="western">(format t &quot;Hello ~a~&amp;&quot; (name obj))</code>
+<code class="western">  </code><code class="western">(when talkative</code>
+<code class="western">    </code><code class="western">(format t &quot;blah&quot;)))</code>
+
+<code class="western">(defgeneric greet (obj &amp;key &amp;allow-other-keys)</code>
+<code class="western">  </code><code class="western">(:documentation &quot;say hi&quot;))</code>
+
+<code class="western">(defmethod greet (obj &amp;key &amp;allow-other-keys)</code>
+<code class="western">  </code><code class="western">(format t &quot;Are you a person ? You are a ~a.~&amp;&quot; (type-of obj)))</code>
+
+<code class="western">(defmethod greet ((obj person) &amp;key talkative &amp;allow-other-keys)</code>
+<code class="western">  </code><code class="western">(format t &quot;Hello ~a !~&amp;&quot; (name obj))</code>
+<code class="western">  </code><code class="western">(when talkative</code>
+<code class="western">    </code><code class="western">(format t &quot;blah&quot;)))</code>
+
+<code class="western">(greet p1 :talkative t) ;; ok</code>
+<code class="western">(greet p1 :foo t) ;; still ok</code>
+
+<code class="western">;;;;;;;;;;;;;;;;;;;;;;;</code>
+
+<code class="western">(defgeneric greet (obj)</code>
+<code class="western">  </code><code class="western">(:documentation &quot;say hello&quot;)</code>
+<code class="western">  </code><code class="western">(:method (obj)</code>
+<code class="western">    </code><code class="western">(format t &quot;Are you a person ? You are a ~a~&amp;.&quot; (type-of obj)))</code>
+<code class="western">  </code><code class="western">(:method ((obj person))</code>
+<code class="western">    </code><code class="western">(format t &quot;Hello ~a !~&amp;&quot; (name obj)))</code>
+<code class="western">  </code><code class="western">(:method ((obj child))</code>
+<code class="western">    </code><code class="western">(format t &quot;ur so cute~&amp;&quot;)))</code>
+
+<code class="western">;;;;;;;;;;;;;;;;</code>
+<code class="western">;;; Специализация</code>
+<code class="western">;;;;;;;;;;;;;;;;</code>
+
+<code class="western">(defgeneric feed (obj meal-type)</code>
+<code class="western">  </code><code class="western">(:method (obj meal-type)</code>
+<code class="western">    </code><code class="western">(declare (ignorable meal-type))</code>
+<code class="western">    </code><code class="western">(format t &quot;eating~&amp;&quot;)))</code>
+
+<code class="western">(defmethod feed (obj (meal-type (eql :dessert)))</code>
+<code class="western">    </code><code class="western">(declare (ignorable meal-type))</code>
+<code class="western">    </code><code class="western">(format t &quot;mmh, dessert !~&amp;&quot;))</code>
+
+<code class="western">(feed c1 :dessert)</code>
+<code class="western">;; mmh, dessert !</code>
+
+<code class="western">(defmethod feed ((obj child) (meal-type (eql :soup)))</code>
+<code class="western">    </code><code class="western">(declare (ignorable meal-type))</code>
+<code class="western">    </code><code class="western">(format t &quot;bwark~&amp;&quot;))</code>
+
+<code class="western">(feed p1 :soup)</code>
+<code class="western">;; eating</code>
+<code class="western">(feed c1 :soup)</code>
+<code class="western">;; bwark</code></pre><h2 class="western">
+<a name="generic-functions-defgeneric-defmethod"></a>Обобщенные функции (defgeneric, defmethod)</h2>
+
+<p><code class="western">generic function</code>(Обобщенная функция) - 
+это функция lisp, которая связана с набором методов и отправляет(dispatches/
+на самом деле выбирает какой из них выполнить(один или несколько)) их при вызове. 
+Все методы с одинаковым именем функции принадлежат одной и той же обобщенной функции.</p>
+
+<p>Форма <code class="western">defmethod</code> похожа на 
+<code class="western">defun</code>. Она связывает тело кода с именем функции, 
+но это тело может быть выполнено только в том случае, если типы аргументов 
+соответствуют шаблону, объявленному лямбда-списком..</p>
+
+<p>У них могут быть необязательные аргументы, ключевые слова и аргументы 
+<code class="western">&amp;rest</code>.</p>
+
+<p>Форма <code class="western">defgeneric</code> определяет обобщенную функцию. 
+Если мы напишем <code class="western">defmethod</code> без соответствующей 
+<code class="western">defgeneric</code>, автоматически будет создана обобщенная 
+функция (см. Примеры).</p>
+
+<p>Обычно рекомендуется писать <code class="western">defgeneric</code>. 
+Мы можем добавить реализацию по умолчанию и даже некоторую документацию. </p>
+
+<pre class="western"><code class="western">(defgeneric greet (obj)</code>
+<code class="western">  </code><code class="western">(:documentation &quot;says hi&quot;)</code>
+<code class="western">  </code><code class="western">(:method (obj)</code>
+<code class="western">    </code><code class="western">(format t &quot;Hi&quot;)))</code></pre>
+<p>
+Обязательные параметры в лямбда-списке метода могут принимать одну из следующих трех форм:
+</p>
+
+<p>1- простая переменная: </p>
+
+<pre class="western"><code class="western">(defmethod greet (foo)</code>
+<code class="western">  </code><code class="western">...)</code></pre>
+<p>
+Этот метод может принимать любые аргументы, он всегда применим.</p>
+
+<p>TПеременная <code class="western">foo</code>, как обычно, привязана к 
+соответствующему значению аргумента.</p>
+
+<p>2- переменная и <strong>specializer</strong>(специализатор), как в: </p>
+
+<pre class="western"><code class="western">(defmethod greet ((foo person))</code>
+<code class="western">  </code><code class="western">...)</code></pre>
+<p>
+В этом случае переменная <code class="western">foo</code> привязывается к 
+соответствующему аргументу только в том случае, если этот аргумент относится 
+к специализирующему-классу <code class="western">person</code> или подклассу, 
+например <code class="western">child</code> (действительно, 
+<code class="western">child</code> также является <code class="western">person</code>).
+</p>
+
+<p>Если какой-либо аргумент не соответствует своему специализатору, тогда 
+метод неприменим и не может быть выполнен с этими аргументами. Мы получим 
+сообщение об ошибке типа «не существует применимого метода для обобщенной 
+функции xxx при вызове с аргументами yyy».
+</p>
+
+<p><strong>Только необходимые параметры могут быть специализированы. 
+Мы не можем специализироваться на необязательных <code class="western">&amp;key</code> 
+(ключевых) аргументах.</p>
+
+<p>3- переменная и <strong>специализатор eql</strong></p>
+
+<pre class="western"><code class="western">(defmethod feed ((obj child) (meal-type (eql :soup)))</code>
+<code class="western">    </code><code class="western">(declare (ignorable meal-type))</code>
+<code class="western">    </code><code class="western">(format t &quot;bwark~&amp;&quot;))</code>
+
+<code class="western">(feed c1 :soup)</code>
+<code class="western">;; &quot;bwark&quot;</code></pre>
+<p>
+Вместо простого символа (<code class="western">:soup</code>) специализатором eql 
+может быть любая форма lisp. Она вычисляется в то же время, что и 
+defmethod.</p>
+
+<p>Вы можете определить любое количество методов с одним и тем же именем функции, 
+но с разными специализаторами, при условии, что форма лямбда-списка 
+<em>congruent</em>(соответствует) форме обобщенной функции. 
+Система выбирает наиболее <em>специфичный(конкретный)</em> применимый метод и 
+выполняет его тело. Наиболее конкретный метод - это тот, специализаторы 
+которого находятся ближе всего к заголовку списка предшествования класса -
+<code class="western">class-precedence-list</code>  аргумента 
+(классы слева от лямбда-списка более конкретны). Метод со специализаторами более 
+специфичен(конкретен), чем метода без них. </p>
+
+<p><strong>Замечания:</strong></p>
+
+<ul>
+	<li/>
+
+<p>Ошибочно определять метод с тем же именем функции, что и у обычной функции. 
+	Если вы действительно хотите это сделать, используйте механизм затенения.</p>
+
+	<li/>
+
+<p> Чтобы добавить или удалить ключи/<code class="western">keys</code> или
+	 <code class="western">rest</code> аргументы в лямбда-списке 
+	существующего обобщенного метода, вам нужно будет удалить его 
+	объявление с помощью <code class="western">fmakunbound</code> 
+	(или <code class="western">C-c C-u</code> (slime-undefine-function) 
+	с установкой курсора на функцию в Slime) и начать заново. 
+	В противном случае вы увидите: </p>
+
+</ul>
+<pre class="western"><code class="western">attempt to add the method</code>
+<code class="western">  </code><code class="western">#&lt;STANDARD-METHOD NIL (#&lt;STANDARD-CLASS CHILD&gt;) {1009504233}&gt;</code>
+<code class="western">to the generic function</code>
+<code class="western">  </code><code class="western">#&lt;STANDARD-GENERIC-FUNCTION GREET (2)&gt;;</code>
+<code class="western">but the method and generic function differ in whether they accept</code>
+<code class="western">&amp;REST or &amp;KEY arguments.</code></pre>
+<ul>
+	<li/>
+
+<p>Методы можно переопределить (точно так же, как для обычных функций)..</p>
+
+	<li/>
+
+<p>Порядок, в котором определены методы, не имеет значения, хотя любые классы, 
+	на которых они специализируются, уже должны существовать.</p>
+
+	<li/>
+
+<p>Неспециализированный аргумент более или менее эквивалентен специализации 
+	на классе <code class="western">t</code>. Единственное отличие состоит в том, 
+	что все специализированные аргументы неявно считаются  “referred to”(упомянутыми)
+	(в смысле <code class="western">declare ignore</code>(объявления игнорирования)). </p>
+
+	<li/>
+
+<p>Каждая форма <code class="western">defmethod</code> генерирует (и возвращает) 
+	экземпляр CLOS класса <code class="western">standard-method</code>.</p>
+
+	<li/>
+
+<p>Специализатор <code class="western">eql</code> не будет работать со строками 
+	как есть. В самом деле, для сравнения строк нужно их сравнивать с помощью
+	 <code class="western">equal</code> или <code class="western">equalp</code>. 
+	Но мы можем присвоить нашу строку переменной и использовать ее как в специализаторе
+	<code class="western">eql</code>, так и для вызова функции.</p>
+
+	<li/>
+
+<p>Все методы с одинаковым именем функции принадлежат одной и той же 
+	обобщенной функции.</p>
+
+	<li/>
+
+<p>Все средства доступа(accessors) и читатели(readers) слотов, определенные 
+	<code class="western">defclass</code>, являются методами. Их можно 
+	переопределить или переопределить другими методами той же обобщенной функции.</p>
+
+</ul>
+
+<p>См. Больше о методе <a href="http://www.lispworks.com/documentation/lw70/CLHS/Body/m_defmet.htm">defmethod на CLHS</a> </p>
+
+<h2 class="western"><a name="multimethods"></a>Мультиметоды</h2>
+
+<p>Мультиметоды явно специализируются на нескольких обязательных параметрах 
+обобщенной функции.</p>
+
+<p>Они не принадлежат к определенному классу. Это означает, что нам не нужно
+выбирать класс, в котором лучше всего разместить этот метод, как это могло 
+бы потребоваться в других языках. </p>
+
+<pre class="western"><code class="western">(defgeneric hug (a b)</code>
+<code class="western">   </code><code class="western">(:documentation &quot;Hug between two persons.&quot;))</code>
+<code class="western">;; #&lt;STANDARD-GENERIC-FUNCTION HUG (0)&gt;</code>
+
+<code class="western">(defmethod hug ((a person) (b person))</code>
+<code class="western">  </code><code class="western">:person-person-hug)</code>
+
+<code class="western">(defmethod hug ((a person) (b child))</code>
+<code class="western">  </code><code class="western">:person-child-hug)</code></pre>
+<p>
+Подробнее в  <a href="http://www.gigamonkeys.com/book/object-reorientation-generic-functions.html#multimethods">Practical
+Common Lisp</a>.</p>
+
+<h2 class="western"><a name="controlling-setters-setf-ing-methods"></a>
+Управление сеттерами(установщиками/setters) (методами работающими с setf)</h2>
+
+<p>В Лиспе мы можем определять  <code class="western">setf</code>-аналоги 
+функций или методов. Мы могли бы захотеть, чтобы это было больше контроля 
+над обновлением объекта. </p>
+
+<pre class="western"><code class="western">(defmethod (setf name) (new-val (obj person))</code>
+<code class="western">  </code><code class="western">(if (equalp new-val &quot;james bond&quot;)</code>
+<code class="western">    </code><code class="western">(format t &quot;Dude that's not possible.~&amp;&quot;)</code>
+<code class="western">    </code><code class="western">(setf (slot-value obj 'name) new-val)))</code>
+
+<code class="western">(setf (name p1) &quot;james bond&quot;) ;; -&gt; no rename</code></pre>
+<p>
+Если вы знаете Python, такое поведение обеспечивается декоратором  
+<code class="western">@property</code>. </p>
+
+<h2 class="western"><a name="dispatch-mechanism-and-next-methods"></a>
+Механизм отправки и методы next(последующие)
+</h2>
+
+<p>Когда вызывается обобщенная функция, приложение не может напрямую вызывать метод. 
+Механизм отправки(dispatch-выбора конкретного метода) работает следующим образом: </p>
+
+<ol>
+	<li/>
+<p style="margin-bottom: 0cm">вычислить список применимых методов
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">если нет применимых методов, то сигнализирует об ошибке
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">отсортировать применимые методы в порядке их специфичности
+	</p>
+
+	<li/>
+
+<p>вызвать наиболее конкретный(специфичный) метод. 
+	</p>
+
+</ol>
+
+<p>Наша обобщенная функция <code class="western">greet</code> имеет три применимых метода: </p>
+
+<pre class="western"><code class="western">(closer-mop:generic-function-methods #'greet)</code>
+<code class="western">(#&lt;STANDARD-METHOD GREET (CHILD) {10098406A3}&gt;</code>
+<code class="western"> </code><code class="western">#&lt;STANDARD-METHOD GREET (PERSON) {1009008EC3}&gt;</code>
+<code class="western"> </code><code class="western">#&lt;STANDARD-METHOD GREET (T) {1008E6EBB3}&gt;)</code></pre>
+<p>
+Во время выполнения метода остальные применимые методы все еще доступны 
+через локальную функцию <em>call-next-method</em>. Эта функция имеет 
+лексическую область видимости в теле метода, но неопределенный экстент
+(время существования). Она вызывает следующий наиболее конкретный метод 
+и возвращает любое значение, возвращенное этим методом. Её можно вызвать 
+одним из следующих способов:
+</p>
+
+<ul>
+	<li/>
+
+<p> без аргументов, и в этом случае <em>следующий метод</em> 
+	получит точно те же аргументы, что и этот метод, или</p>
+
+	<li/>
+
+<p> явные аргументы, и в этом случае требуется, чтобы отсортированный набор методов, 
+	применимых к новым аргументам, был таким же, как тот, который был вычислен 
+	при первом вызове обобщенной функции.</p>
+
+</ul>
+
+<p>Например:</p>
+
+<pre class="western"><code class="western">(defmethod greet ((obj child))</code>
+<code class="western">  </code><code class="western">(format t &quot;ur so cute~&amp;&quot;)</code>
+<code class="western">  </code><code class="western">(when (next-method-p)</code>
+<code class="western">    </code><code class="western">(call-next-method)))</code>
+<code class="western">;; STYLE-WARNING: REDEFINING GREET (#&lt;STANDARD-CLASS CHILD&gt;) in DEFMETHOD</code>
+<code class="western">;; #&lt;STANDARD-METHOD GREET (child) {1003D3DB43}&gt;</code>
+
+<code class="western">(greet c1)</code>
+<code class="western">;; ur so cute</code>
+<code class="western">;; Hello Alice !</code></pre>
+<p>
+Вызов <code class="western">call-next-method</code> при отсутствии 
+следующего метода сигнализирует об ошибке. Вы можете узнать, существует ли 
+следующий метод, вызвав локальную функцию <code class="western">next-method-p</code> 
+(которая также имеет лексическую область видимости и неопределенный экстент).</p>
+
+<p>Наконец, обратите внимание, что тело каждого метода устанавливает 
+блок с тем же именем, что и обобщенная функция метода. Если вы 
+выполните <code class="western">return-from</code> с этим именем, 
+вы выходите из текущего метода, а не из вызова включающей 
+обобщенной функции. </p>
+
+<h2 class="western"><a name="method-qualifiers-before-after-around"></a>
+Квалификаторы метода (до(before), после(after), вокруг(around))</h2>
+
+<p>В наших примерах "Погружение в", мы видели использование <em>квалификаторов</em>
+<code class="western">:before</code>, <code class="western">:after</code> и 
+<code class="western">:around</code> :</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><code class="western">(defmethod
+	foo :before (obj) (...))</code> 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><code class="western">(defmethod
+	foo :after (obj) (...))</code> 
+	</p>
+
+	<li/>
+
+<p><code class="western">(defmethod foo :around (obj) (...))</code>
+		</p>
+
+</ul>
+
+<p>По умолчанию в  фреймворке <em>стандартная  комбинация методов</em>,
+предоставляемом CLOS, мы можем использовать только один из трех квалификаторов,
+а поток управления выглядит следующим образом:</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"> метод-до(<strong>before-method</strong>)
+	вызывается перед применимым методом. Если их много, вызываются все
+	методы-до. Наиболее специфичный(конкретный) метод-до вызывается первым
+	(child перед person). 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">вызывается наиболее конкретный применимый
+	первичный метод(<strong>primary method</strong>) (метод без квалификаторов)
+	(только один). 
+	</p>
+
+	<li/>
+
+<p>вызываются все применимые методы-после(<strong>after-methods</strong>).
+	Самый конкретный вызывается <em>последним</em> (метод-после(after-method)
+	для person, затем метод-после(after-method) для child). 
+	</p>
+
+</ul>
+
+<p><strong>Обобщенная функция возвращает значение основного метода</strong>. 
+Любые значения методов before или after игнорируются. Их используют
+из-за их побочных эффектов.</p>
+
+<p>А еще у нас есть методы-окружающие(<strong>around-methods</strong>/метод-вокруг). 
+Они являются оболочкой только что описанного основного механизма. Они могут быть
+полезны для перехвата возвращаемых значений или для настройки среды вокруг основного
+метода (установки перехвата/ловушек(catch), блокировки, времени выполнения, ...).</p>
+
+<p>Если механизм диспетчеризации находит  метод-вокруг(around-method), 
+он вызывает его и возвращает результат. Если у метода-вокруг есть 
+<code class="western">call-next-method</code>, он вызывает следующий 
+наиболее подходящий метод-вокруг. Только когда мы достигаем основного метода, 
+мы начинаем вызывать методы до и после.</p>
+
+<p>Таким образом, полный механизм диспетчеризации обобщенных функций 
+выглядит следующим образом: </p>
+
+<ol>
+	<li/>
+<p style="margin-bottom: 0cm">вычислить применимые методы и разбить их на 
+	отдельные списки в соответствии с их квалификатором;
+		</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">если нет применимого основного метода, 
+	то сигнализировать об ошибке;
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">отсортировать каждый из списков в порядке специфичности;
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">выполнить наиболее конкретный/специфичный метод
+	<code class="western">:around</code> и вернуть все, что он возвращает;
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">если метод <code class="western">:around</code> 
+	вызывает метод <code class="western">call-next-method</code>, выполнить 
+	следующий наиболее конкретный метод <code class="western">:around</code>; 
+	</p>
+
+	<li/>
+
+<p>если в первую очередь не было методов <code class="western">:around</code> 
+	или если метод <code class="western">:around</code> вызывает 
+	<code class="western">call-next-method</code>, но больше нет методов
+	<code class="western">:around</code> для вызова, то действуйте следующим образом:</p>
+
+<p>a. запустить все методы <code class="western">:before</code> по порядку, 
+	игнорируя любые возвращаемые значения и не разрешая вызовы 
+	<code class="western">call-next-method</code> или <code class="western">next-method-p</code>;</p>
+
+<p>b. выполнить наиболее конкретный первичный метод и вернуть все, 
+	что он вернет;</p>
+
+<p>c. если основной/первичный метод вызывает 
+	<code class="western">call-next-method</code>, 
+	выполнить следующий наиболее конкретный основной метод; </p>
+
+<p>d. если основной метод вызывает <code class="western">call-next-method</code>, 
+	но нет других основных методов для вызова, то сигнализирует об ошибке;
+</p>
+
+<p>e. после завершения основного метода(ов) запустите все методы
+	<code class="western">:after</code> в обратном порядке, 
+	игнорируя любые возвращаемые значения и не разрешая вызовы 
+	<code class="western">call-next-method</code>
+	или <code class="western">next-method-p</code>.</p>
+
+</ol>
+
+<p>Думайте об этом как о луковице, со всеми методами  
+	<code class="western">:around</code> во внешнем слое, 
+	методами <code class="western">:before</code>
+	и <code class="western">:after</code> в среднем слое и 
+	основными/первичными методами внутри. </p>
+
+<h2 class="western"><a name="other-method-combinations"></a>Другие комбинации методов</h2>
+
+<p>Тип комбинации методов по умолчанию, который мы только что рассмотрели, 
+	называется стандартным(<code class="western">standard</code>), 
+	но доступны и другие типы комбинации методов, и нет необходимости говорить, 
+	что вы можете определить свой собственный.
+</p>
+
+<p>Встроенные типы:</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">progn + list nconc and max or append min</code></pre>
+<p>
+Вы заметили, что эти типы названы в честь оператора lisp. На самом деле, 
+они определяют структуру, которая объединяет применимые первичные методы 
+внутри вызова оператора lisp с таким именем. Например, использование 
+комбинированного типа <code class="western">progn</code> эквивалентно вызову 
+<strong>всех</strong> основных методов один за другим: </p>
+
+<pre class="western"><code class="western">(progn</code>
+<code class="western">  </code><code class="western">(method-1 args)</code>
+<code class="western">  </code><code class="western">(method-2 args)</code>
+<code class="western">  </code><code class="western">(method-3 args))</code></pre>
+<p>
+Здесь, в отличие от стандартного механизма, вызываются все основные методы,
+применимые к данному объекту, причем в первую очередь наиболее конкретные.</p>
+
+<p>Чтобы изменить тип комбинации, мы устанавливаем опцию
+<code class="western">:method-combination</code> в 
+<code class="western">defgeneric</code> и используем ее в качестве 
+квалификатора методов: </p>
+
+<pre class="western"><code class="western">(defgeneric foo (obj)</code>
+<code class="western">  </code><code class="western">(:method-combination progn))</code>
+
+<code class="western">(defmethod foo progn ((obj obj))</code>
+<code class="western">   </code><code class="western">(...))</code></pre>
+<p>
+Пример с <strong>progn</strong>:</p>
+
+<pre class="western"><code class="western">(defgeneric dishes (obj)</code>
+<code class="western">   </code><code class="western">(:method-combination progn)</code>
+<code class="western">   </code><code class="western">(:method progn (obj)</code>
+<code class="western">     </code><code class="western">(format t &quot;- clean and dry.~&amp;&quot;))</code>
+<code class="western">   </code><code class="western">(:method progn ((obj person))</code>
+<code class="western">     </code><code class="western">(format t &quot;- bring a person's dishes~&amp;&quot;))</code>
+<code class="western">   </code><code class="western">(:method progn ((obj child))</code>
+<code class="western">     </code><code class="western">(format t &quot;- bring the baby dishes~&amp;&quot;)))</code>
+<code class="western">;; #&lt;STANDARD-GENERIC-FUNCTION DISHES (3)&gt;</code>
+
+<code class="western">(dishes c1)</code>
+<code class="western">;; - bring the baby dishes</code>
+<code class="western">;; - bring a person's dishes</code>
+<code class="western">;; - clean and dry.</code>
+
+<code class="western">(greet c1)</code>
+<code class="western">;; ur so cute  --&gt; only the most applicable method was called.</code></pre>
+<p>
+Точно так же использование типа <code class="western">list</code> эквивалентно 
+возврату списка значений методов. </p>
+
+<pre class="western"><code class="western">(list</code>
+<code class="western">  </code><code class="western">(method-1 args)</code>
+<code class="western">  </code><code class="western">(method-2 args)</code>
+<code class="western">  </code><code class="western">(method-3 args))</code>
+<code class="western">(defgeneric tidy (obj)</code>
+<code class="western">  </code><code class="western">(:method-combination list)</code>
+<code class="western">  </code><code class="western">(:method list (obj)</code>
+<code class="western">    </code><code class="western">:foo)</code>
+<code class="western">  </code><code class="western">(:method list ((obj person))</code>
+<code class="western">    </code><code class="western">:books)</code>
+<code class="western">  </code><code class="western">(:method list ((obj child))</code>
+<code class="western">    </code><code class="western">:toys))</code>
+<code class="western">;; #&lt;STANDARD-GENERIC-FUNCTION TIDY (3)&gt;</code>
+
+<code class="western">(tidy c1)</code>
+<code class="western">;; (:toys :books :foo)</code></pre>
+<p>
+принимаются методы-вокруг(<strong>Around methods</strong>):</p>
+
+<pre class="western"><code class="western">(defmethod tidy :around (obj)</code>
+<code class="western">   </code><code class="western">(let ((res (call-next-method)))</code>
+<code class="western">     </code><code class="western">(format t &quot;I'm going to clean up ~a~&amp;&quot; res)</code>
+<code class="western">     </code><code class="western">(when (&gt; (length res)</code>
+<code class="western">              </code><code class="western">1)</code>
+<code class="western">       </code><code class="western">(format t &quot;that's too much !~&amp;&quot;))))</code>
+
+<code class="western">(tidy c1)</code>
+<code class="western">;; I'm going to clean up (toys book foo)</code>
+<code class="western">;; that's too much !</code></pre>
+<p>
+Обратите внимание, что эти операторы не поддерживают методы 
+<code class="western">before</code>, <code class="western">after</code> и
+ <code class="western">around</code> (действительно, для них больше нет места). 
+Они поддерживают методы around(вокруг), для которых разрешен 
+<code class="western">call-next-method</code>, но они не поддерживают вызов 
+<code class="western">call-next-method</code> в основных методах 
+(это действительно было бы избыточным, поскольку вызываются все основные методы, 
+или неуклюже <em>не</em> вызывать один ).</p>
+
+<p>CLOS позволяет нам определять новый оператор как тип комбинации методов, 
+будь то функция lisp, макрос или специальная форма. Мы даём вам возможность 
+обратиться к книгам, если вы почувствуете в этом необходимость. </p>
+
+<h2 class="western"><a name="debugging-tracing-method-combination"></a>
+Отладка: трассировка комбинации методов</h2>
+
+<p>Комбинацию методов можно трассировать/отслеживать(<a href="http://www.xach.com/clhs?q=trace">trace</a>), но это зависит от реализации.</p>
+
+<p>В SBCL мы можем использовать <code class="western">(trace foo :methods t)</code>. 
+См. <a href="http://christophe.rhodes.io/notes/blog/posts/2018/sbcl_method_tracing/">Этот пост разработчика ядра SBCL</a>.</p>
+
+<p>Например, учитывая обобщение:</p>
+
+<pre class="western"><code class="western">(defgeneric foo (x)</code>
+<code class="western">  </code><code class="western">(:method (x) 3))</code>
+<code class="western">(defmethod foo :around ((x fixnum))</code>
+<code class="western">  </code><code class="western">(1+ (call-next-method)))</code>
+<code class="western">(defmethod foo ((x integer))</code>
+<code class="western">  </code><code class="western">(* 2 (call-next-method)))</code>
+<code class="western">(defmethod foo ((x float))</code>
+<code class="western">  </code><code class="western">(* 3 (call-next-method)))</code>
+<code class="western">(defmethod foo :before ((x single-float))</code>
+<code class="western">  </code><code class="western">'single)</code>
+<code class="western">(defmethod foo :after ((x double-float))</code>
+<code class="western"> </code><code class="western">'double)</code></pre>
+<p>
+Давайте проследим(трассируем) это:</p>
+
+<pre class="western"><code class="western">(trace foo :methods t)</code>
+
+<code class="western">(foo 2.0d0)</code>
+<code class="western">  </code><code class="western">0: (FOO 2.0d0)</code>
+<code class="western">    </code><code class="western">1: ((SB-PCL::COMBINED-METHOD FOO) 2.0d0)</code>
+<code class="western">      </code><code class="western">2: ((METHOD FOO (FLOAT)) 2.0d0)</code>
+<code class="western">        </code><code class="western">3: ((METHOD FOO (T)) 2.0d0)</code>
+<code class="western">        </code><code class="western">3: (METHOD FOO (T)) returned 3</code>
+<code class="western">      </code><code class="western">2: (METHOD FOO (FLOAT)) returned 9</code>
+<code class="western">      </code><code class="western">2: ((METHOD FOO :AFTER (DOUBLE-FLOAT)) 2.0d0)</code>
+<code class="western">      </code><code class="western">2: (METHOD FOO :AFTER (DOUBLE-FLOAT)) returned DOUBLE</code>
+<code class="western">    </code><code class="western">1: (SB-PCL::COMBINED-METHOD FOO) returned 9</code>
+<code class="western">  </code><code class="western">0: FOO returned 9</code>
+<code class="western">9</code></pre><h1 class="western">
+<a name="mop"></a>MOP</h1>
+
+<p>Мы собираем здесь несколько примеров, которые используют структуру(фреймворк), 
+предоставляемую протоколом метаобъектов, настраиваемой объектной системой, 
+которая управляет объектной системой Lisp. Мы касаемся продвинутых концепций, 
+поэтому, если ты новичек, не волнуйся: тебе не нужно понимать этот раздел, 
+чтобы начать использовать Common Lisp Object System.</p>
+
+<p>Мы не будем здесь подробно рассказывать о MOP, но, надеюсь, достаточно, 
+чтобы вы увидели его возможности или помогли понять, как создаются некоторые 
+библиотеки CL. Мы приглашаем вас прочитать книги, упомянутые во введении. </p>
+
+<h2 class="western"><a name="metaclasses"></a>Метаклассы(Metaclasses)</h2>
+
+<p>Метаклассы необходимы для управления поведением других классов.</p>
+
+<p><em>Как заявлено, много говорить не будем. См. Также Википедию для 
+<a href="https://en.wikipedia.org/wiki/Metaclass">metaclasses</a> или
+<a href="https://en.wikipedia.org/wiki/Common_Lisp_Object_System">CLOS</a></em>.</p>
+
+<p>Стандартный метакласс - это  <code class="western">standard-class</code>:</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(class-of p1) ;; #&lt;STANDARD-CLASS PERSON&gt;</code></pre>
+<p>
+Но мы изменим его на собственный, чтобы иметь возможность <strong>подсчитывать 
+создание экземпляров</strong>. Этот же механизм можно использовать для 
+автоматического увеличения первичного ключа системы баз данных 
+(так поступают библиотеки Postmodern или Mito), для регистрации 
+создания объектов и т. Д.
+</p>
+
+<p>Наш метакласс унаследован от  <code class="western">standard-class</code>:</p>
+
+<pre class="western"><code class="western">(defclass counted-class (standard-class)</code>
+<code class="western">  </code><code class="western">((counter :initform 0)))</code>
+<code class="western">#&lt;STANDARD-CLASS COUNTED-CLASS&gt;</code>
+
+<code class="western">(unintern 'person)</code>
+<code class="western">;; this is necessary to change the metaclass of person.</code>
+<code class="western">;; or (setf (find-class 'person) nil)</code>
+<code class="western">;; https://stackoverflow.com/questions/38811931/how-to-change-classs-metaclass#38812140</code>
+
+<code class="western">(defclass person ()</code>
+<code class="western">  </code><code class="western">((name</code>
+<code class="western">    </code><code class="western">:initarg :name</code>
+<code class="western">    </code><code class="western">:accessor name)</code>
+<code class="western">  </code><code class="western">(:metaclass counted-class))) ;; &lt;- metaclass</code>
+<code class="western">;; #&lt;COUNTED-CLASS PERSON&gt;</code>
+<code class="western">;;   ^^^ not standard-class anymore.</code></pre>
+<p>
+Параметр класса <code class="western">:metaclass</code> может появляться 
+только один раз.</p>
+
+<p>На самом деле вы должны были получить сообщение с просьбой 
+реализовать <code class="western">validate-superclass</code>(суперкласс проверки). 
+Итак, с библиотекой <code class="western">closer-mop</code>: </p>
+
+<pre class="western"><code class="western">(defmethod closer-mop:validate-superclass ((class counted-class)</code>
+<code class="western">                                           </code><code class="western">(superclass standard-class))</code>
+<code class="western">  </code><code class="western">t)</code></pre>
+<p>
+Теперь мы можем контролировать создание новых экземпляров 
+<code class="western">person</code>: </p>
+
+<pre class="western"><code class="western">(defmethod make-instance :after ((class counted-class) &amp;key)</code>
+<code class="western">  </code><code class="western">(incf (slot-value class 'counter)))</code>
+<code class="western">;; #&lt;STANDARD-METHOD MAKE-INSTANCE :AFTER (COUNTED-CLASS) {1007718473}&gt;</code></pre>
+<p>
+Обратите внимание, что квалификатор <code class="western">:after</code> - 
+самый безопасный вариант, мы позволяем стандартному методу работать как обычно и 
+возвращаем новый экземпляр.</p>
+
+<p>Ключ <code class="western">&amp;key</code> необходим, помните, что 
+<code class="western">make-instance</code> имеет initargs.</p>
+
+<p>Сейчас тестируем: </p>
+
+<pre class="western"><code class="western">(defvar p3 (make-instance 'person :name &quot;adam&quot;))</code>
+<code class="western">#&lt;PERSON {1007A8F5B3}&gt;</code>
+
+<code class="western">(slot-value p3 'counter)</code>
+<code class="western">;; =&gt; error. No, our new slot isn't on the person class.</code>
+<code class="western">(slot-value (find-class 'person) 'counter)</code>
+<code class="western">;; 1</code>
+
+<code class="western">(make-instance 'person :name &quot;eve&quot;)</code>
+<code class="western">;; #&lt;PERSON {1007AD5773}&gt;</code>
+<code class="western">(slot-value (find-class 'person) 'counter)</code>
+<code class="western">;; 2</code></pre>
+<p>
+Работает.</p>
+
+<h2 class="western"><a name="controlling-the-initialization-of-instances-initialize-instance"></a>
+Управление инициализацией экземпляров (initialize-instance)</h2>
+
+<p>Для дальнейшей настройки создания экземпляров путем специализации 
+<code class="western">initialize-instance</code>, который вызывается 
+<code class="western">make-instance</code>, сразу после того, как он создал 
+новый экземпляр, но еще не инициализировал его с помощью initargs и initforms по умолчанию. </p>
+
+<p>Рекомендуется (Keene) создать метод after, поскольку создание основного метода 
+предотвратит инициализацию слотов. </p>
+
+<pre class="western"><code class="western">(defmethod initialize-instance :after ((obj person) &amp;key)</code>
+<code class="western">  </code><code class="western">(do something with obj))</code></pre>
+<p>
+Другой рациональный путь. Реализация <code class="western">make-instance</code> 
+в CLOS состоит из двух этапов: выделяет новый объект и затем передает его вместе 
+со всеми аргументами ключевыми словами <code class="western">make-instance</code> 
+в обобщенную функцию <code class="western">initialize-instance</code>. 
+Реализаторы и разработчики приложений определяют: методы-после
+(<code class="western">:after</code>) <code class="western">initialize-instance</code> 
+для инициализации слотов экземпляра. Предоставляемый системой основной метод 
+делает это в отношении (a) значений <code class="western">:initform</code> и
+<code class="western">:initarg</code>, предоставленных с определением класса, и 
+(b) ключевых слов, переданных из <code class="western">make-instance</code>. 
+Другие методы могут расширить это поведение по своему усмотрению. 
+Например, они могут принять дополнительное ключевое слово, которое вызывает 
+доступ к базе данных для заполнения определенных слотов. Лямбда-список для 
+<code class="western">initialize-instance</code> это: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">initialize-instance instance &amp;rest initargs &amp;key &amp;allow-other-keys</code></pre>
+<p>
+Смотрите больше в книгах  
+</p>
+
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

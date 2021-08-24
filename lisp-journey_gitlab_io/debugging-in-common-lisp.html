@@ -1,0 +1,590 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-08-14T13:11:23.892448350"/>
+	<meta name="changed" content="2021-08-14T13:13:31.498115735"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Отладка в Common Lisp</h1>
+
+<p>Вы вошли в этот новый мир Лиспа и теперь задаетесь вопросом: 
+как мы можем отладить то, что происходит? Насколько он более интерактивен, 
+чем на других платформах? Что приносит интерактивный отладчик из трассировки 
+стека?</p>
+
+<p><em>примечание</em>: это руководство доступно в 
+<a href="https://lispcookbook.github.io/cl-cookbook/debugging.html">Поваренной книге 
+Common Lisp</a> и будет получать обновления там.</p>
+
+<p>Если вам нужны пошаговые примеры интерактивной отладки с красивыми снимками 
+экрана и гифками, см. Сообщения блога в разделе «Ссылки» ниже. </p>
+
+<p><strong>Оглавление</strong></p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#print-debugging"> Отладка с помощью печати</a> 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#logging"> логирование</a>
+		</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#using-the-powerful-repl"> Использование мощного REPL</a> 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#inspect-and-describe">Inspect(Осмотр) и describe(описание)</a> 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#the-interactive-debugger"> Интерактивный отладчик</a> 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#trace">Трассировка(Trace/След)</a>
+		</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm"><a href="#tracing-method-invocation">Вызов метода трассировки </a> 
+		</p>
+
+	</ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#step">Шаг(step)</a>
+		</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#break">Перерыв(Break)</a>
+		</p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm"><a href="#breakpoints-in-slime">Точки останова в  Slime</a> 
+		</p>
+
+	</ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#advise-and-watch">Консультация(Advise) и наблюдение/слежка(watch)</a> 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="#unit-tests">Модульные тесты</a> 
+	</p>
+
+	<li/>
+
+<p><a href="#references">Ссылки</a>
+		</p>
+<p><a href="#remote-debugging">Удаленная отладка</a>
+		</p>
+
+</ul>
+<h2 class="western"><a name="print-debugging"></a>Отладка с помощью печати</h2>
+
+<p>Конечно, мы можем использовать знаменитую технику «отладки печатью». 
+Давайте просто вспомним несколько функций печати.</p>
+
+<p><code class="western">print</code> работает, он печатает READable 
+представление своего аргумента, что означает, что то, 
+что напечатано(<code class="western">print</code>ed), может быть прочитано
+(<code class="western">read</code>) обратно, считывателем Lisp.</p>
+
+<p><code class="western">princ</code> фокусируется на <em>эстетическом</em> 
+представлении.</p>
+
+<p><code class="western">format t &quot;~a&quot; …)</code>, с <em>эстетической</em> 
+директивой печатает строку (в <code class="western">t</code>, стандартный поток вывода) 
+и возвращает nil, тогда как <code class="western">format nil …</code> ничего не печатает 
+и возвращает строку. С помощью множества элементов управления форматом мы можем 
+распечатать сразу несколько переменных. </p>
+
+<h2 class="western"><a name="logging"></a>Логирование</h2>
+
+<p>Логгирование(Ведение журнала) - хорошая эволюция от отладки печатью ;)</p>
+
+<p><a href="https://github.com/sharplispers/log4cl/">log4cl</a>  
+это популярная де-факто библиотека для ведения журналов, 
+но не единственная. Загрузить:</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(ql:quickload :log4cl)</code></pre>
+<p>
+и у нас есть фиктивная переменная: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(defvar *foo* '(:a :b :c))</code></pre>
+<p>
+Мы можем использовать log4cl с его nickname(псевдонимом) <code class="western">log</code>, 
+тогда его так же просто использовать, как: </p>
+
+<pre class="western"><code class="western">(log:info *foo*)</code>
+<code class="western">;; &lt;INFO&gt; [13:36:49] cl-user () - *FOO*: (:A :B :C)</code></pre>
+<p>
+Мы можем чередовать строки и выражения со строками управления 
+<code class="western">format</code>(форматом) или без них: </p>
+
+<pre class="western"><code class="western">(log:info &quot;foo is &quot; *foo*)</code>
+<code class="western">;; &lt;INFO&gt; [13:37:22] cl-user () - foo is *FOO*: (:A :B :C)</code>
+<code class="western">(log:info &quot;foo is ~{~a~}&quot; *foo*)</code>
+<code class="western">;; &lt;INFO&gt; [13:39:05] cl-user () - foo is ABC</code></pre>
+<p>
+С помощью сопутствующей библиотеки <code class="western">log4slime</code> мы можем 
+интерактивно изменять уровень логгирования(записи журнала):</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"> глобальный, 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">на пакет, 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">на функцию, 
+	</p>
+
+	<li/>
+
+<p>  а также методами CLOS и иерархией CLOS (методы до и после). 
+	</p>
+
+</ul>
+
+<p>Когда у нас много выходных данных, очень удобно отключать ведение журнала 
+функций или пакетов, которые, как мы предполагаем, работают, и, таким образом, 
+сужать наш поиск до нужной области. Мы даже можем сохранить эту конфигурацию и 
+повторно использовать ее в другом образе, или даже на другой машине.</p>
+
+<p>Все это можно сделать с помощью команд, сочетаний клавиш, а также с помощью меню 
+или щелчков мышью. </p>
+
+<p><img src="debugging-in-common-lisp_html_bb19b470f2fefdfa.png" name="Image1" alt=""changing the log level with log4slime"" align="bottom" width="670" height="361" border="0"/>
+</p>
+
+<p>Приглашаем вас прочитать файл readme для log4cl. </p>
+
+<h2 class="western"><a name="using-the-powerful-repl"></a>Использование мощного REPL</h2>
+
+<p>Частью удовольствия использования Lisp является превосходный REPL. 
+Его существование обычно откладывает необходимость использования других 
+инструментов отладки, если совсем не отменяет их для обычной процедуры.</p>
+
+<p>Как только мы определим функцию, мы можем попробовать ее в REPL. 
+В Slime скомпилируйте функцию с помощью <code class="western">C-c C-c</code> 
+(или весь буфер с <code class="western">C-c C-k</code>), переключитесь в REPL 
+с помощью <code class="western">C-c C-z</code> и попробуйте. 
+В конце концов войдите в пакет, над которым вы работаете 
+ <code class="western">(in-package :your-package)</code>.</p>
+
+<p>Обратная связь мгновенная. Нет необходимости ни перекомпилировать все, 
+ни перезапускать какой-либо процесс, ни создавать основную функцию и 
+определять аргументы командной строки для использования в оболочке 
+(мы можем сделать это позже, когда потребуется).</p>
+
+<p>Обычно нам нужно создать некоторые данные для тестирования наших функций. 
+Это последующее искусство существования REPL и, возможно, новая дисциплина для новичков. 
+Уловка состоит в том, чтобы записать тестовые данные вместе с вашими функциями, 
+но внутри объявления <code class="western">#+nil</code>, чтобы только вы могли 
+вручную скомпилировать их: </p>
+
+<pre class="western"><code class="western">    </code><code class="western">#+nil</code>
+<code class="western">    </code><code class="western">(progn</code>
+<code class="western">       </code><code class="western">(defvar *test-data* nil)</code>
+<code class="western">       </code><code class="western">(setf *test-data* (make-instance 'foo â¦)))</code></pre>
+<p>
+Когда вы загружаете этот файл, <code class="western">*test-data*</code> 
+не будет существовать, но вы можете создать его вручную с помощью 
+<code class="western">C-c C-c</code>.</p>
+
+<p>Мы можем определить функции тестирования здесь.</p>
+
+<p>Некоторые делают то же самое внутри <code class="western">#| … |#</code> Комментариев.
+</p>
+
+<p>При этом не забывайте писать модульные тесты, когда придет время ;) </p>
+
+<h2 class="western"><a name="inspect-and-describe"></a>Inspect(Осмотр) и describe(описание)</h2>
+
+<p>Эти две команды преследуют одну и ту же цель: распечатать описание(description) 
+объекта, а <code class="western">inspect</code> - интерактивный.</p>
+
+<pre class="western"><code class="western">(inspect *foo*)</code>
+
+<code class="western">The object is a proper list of length 3.</code>
+<code class="western">0. 0: :A</code>
+<code class="western">1. 1: :B</code>
+
+<code class="western">2. 2: :C</code>
+<code class="western">&gt; q</code></pre>
+<p>
+Мы также можем в редакторах, которые его поддерживают, щелкнуть правой кнопкой мыши 
+любой объект в REPL и проверить(проинспектировать/<code class="western">inspect</code>) его. 
+Нам представлен экран, на котором мы можем глубоко погрузиться в структуру данных и 
+даже изменить ее.</p>
+
+<p>Давайте быстро рассмотрим более интересную структуру, объект: </p>
+
+<pre class="western"><code class="western">(defclass foo ()</code>
+<code class="western">    </code><code class="western">((a :accessor foo-a :initform '(:a :b :c))</code>
+<code class="western">     </code><code class="western">(b :accessor foo-b :initform :b)))</code>
+<code class="western">;; #&lt;STANDARD-CLASS FOO&gt;</code>
+<code class="western">(make-instance 'foo)</code>
+<code class="western">;; #&lt;FOO {100F2B6183}&gt;</code></pre>
+<p>
+Щелкаем правой кнопкой мыши по объекту <code class="western">#&lt;FOO</code> и 
+выбираем «inspect/проверить». Нам представлена интерактивная панель (в Slime): </p>
+
+<pre class="western"><code class="western">#&lt;FOO {100F2B6183}&gt;</code>
+<code class="western">--------------------</code>
+<code class="western">Class: #&lt;STANDARD-CLASS FOO&gt;</code>
+<code class="western">--------------------</code>
+<code class="western"> </code><code class="western">Group slots by inheritance [ ]</code>
+<code class="western"> </code><code class="western">Sort slots alphabetically  [X]</code>
+
+<code class="western">All Slots:</code>
+<code class="western">[ ]  A = (:A :B :C)</code>
+<code class="western">[ ]  B = :B</code>
+
+<code class="western">[set value]  [make unbound]</code></pre>
+<p>
+Когда мы щелкаем или нажимаем Enter на строке слота A, мы исследуем его 
+дальше: </p>
+
+<pre class="western"><code class="western">#&lt;CONS {100F5E2A07}&gt;</code>
+<code class="western">--------------------</code>
+<code class="western">A proper list:</code>
+<code class="western">0: :A</code>
+<code class="western">1: :B</code>
+<code class="western">2: :C</code></pre><h2 class="western">
+<a name="the-interactive-debugger"></a>Интерактивный отладчик</h2>
+
+<p>Всякий раз, когда возникает исключительная ситуация (см. 
+<a href="https://lispcookbook.github.io/cl-cookbook/error_handling.html">Обработку ошибок(error
+handling)</a>), появляется интерактивный отладчик.</p>
+
+<p>Он представляет сообщение об ошибке, доступные действия (<em>перезапуски)</em> 
+и обратную трассировку. Несколько замечаний:</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">перезапуски программируются, и мы можем создавать собственные, 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"> в Slime нажмите <code class="western">v</code> 
+	на трассировке стека, чтобы перейти к исходному файлу в правой строке, 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">нажмите Enter на фрейме, чтобы получить 
+	более подробную информацию,
+	</p>
+
+	<li/>
+
+<p>мы можем изучить функциональность с помощью меню, которое должно 
+	появиться в нашем редакторе. См. Ниже в разделе «break» еще 
+	несколько команд (eval во фрейме и т. Д.).  
+	</p>
+
+</ul>
+
+<p>Обычно ваш компилятор оптимизирует работу, и это сокращает объем информации, 
+доступной отладчику. Например, иногда мы не видим промежуточных переменных вычислений. 
+Возможно, вы захотите напечатать аргумент функции (с  <code class="western">e</code> 
+для «eval в фрейме», см. Ниже), но вы продолжаете получать ошибку 
+<code class="western">Variable XYZ is unbound</code>.</p>
+
+<p>Чтобы исправить это, мы должны изменить варианты оптимизации с помощью 
+<code class="western">declaim</code> в начале файла: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(declaim (optimize (speed 0) (space 0) (debug 3)))</code></pre>
+<p>
+или с <code class="western">declare</code>, внутри <code class="western">defun</code>:</p>
+
+<pre class="western"><code class="western">(defun my-fun (xyz)</code>
+<code class="western">  </code><code class="western">(declare (optimize (debug 3)))</code>
+<code class="western">  â¦</code><code class="western">)</code></pre>
+<p>
+и перекомпилировать код. Теперь вы должны увидеть локальные переменные, такие как 
+<code class="western">xyz</code>.</p>
+
+<h2 class="western"><a name="trace"></a>Трассировка/Отслеживание вызовов/Trace</h2>
+
+<p><a href="http://www.xach.com/clhs?q=trace">trace</a>  позволяет нам видеть, 
+когда была вызвана функция, какие аргументы она получила 
+и какое значение вернула. </p>
+
+<pre class="western"><code class="western">(defun factorial (n)</code>
+<code class="western">  </code><code class="western">(if (plusp n)</code>
+<code class="western">    </code><code class="western">(* n (factorial (1- n)))</code>
+<code class="western">    </code><code class="western">1))</code>
+<code class="western">(trace factorial)</code>
+
+<code class="western">(factorial 2)</code>
+<code class="western">  </code><code class="western">0: (FACTORIAL 3)</code>
+<code class="western">    </code><code class="western">1: (FACTORIAL 2)</code>
+<code class="western">      </code><code class="western">2: (FACTORIAL 1)</code>
+<code class="western">        </code><code class="western">3: (FACTORIAL 0)</code>
+<code class="western">        </code><code class="western">3: FACTORIAL returned 1</code>
+<code class="western">      </code><code class="western">2: FACTORIAL returned 1</code>
+<code class="western">    </code><code class="western">1: FACTORIAL returned 2</code>
+<code class="western">  </code><code class="western">0: FACTORIAL returned 6</code>
+<code class="western">6</code>
+
+<code class="western">(untrace factorial)</code></pre>
+<p>
+Чтобы отменить трассировку всех функций, просто вычислите
+<code class="western">(untrace)</code>.</p>
+
+<p>В Slime у нас также есть ярлык <code class="western">C-c M-t</code> для трассировки 
+или отмены трассировки функции.</p>
+
+<p>Если вы не видите рекурсивных вызовов, это может быть связано с оптимизацией 
+компилятора. Попробуйте это перед определением отслеживаемой/трассируемой функции: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(declaim (optimize (debug 3)))</code></pre>
+<p>
+Вывод печатается в <code class="western">*trace-output*</code> 
+(см. CLHS).</p>
+
+<p>В Slime у нас также есть интерактивный диалог трассировки с code class="western">M-x
+slime-trace-dialog</code>, привязанным к <code class="western">C-c T</code>.</p>
+
+<h3 class="western"><a name="tracing-method-invocation"></a>Вызов метода трассировки</h3>
+
+<p>В SBCL мы можем использовать <code class="western">(trace foo :methods t)</code> 
+для отслеживания порядка выполнения комбинации методов (методов до, после, вокруг). 
+Например: </p>
+
+<pre class="western"><code class="western">(trace foo :methods t)</code>
+
+<code class="western">(foo 2.0d0)</code>
+<code class="western">  </code><code class="western">0: (FOO 2.0d0)</code>
+<code class="western">    </code><code class="western">1: ((SB-PCL::COMBINED-METHOD FOO) 2.0d0)</code>
+<code class="western">      </code><code class="western">2: ((METHOD FOO (FLOAT)) 2.0d0)</code>
+<code class="western">        </code><code class="western">3: ((METHOD FOO (T)) 2.0d0)</code>
+<code class="western">        </code><code class="western">3: (METHOD FOO (T)) returned 3</code>
+<code class="western">      </code><code class="western">2: (METHOD FOO (FLOAT)) returned 9</code>
+<code class="western">      </code><code class="western">2: ((METHOD FOO :AFTER (DOUBLE-FLOAT)) 2.0d0)</code>
+<code class="western">      </code><code class="western">2: (METHOD FOO :AFTER (DOUBLE-FLOAT)) returned DOUBLE</code>
+<code class="western">    </code><code class="western">1: (SB-PCL::COMBINED-METHOD FOO) returned 9</code>
+<code class="western">  </code><code class="western">0: FOO returned 9</code>
+<code class="western">9</code></pre>
+<p>
+См. Раздел <a href="https://lispcookbook.github.io/cl-cookbook/clos.html">CLOS</a> 
+для получения более подробной информации. </p>
+
+<h2 class="western"><a name="step"></a>Step(Шаг)</h2>
+
+<p><a href="http://www.xach.com/clhs?q=step">step</a> это интерактивная команда 
+с той же областью действия, что и   <code class="western">trace</code>.
+Этот:</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(step (factorial 2))</code></pre>
+<p>
+дает интерактивную панель с доступными перезагрузками: </p>
+
+<pre class="western"><code class="western">Evaluating call:</code>
+<code class="western">  </code><code class="western">(FACTORIAL 2)</code>
+<code class="western">с аргументами:</code>
+<code class="western">  </code><code class="western">2</code>
+<code class="western">   </code><code class="western">[Condition of type SB-EXT:STEP-FORM-CONDITION]</code>
+
+<code class="western">Restarts:</code>
+<code class="western"> </code><code class="western">0: [STEP-CONTINUE] Resume normal execution</code>
+<code class="western"> </code><code class="western">1: [STEP-OUT] Resume stepping after returning from this function</code>
+<code class="western"> </code><code class="western">2: [STEP-NEXT] Step over call</code>
+<code class="western"> </code><code class="western">3: [STEP-INTO] Step into call</code>
+<code class="western"> </code><code class="western">4: [RETRY] Retry SLIME REPL evaluation request.</code>
+<code class="western"> </code><code class="western">5: [*ABORT] Return to SLIME's top level.</code>
+<code class="western"> </code><code class="western">--more--</code>
+
+<code class="western">Backtrace:</code>
+<code class="western">  </code><code class="western">0: ((LAMBDA ()))</code>
+<code class="western">  </code><code class="western">1: (SB-INT:SIMPLE-EVAL-IN-LEXENV (LET ((SB-IMPL::*STEP-OUT* :MAYBE)) (UNWIND-PROTECT (SB-IMPL::WITH-STEPPING-ENABLED #))) #S(SB-KERNEL:LEXENV :FUNS NIL :VARS NIL :BLOCKS NIL :TAGS NIL :TYPE-RESTRICTIONS ..</code>
+<code class="western">  </code><code class="western">2: (SB-INT:SIMPLE-EVAL-IN-LEXENV (STEP (FACTORIAL 2)) #&lt;NULL-LEXENV&gt;)</code>
+<code class="western">  </code><code class="western">3: (EVAL (STEP (FACTORIAL 2)))</code></pre>
+<p>
+Пошаговый режим полезен, но может быть признаком того, что вам нужно 
+упростить свою функцию. </p>
+
+<h2 class="western"><a name="break"></a>Break(Перерыв)</h2>
+
+<p>Вызов <a href="http://www.xach.com/clhs?q=break">break</a> заставляет программу 
+войти в отладчик, из которого мы можем проверить стек вызовов</p>
+
+<h3 class="western"><a name="breakpoints-in-slime"></a>Точки останова в
+Slime</h3>
+
+<p>Посмотрите на меню <code class="western">SLDB</code>, оно показывает клавиши 
+навигации и доступные действия. Из которых: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><code class="western">e</code>
+	(<em>sldb-eval-in-frame</em>) запрашивает выражение и вычисляет его 
+	в выбранном кадре. Вот как мы можем исследовать наши промежуточные переменные. 
+	</p>
+
+	<li/>
+
+<p><code class="western">d</code> аналогичен с добавлением 
+	красивой печати результата.
+	</p>
+
+</ul>
+
+<p>Как только мы находимся в кадре и обнаруживаем подозрительное поведение, 
+мы можем даже повторно скомпилировать функцию во время выполнения и 
+возобновить выполнение программы с того места, где оно было остановлено 
+(с помощью перезапуска «step-continue/пошаговое продолжение»). </p>
+
+<h2 class="western"><a name="advise-and-watch"></a>Консультация(Advise) и наблюдение/слежка(watch)</h2>
+
+<p><a href="http://www.xach.com/clhs?q=break">advise</a> и <a href="http://www.xach.com/clhs?q=watch">watch</a> доступны в реализациях некоторых поставщиков, таких как LispWorks. 
+Они недоступны в SBCL. <code class="western">advise</code> позволяет изменять функцию 
+без изменения ее исходного кода или делать что-то до или после ее выполнения, например, 
+комбинацию методов CLOS (до, после методов).</p>
+
+<p><code class="western">watch</code>  позволяет указать переменные, 
+которые будут отображаться в каком-либо графическом интерфейсе во время 
+выполнения программы. </p>
+
+<h2 class="western"><a name="unit-tests"></a>Модульные тесты</h2>
+
+<p>И последнее, но не менее важное: возможно, вы ищете автоматическое тестирование 
+отдельных функций! См. Раздел <a href="https://lispcookbook.github.io/cl-cookbook/testing.html">тестирования/testing</a> и список <a href="https://github.com/CodyReichert/awesome-cl#unit-testing">test
+frameworks(фреймворков для тестирования) и библиотек</a>.</p>
+
+<h2 class="western"><a name="references"></a>Ссылки</h2>
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://successful-lisp.blogspot.com/p/httpsdrive.html">âHow
+	to understand and use Common Lispâ</a>, chap. 30, David Lamkins
+	(book download from authorâs site) 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://malisper.me/debugging-lisp-part-1-recompilation/">Malisper:
+	debugging Lisp series</a> 
+	</p>
+
+	<li/>
+
+<p><a href="https://two-wrongs.com/debugging-common-lisp-in-slime.html">Two
+	Wrongs: debugging Common Lisp in Slime</a> 
+	</p>
+
+</ul>
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+<h2 class="western"><a name="remote-debugging"></a>Удаленная отладка</h2>
+
+<p>Вы можете запустить свое программное обеспечение на машине в сети, 
+подключиться к нему и отлаживать его из дома, из вашей среды разработки.</p>
+
+<p>При этом необходимо запустить <strong>сервер Swank</strong> на 
+удаленном компьютере (Swank является внутренним(backend) партнером Slime), 
+создать туннель ssh и подключиться к серверу Swank из нашего редактора. 
+Затем мы можем прозрачно просматривать и вычислять код в запущенном 
+экземпляре.</p>
+
+<p>Чтобы проверить это, давайте определим функцию, которая печатает вечно.</p>
+
+<p>При необходимости сначала импортируйте зависимости: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(ql:quickload '(&quot;swank&quot; &quot;bordeaux-threads&quot;))</code>
+<code class="western">;; a little common lisp swank demo</code>
+<code class="western">;; while this program is running, you can connect to it from another terminal or machine</code>
+<code class="western">;; and change the definition of doprint to print something else out!</code>
+
+<code class="western">(require :swank)</code>
+<code class="western">(require :bordeaux-threads)</code>
+
+<code class="western">(defparameter *counter* 0)</code>
+
+<code class="western">(defun dostuff ()</code>
+<code class="western">  </code><code class="western">(format t &quot;hello world ~a!~%&quot; *counter*))</code>
+
+<code class="western">(defun runner ()</code>
+<code class="western">  </code><code class="western">(swank:create-server :port 4006)</code>
+<code class="western">  </code><code class="western">(format t &quot;we are past go!~%&quot;)</code>
+<code class="western">  </code><code class="western">(bt:make-thread (lambda ()</code>
+<code class="western">                    </code><code class="western">(loop repeat 5 do</code>
+<code class="western">                          </code><code class="western">(sleep 5)</code>
+<code class="western">                          </code><code class="western">(dostuff)</code>
+<code class="western">                          </code><code class="western">(incf *counter*)))</code>
+<code class="western">                  </code><code class="western">:name &quot;do-stuff&quot;))</code>
+
+<code class="western">(runner)</code></pre>
+<p>
+На сервере мы можем запустить этот код с помощью </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">sbcl --load demo.lisp</code></pre>
+<p>
+Если вы проверите с помощью <code class="western">(bt:all-threads)</code>, 
+вы увидите, что ваш сервер Swank работает на порту 4006, а также другой поток, 
+готовый делать что-то: </p>
+
+<pre class="western"><code class="western">(#&lt;SB-THREAD:THREAD &quot;do-stuff&quot; RUNNING {10027CEDC3}&gt;</code>
+<code class="western"> </code><code class="western">#&lt;SB-THREAD:THREAD &quot;Swank Sentinel&quot; waiting on:</code>
+<code class="western">      </code><code class="western">#&lt;WAITQUEUE  {10027D0003}&gt;</code>
+<code class="western">    </code><code class="western">{10027CE8B3}&gt;</code>
+<code class="western"> </code><code class="western">#&lt;SB-THREAD:THREAD &quot;Swank 4006&quot; RUNNING {10027CEB63}&gt;</code>
+<code class="western"> </code><code class="western">#&lt;SB-THREAD:THREAD &quot;main thread&quot; RUNNING {1007C40393}&gt;)</code></pre>
+<p>
+Мы делаем переадресацию портов на нашей машине разработки: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">ssh -L4006:127.0.0.1:4006 username@example.com</code></pre>
+<p>
+это безопасно перенаправит порт 4006 на сервере example.com на порт 4006 нашего локального компьютера (Swank принимает соединения только от localhost).</p>
+
+<p>Подключаемся к работающему Swank с помощью 
+<code class="western">M-x slime-connect</code>, выбирая localhost 
+для хоста и порт 4006.</p>
+
+<p>Мы можем написать новый код: </p>
+
+<pre class="western"><code class="western">(defun dostuff ()</code>
+<code class="western">  </code><code class="western">(format t &quot;goodbye world ~a!~%&quot; *counter*))</code>
+<code class="western">(setf *counter* 0)</code></pre>
+<p>
+и вычислить его как обычно, например, с помощью <code class="western">C-c C-c</code> или
+ <code class="western">M-x slime-eval-region</code>. 
+Результат должен измениться. </p>
+
+<p>Вот как Рон Гаррет отлаживал космический корабль Deep Space 1 с Земли 
+в 1999 году:</p>
+
+<blockquote>Мы смогли отладить и исправить состояние гонки, которое 
+не обнаружилось во время наземного тестирования. (Отладка программы,
+работающей на аппаратном обеспечении стоимостью 100 миллионов долларов, 
+которое находится на расстоянии 100 миллионов миль, представляет собой интересный опыт. 
+Выполнение цикла чтения-оценки-печати( )на космическом корабле оказалось бесценным для поиска и устранения проблемы. </blockquote>
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</body>
+</html>
