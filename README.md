@@ -21,6 +21,21 @@ lisp-journey_gitlab_io/debugging-in-common-lisp.html - отладка в лис�
 lisp-journey_gitlab_io/models-and-databases-mito-sxql.html - ОРМ-базы данных в ЛИСП<br>
 </p>
 
+<p>
+Статьи в формате md<br>
+взято из https://github.com/LispCookbook/cl-cookbook <br>
+md/md_process.html - средства программирования потоков в лиспе с лисп cookbook<br>
+</p>
+
+<p>
+Статьи по программированию серверов www<br>
+www/ElephantUserManual.html - описание библиотеки Elephant-сохраняемые объекты-НЕЗАКОНЧЕНО<br>
+www/Hunchentoot.html  - лисп веб сервер<br>
+www/lispweb.html      - лисп для генерации веб-страниц<br>
+www/lispweb2.html     - и дополняющая статья<br>
+</p>
+
+
 <br>
 Сравнение языков программирования, взгляд Java программиста<br>
 Revisiting_Prechelts_paper_and_follow-ups_comparing_Java_Lisp,_CorC++_and_scripting_languages.html<br>
