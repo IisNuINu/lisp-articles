@@ -1,0 +1,901 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-09-05T08:50:24.492935475"/>
+	<meta name="changed" content="2021-09-05T08:51:26.494434735"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h2 class="western">Lisp для Web, Часть II 
+</h2>
+
+<p><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/">â</a>
+</p>
+
+<p>В этой статье я надеюсь дополнить статью Адама Петерсена
+<a href="https://web.archive.org/web/20171109223946/http://www.adampetersen.se/articles/lispweb.htm"><i>Лисп для Web</i></a>, предложив для обсуждения некоторые аспекты 
+веб-программирования, с которыми большинство из нас знакомо. 
+</p>
+
+<h3 class="western">Оглавление</h3>
+<div id="text-table-of-contents" dir="ltr">
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/#sec-1"> Что ожидать</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/#sec-2">Оригинальная программа
+</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/#sec-3">Ваша среда Lisp
+</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/#sec-4"> Умные маршруты</a>
+				</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/#sec-5">Написание CSS на Лиспе</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/#sec-6">Использование jQuery</a>
+				</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/#sec-7">Написание набора тестов</a> 
+		</p>
+
+		<li/>
+
+<p><a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/07/lisp-for-the-web-part-ii/#sec-8">Заключение </a>
+				</p>
+
+	</ul>
+</div>
+<div id="outline-container-sec-1" dir="ltr">
+	<h3 class="western"><a name="sec-1"></a>Что ожидать</h3>
+	<div id="text-1" dir="ltr">
+
+<p>Адам Петерсен написал потрясающую статью под названием <a href="https://web.archive.org/web/20171109223946/http://www.adampetersen.se/articles/lispweb.htm">Lisp
+	для Web</a>. В ней он знакомит читателей с созданием простого 
+	веб-приложения с использованием Common Lisp (далее Lisp). 
+	Это фантастическая статья, и я недавно сел с ней (и 
+	<a href="https://web.archive.org/web/20171109223946/http://landoflisp.com/">некоторыми</a> 
+	<a href="https://web.archive.org/web/20171109223946/http://www.ccs.neu.edu/home/matthias/BTLS/">другими</a> ресурсами), чтобы наконец написать код на Лиспе. 
+	</p>
+
+<p>Так что я хотел бы здесь взять некоторые вещи, которые были упущены 
+	(по уважительной причине) в исходной статье, и конкретизировать 
+	опыт разработки для Интернета с помощью Lisp. В конце статьи 
+	г-н Петерсен пишет, что 
+		</p>
+
+		<blockquote> Благодаря динамичному и интерактивному характеру Lisp он 
+		идеально подходит для создания прототипов. А поскольку программы на Лиспе 
+		очень легко развивать, этот прототип может однажды превратиться в 
+		полноценный продукт. 
+		</blockquote>
+
+<p>Я надеюсь, что, продолжая его руководство таким образом, я смогу показать 
+	читателям, как может происходить этот процесс от прототипа до продукта; 
+	органичным образом, демонстрирующим «эволюционные» способности Лиспа.  
+		</p>
+
+	</div>
+</div>
+<div id="outline-container-sec-2" dir="ltr">
+	<h3 class="western"><a name="sec-2"></a> Оригинальная программа</h3>
+	<div id="text-2" dir="ltr">
+
+<p>Исходную программу можно найти в статье о <a href="https://web.archive.org/web/20171109223946/http://www.adampetersen.se/articles/lispweb.htm">Lisp для Web</a>. Я внес в неё
+	некоторые изменения, чтобы соответствовать определенным критериям: 
+		</p>
+
+		<ul>
+			<li/>
+<p style="margin-bottom: 0cm">В исходной статье рекомендуется использовать BerkeleyDB 
+	в качестве серверной части, доступ к которой осуществляется через библиотеку 
+	Lisp <a href="https://web.archive.org/web/20171109223946/http://common-lisp.net/project/elephant/">Elephant</a>. Я все еще использую Elephant, хотя полагаю, что может быть доступно
+	более Лисповая библиотека сериализации - Elephant требует много погружений во внешние
+	функции. Однако BerkeleyDB заменен на SQLite. Это значительно упрощает развертывание и
+	позволяет избежать <a href="https://web.archive.org/web/20171109223946/http://en.wikipedia.org/wiki/Berkeley_DB#Licensing">проблем с лицензированием</a>, которые, похоже,
+	 преследуют BerkeleyDB. 
+			</p>
+
+			<li/>
+<p style="margin-bottom: 0cm">Мы привязываем хранилище Elephant к переменной, а именно 
+	<code class="western">*store*</code>, на случай, если мы хотим изменить базы 
+	данных во время взаимодействия на верхнем уровне.
+						</p>
+
+			<li/>
+<p style="margin-bottom: 0cm">Синтаксис для запуска сервера в Hunchentoot изменился 
+			по сравнению с исходной статьей. Теперь мы создаем экземпляр 
+			<a href="https://web.archive.org/web/20171109223946/http://weitz.de/hunchentoot/#acceptor">acceptor</a>(акцептора) Hunchentoot, чтобы привязать и запустить сервер.  
+			</p>
+
+			<li/>
+<p style="margin-bottom: 0cm">В исходной статье используются URL-адреса, 
+			оканчивающиеся на <code class="western">.htm</code>. Например, 
+			индексная страница находится по адресу <code class="western">/retro-games.htm</code>. Нет никаких причин для того, чтобы это не было просто 
+<code class="western">/retro-games</code>, и я изменил все URL-адреса, чтобы следовать 
+			этому соглашению. Помните, ребята, <a href="https://web.archive.org/web/20171109223946/http://www.w3.org/Provider/Style/URI">крутые URI</a> не раскрывают свою реализацию!
+			</p>
+
+			<li/>
+
+<p>Чтобы быть немного более инклюзивным, мы больше не голосуем просто 
+			по ретро-играм. Теперь вы можете добавлять голоса за любую игру! 
+			(На самом деле это не обязательное изменение, но я не знаю многих 
+			очень старых игр, поэтому, по крайней мере, это упрощает 
+			придумывание примеров.)
+			</p>
+
+		</ul>
+
+<p>Итак, первое, что мы собираемся сделать, это внести эти преобразования 
+		в исходный файл, а затем мы сможем продолжить работу оттуда. 
+		</p>
+
+<p>Если вам нужна разница(отличие), чтобы вы могли начать с этих изменений, 
+		я разместил её в Gist: <a href="https://web.archive.org/web/20171109223946/http://gist.github.com/1024814">game-voter.patch</a>
+				</p>
+
+<p><img src="lispweb2_html_af4c4238101b11ae.png" name="Image1" alt="main-page.png" align="bottom" width="750" height="657" border="0"/>
+
+				</p>
+
+	</div>
+</div>
+<div id="outline-container-sec-3" dir="ltr">
+	<h3 class="western"><a name="sec-3"></a>Ваша среда Lisp</h3>
+	<div id="text-3" dir="ltr">
+
+<p>В оригинальной статье весьма разумно избегается обсуждение реальной среды, 
+		в которой установлен Лисп. Никому не полезно иметь устаревшее 
+		описание установки Lisp. В этом случае, однако, я хотел бы сделать 
+		снимок состояния Lisp определенными способами; Я собираюсь в некоторой 
+		степени описать свою настройку. 
+		</p>
+
+<p>Запуск OS X 10.6.7 с установленным <a href="https://web.archive.org/web/20171109223946/http://www.sbcl.org/">Steel Bank Common Lisp</a> с помощью превосходной системы управления 
+пакетами(какой то маковский менеджер) <a href="https://web.archive.org/web/20171109223946/http://mxcl.github.com/homebrew/">homebrew</a>. Мой редактор, REPL и общая среда взаимодействия с Лиспом - 
+это Emacs 23.3, скомпилированный для Mac <a href="https://web.archive.org/web/20171109223946/http://emacsformacosx.com/">Дэвидом Колдуэллом</a>. 
+		</p>
+
+<p>Я использую менеджер пакетов - это фантастический <a href="https://web.archive.org/web/20171109223946/http://www.quicklisp.org/">Quicklisp</a>. Я уже пробовал устанавливать 
+		пакеты для Common Lisp с помощью ASDF, и Quicklisp намного проще, мощнее 
+		и многообещающе, что пугает. 
+		</p>
+
+<p>В REPL следующая команда сделала все, что я ожидал, и ничего, что я не сделал: 
+		установил библиотеки (часто называемые системами), которые мне были 
+		нужны, без жалоб и поломок, и предоставил пакеты на верхнем уровне.
+		</p>
+
+		<pre class="western" style="margin-bottom: 0.5cm">CL-USER&gt; (ql:quickload '(cl-who hunchentoot parenscript elephant fiveam css-lite cl-json))</pre>
+	</div>
+</div>
+<div id="outline-container-sec-4" dir="ltr">
+	<h3 class="western"><a name="sec-4"></a>Умные маршруты</h3>
+	<div id="text-4" dir="ltr">
+
+<p>Была одна вещь, которую я заметил почти сразу, когда играл с программой. 
+		Если бы я хотел внести изменения в «контроллер», то есть в 
+		любую из функций, определенных с помощью 
+		<code class="western">define-url-fn</code>, перевычисление 
+		его просто push(затолкнула) бы другой маршрут в 
+		<code class="western">hunchentoot:*dispatch-table*</code>. 
+		Само по себе это не большая проблема, но это ненужное вычисление, 
+		и после того, как я поместил сотню или около того различных версий
+		диспетчеризации контроллера в <code class="western">*dispatch-table*</code>(таблицу диспетчеризации), я захотел более практичный способ описания маршрутов 
+		на моем сайте. Кроме того, использование макроса, такого как 
+		<code class="western">define-url-fn</code>, для описания маршрутов 
+		означает, что Emacs не распознает эту функцию контроллера как допустимый 
+		символ. Это глупое удобство, но чем больше я использую <code class="western">defmacro</code> и <code class="western">defun</code>, тем легче мне 
+		найти код, который я ищу, с помощью поиска символов Emacs. 
+		</p>
+
+<p>Так, например, контроллер для добавления игры выглядит следующим образом: 
+				</p>
+
+		<pre class="western">(define-url-fn (game-added)
+  (let ((name (parameter &quot;name&quot;)))
+    (unless (or (null name) (zerop (length name))) ; In case JavaScript is turned off.
+      (add-game name))
+    (redirect &quot;/games&quot;))) ; Display the front page.</pre>
+<p>
+		К этому: 
+		</p>
+
+		<pre class="western">(defun controller-game-added ()
+  (let ((name (parameter &quot;name&quot;)))
+    (unless (or (null name) (zerop (length name)))
+      (add-game name))
+    (redirect &quot;/retro-games&quot;)))</pre>
+<p>
+		Теперь, имея несколько функций, я вручную установил <code class="western">*dispatch-table*</code> в список желаемых маршрутов, 
+		используя функции создания диспетчера Hunchentoot.
+				</p>
+
+<p><code class="western">hunchentoot:create-regex-dispatcher</code>
+		- это функция, которая принимает регулярное выражение для конечной 
+		точки и запускает функцию, названную вторым аргументом, при выполнении. 
+				</p>
+
+		<pre class="western">(setq *dispatch-table*
+ (list
+  (create-regex-dispatcher &quot;^/index&quot; 'controller-index)
+  (create-regex-dispatcher &quot;^/vote&quot; 'controller-vote)
+  (create-regex-dispatcher &quot;^/game-added&quot; 'controller-game-added)
+  (create-regex-dispatcher &quot;^/new-game&quot; 'controller-new-game)))</pre>
+	</div>
+</div>
+<div id="outline-container-sec-5" dir="ltr">
+	<h3 class="western"><a name="sec-5"></a>Написание CSS на Лиспе</h3>
+	<div id="text-5" dir="ltr">
+
+<p>Исходный учебник никогда не предоставляет CSS, который использовался для 
+		стилизации веб-сайта. Как видите, я предоставил некоторые из моих 
+		собственных CSS, чтобы немного улучшить ситуацию, но вы не увидите этого, 
+		если зашли так далеко в статье. Почему? Потому что мы перезаписали 
+		содержимое <code class="western">*dispatch-table*</code> четырьмя 
+		маршрутами, которые мы определили выше. Что мы собираемся сделать, 
+		так это определить другой маршрут для CSS, но предоставить CSS в форме Lisp,
+		которая затем будет переведена для нас в CSS. Это дает нам некоторую 
+		гибкость и может помочь уменьшить часть избыточности, которую CSS имеет 
+		тенденцию накапливать, не прибегая к некоторым расширениям CSS (таким 
+		как <a href="https://web.archive.org/web/20171109223946/http://sass-lang.com/">Sass</a> или <a href="https://web.archive.org/web/20171109223946/http://lesscss.org/">LESS</a>).
+				</p>
+
+<p>CSS входит в функцию контроллера, как и другие динамически создаваемые 
+		страницы на сайте.  
+		</p>
+
+		<pre class="western">(defun controller-css ()
+  (setf (hunchentoot:content-type* hunchentoot:*reply*) &quot;text/css&quot;)
+  &quot;...&quot;)</pre>
+<p>
+		Мы устанавливаем  <code class="western">content-type</code> 
+		заголовка на «text/css», что позволяет веб-браузерам знать, 
+		что отправляемый нами файл предназначен для интерпретации как 
+		таблица стилей. Я собрал стиль и буду использовать некоторые 
+		его аспекты, чтобы проиллюстрировать некоторые моменты с помощью 
+		Lisp, но вы можете изменить стиль сайта, как хотите. В любом случае 
+		замените многоточие в приведенном выше примере кода своим стилем. Вы 
+		можете использовать свой CSS дословно, явно используя несколько символов 
+		новой строки в одной строке. Строки Лиспа понимают несколько строк без 
+		какого-либо специального индикатора:  
+		</p>
+
+		<pre class="western">(setq *some-string* &quot;This is a string that
+spans
+multiple
+lines.&quot;)</pre>
+<p>
+		Мой стиль CSS воспроизводится по следующей ссылке: <a href="https://web.archive.org/web/20171109223946/https://gist.github.com/1062278">game-voter.css</a>
+				</p>
+
+<p>Мы будем использовать библиотеку <a href="https://web.archive.org/web/20171109223946/http://www.cliki.net/css-lite">css-lite</a> для создания нашего CSS. Эта библиотека предоставляет 
+		один основной метод, <code class="western">css</code>, который принимает 
+		список списков и генерирует из них наш CSS. Внутри этого параметра списка 
+		все остальные списки описывают набор селекторов, а следующий список 
+		представляет собой связанный список атрибутов css для значений. Мой первый 
+		перевод в формат <code class="western">css-lite</code> выглядит примерно так: 
+		</p>
+
+		<pre class="western">(defun controller-css ()
+  (setf (hunchentoot:content-type* hunchentoot:*reply*) &quot;text/css&quot;)
+  (css-lite:css
+    ((&quot;body&quot;)
+     (:width &quot;70%&quot; :margin &quot;0 auto&quot; :font-family &quot;sans-serif&quot;
+      :border-left &quot;1px solid #ccc&quot;
+      :border-right &quot;1px solid #ccc&quot;
+      :border-bottom &quot;1px solid #ccc&quot;))
+    ((&quot;h1&quot;)
+     (:font-size &quot;140%&quot; :text-align &quot;center&quot;))
+    ((&quot;h2&quot;)
+     (:color &quot;#000&quot; :background-color &quot;#cef&quot; :margin &quot;0 auto&quot; :padding &quot;4px 0&quot;))
+    ((&quot;#header&quot;)
+     (:background-color &quot;#cef&quot; :padding &quot;8px&quot;))
+    ((&quot;#header .logo&quot;)
+      (:display &quot;block&quot; :margin &quot;0 auto&quot;))
+    ((&quot;#header .strapline&quot;)
+     (:display &quot;block&quot; :text-align &quot;center&quot; :font-size &quot;80%&quot; :font-style &quot;italic&quot;))
+
+    ;; и так далее ...</pre>
+<p>
+		Итак, первое, что бросается в глаза, - это повторение описания border(границы)
+		для селектора <code class="western">body</code>(тела). Я уверен, что есть 
+		какой-нибудь способ описания границы с помощью CSS, но в качестве примера 
+		мы собираемся использовать переменную для инкапсуляции описания границы. 
+		</p>
+
+		<pre class="western">(let ((border &quot;1px solid #ccc&quot;))
+  (css-lite:css ((&quot;body&quot;)
+                 (:border-left border
+                  :border-right border
+                  :border-bottom border))))</pre>
+<p>
+		Достаточно просто, но что, если мы захотим сократить какой-то 
+		более сложный фрагмент CSS? Например, некоторые атрибуты CSS3, 
+		которые инициализируются по-разному для каждого браузера?
+
+		</p>
+
+<p>Свойство gradient в настоящее время имеет несколько различных реализаций. 
+		Вот селекторы, предоставляемые популярным генератором градиентов CSS3, 
+		отличным и всеобъемлющим <a href="https://web.archive.org/web/20171109223946/http://www.colorzilla.com/gradient-editor/">Ultimate CSS Gradient Generator</a> от Алекса Сироты: 
+		</p>
+
+		<pre class="western">background: #1e5799; /* Old browsers */
+background: -moz-linear-gradient(top, #1e5799 0%, #2989d8 50%, #207cca 51%, #7db9e8 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#1e5799), color-stop(50%,#2989d8), color-stop(51%,#207cca), color-stop(100%,#7db9e8)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top, #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top, #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%); /* Opera11.10+ */
+background: -ms-linear-gradient(top, #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%); /* IE10+ */
+background: linear-gradient(top, #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%); /* W3C */</pre>
+<p>
+		Что мы хотим сделать, так это описать наш CSS как имеющий градиент, 
+		а Lisp сделает работу по его переводу во все браузеры, которые мы 
+		хотим поддерживать.
+		</p>
+
+<p>Первое, на что следует обратить внимание, это то, что многие правила 
+		используют один и тот же базовый формат - формат рекомендации W3C. 
+		Эти правила должно быть легко применить, просто изменив имя функции CSS. 
+		Две другие вещи, которые должны вам броситься в глаза: 
+		</p>
+
+		<ul>
+			<li/>
+<p style="margin-bottom: 0cm">Мы должны использовать спадающий фон первого цвета 
+		в шаблоне для браузеров, которые вообще не поддерживают градиент.
+			</p>
+
+			<li/>
+
+<p> Правило <code class="western">-webkit-gradient</code> меняет порядок 
+		аргументов на обратный: вместо цвета и процента оно 
+		принимает процент и цвет.  
+			</p>
+
+		</ul>
+
+<p>Функция должна возвращать плоский список селекторов и значений CSS. 
+		Затем мы передаем его внутренней функции <code class="western">css-lite</code>,
+		<code class="western">make-css-function</code>, с идентификатором, 
+		который мы можем использовать в макросе <code class="western">css</code>. 
+		</p>
+
+		<pre class="western">(defun css-linear-gradient (colors-and-positions)
+  (let ((default-background (caar colors-and-positions)))
+    (flet ((w3c-spec (name)
+             (format nil &quot;~A(top, ~{~{~A ~A%~}~^, ~})&quot; name colors-and-positions))
+           (webkit-gradient ()
+             (format nil &quot;-webkit-gradient(linear, left top, left bottom, ~{color-stop(~{~A%, ~A~})~^, ~})&quot;
+               (mapcar #'reverse colors-and-positions))))
+      (list
+       :background default-background
+       :background (w3c-spec &quot;-moz-linear-gradient&quot;)
+       :background (webkit-gradient)
+       :background (w3c-spec &quot;-webkit-linear-gradient&quot;)
+       :background (w3c-spec &quot;-o-linear-gradient&quot;)
+       :background (w3c-spec &quot;-ms-linear-gradient&quot;)
+       :background (w3c-spec &quot;linear-gradient&quot;)))))
+
+(css-lite::make-css-func
+  linear-gradient (colors-and-positions) (css-linear-gradient colors-and-positions))</pre>
+<p>
+		Это работает примерно так, как мы ожидаем, создавая различные 
+		комбинации методов градиента, описанных выше. 
+		</p>
+
+		<pre class="western">(css-lite:css
+  ((&quot;body&quot;)
+   (linear-gradient '((&quot;#1e5799&quot; 0) (&quot;#2989d8&quot; 50) (&quot;#207cca&quot; 51) (&quot;#7db9e8&quot; 100)))))</pre>
+	</div>
+</div>
+<div id="outline-container-sec-6" dir="ltr">
+	<h3 class="western"><a name="sec-6"></a>Использование&nbsp;jQuery</h3>
+	<div id="text-6" dir="ltr">
+
+<p>В исходной статье использовался некоторый Javascript, чтобы запретить
+		пользователю отправлять форму отправки игры, если они пытались 
+		ввести пустую строку для названия игры. Он был написан на 
+		<code class="western">parenscript</code>, библиотеке, которая переводит 
+		код Lisp в соответствующий JavaScript. Это была довольно 
+		примитивная реализация, воспроизведенная ниже:  
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps-inline
+             (when (= name.value &quot;&quot;)
+               (alert &quot;Please enter a name.&quot;)
+               (return false)))
+&quot;javascript:if (name.value === \&quot;\&quot;) {
+    alert(\&quot;Please enter a name.\&quot;);
+    return false;
+}&quot;</pre>
+<p>
+		Такие модальные окна предупреждений не являются ужасной идеей, 
+		но есть более элегантный и ожидаемый способ справиться с таким 
+		поведением: отображать встроенное сообщение для пользователя при 
+		отправке формы; и что может быть лучше, чем jQuery? 
+		</p>
+
+<p>Parenscript - фантастическая библиотека, но может потребоваться некоторое время 
+		и размышления, чтобы привыкнуть к ее идиомам. Большинство из них имеют 
+		смысл в ретроспективе, но не раньше, чем вы ими воспользуетесь какое-то время.
+		Хорошая новость в том, что он отлично работает с jQuery после того, как вы
+		поработали над этим, а макросы Lisp могут помочь преодолеть пробел и облегчить 
+		вам жизнь.  
+		</p>
+
+<p>Основной макрос, используемый с Parenscript, - это <code class="western">ps</code>, 
+		особенно если вы будете вставлять содержимое вашего кода непосредственно 
+		в теги <code class="western">&lt;script&gt;</code>. Большая часть Parenscript
+		состоит из своего рода translators(преобразователей), превращающих 
+		лисп-формы в соответствующее многословие Javascript. <a href="https://web.archive.org/web/20171109223946/http://common-lisp.net/project/parenscript/reference.html">Ссылка на Parenscript</a> - это каноническая библия этих преобразований, 
+		в которой кратко объясняются все эти правила и то, как они могут применяться. 
+		А пока мы рассмотрим те, которые имеют отношение к нам. 
+		</p>
+
+<p>У простых функций есть очевидные аналоги.  
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps (+ 1 2))
+
+&quot;1 + 2;&quot;</pre>
+<p>
+		Попытка вызвать функцию по имени также очевидна. Именно здесь 
+		мы указываем на одно из преобразующих свойств Parenscript: брать 
+		символы с дефисом и превращать их в действительный идентификатор 
+		Javascript, используя заглавные буквы сразу после дефисов. Это 
+		необходимое изменение, поскольку символы в Лиспе заключены в 
+		заглавные буквы.  
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps (makeFunnyNoise))
+
+&quot;makefunnynoise();&quot;
+
+GAME-VOTER&gt; (ps (make-funny-noise))
+
+&quot;makeFunnyNoise();&quot;</pre>
+<p>
+		Большая часть программирования jQuery выполняется путем передачи 
+		анонимных функций. В Parenscript эти функции создаются через - 
+		А как иначе? - использование лямбды(<code class="western">lambda</code>). 
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps (lambda (foo bar) (+ foo bar)))
+
+&quot;function (foo, bar) {
+    return foo + bar;
+};&quot;</pre>
+<p>
+		Переменные можно определять по-разному; наиболее разумным для нас 
+		способом является использование привязки <code class="western">let</code>, 
+		которая работает во многом так, как вы ожидаете. Это лучшая часть Parenscript: 
+		она предсказуема. Вам не нужно менять многие привычки, чтобы начать её
+		использовать.  
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps (let ((a 1) (b 2)) (+ a b)))
+
+&quot;var a = 1;
+var b = 2;
+a + b;&quot;</pre>
+<p>
+		Объекты можно создавать с помощью оператора 
+		<code class="western">create</code>. 
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps (create :url &quot;http://example.com&quot;))
+
+&quot;{ 'url' : 'http://example.com' };&quot;</pre>
+<p>
+		Если бы у нас был объект (Javascript) с именем <code class="western">foo</code>
+		и мы хотели бы вызвать его функцию <code class="western">bar</code>, 
+		нам пришлось бы использовать оператор «chain/цепочки» в Parenscript, 
+		обозначаемый символом <code class="western">@</code>. Затем мы заключаем 
+		оператор цепочки в другие круглые скобки, чтобы указать, что мы вызываем
+		результат. Здесь мы также показываем вам, что любой непонятный символ, 
+		например,  <code class="western">foo</code> и
+		<code class="western">bar</code>, остается неизменным.. 
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps (@ foo bar))
+
+&quot;foo.bar;&quot;
+
+GAME-VOTER&gt; (ps ((@ foo bar)))
+
+&quot;foo.bar();&quot;</pre>
+<p>
+		Это один из способов, которым мы можем получить доступ к 
+		основной функции jQuery, т.е. вызвать функции, висящие 
+		непосредственно от него, такие как <code class="western">$.ajax()</code>. 
+		Параметры можно поместить во внешние скобки связанного вызова.  
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps ((@ $ ajax)))
+
+&quot;$.ajax();&quot;
+
+GAME-VOTER&gt; (ps ((@ $ ajax) (create :url &quot;http://example.com&quot;)))
+
+&quot;$.ajax({ 'url' : 'http://example.com' });&quot;</pre>
+<p>
+		Другой способ - вызвать селектор jQuery для управления элементами 
+		на странице. 
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps ((@ ($ &quot;div.foo&quot;) fade-in)))
+
+&quot;$('div.foo').fadeIn();&quot;</pre>
+<p>
+		Имея в виду все это, давайте взглянем на jQuery, который 
+		мы хотим создать на странице:  
+		</p>
+
+		<pre class="western">$(document).ready(function () {
+    $('input.btn').click(function () {
+        var text = $('input.txt').val().trim();
+        if (text == '') {
+            $('#error').fadeIn();
+            return false;
+        };
+    });
+});</pre>
+<p>
+		Это моя первая попытка перевести это в Parenscript.  
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps ((@ ($ document) ready)
+                 (lambda ()
+                   ((@ ($ &quot;input.btn&quot;) click)
+                    (lambda ()
+                      (let ((text (chain ($ &quot;input.txt&quot;) (val) (trim))))
+                        (cond ((equal text &quot;&quot;) 
+                               ((@ ($ &quot;#error&quot;) fade-in))
+                               (return false)))))))))</pre>
+<p>
+		У нас есть дублирование кода, необходимого для подготовки 
+		обработчика событий: две строки для <code class="western">document.ready</code>
+		и две строки для <code class="western">$(&quot;input.btn&quot;).click</code>.
+		Используя Parenscript, мы можем написать макрос Lisp и «установить» его 
+		в преобразователь/переводчик Parenscript, вот так.  
+		</p>
+
+		<pre class="western">(defmacro $$ ((selector event-binding) &amp;body body)
+  =((@ ($ ,selector) ,event-binding) (lambda () ,@body)))
+
+(import-macros-from-lisp '$$)</pre>
+<p>
+		<code class="western">import-macros-from-lisp</code> описан в 
+		<a href="https://web.archive.org/web/20171109223946/http://common-lisp.net/project/parenscript/reference.html#section-macros">разделе макросов</a> документации Parenscript.
+		Это позволяет сделать нашу вторую попытку намного чище/понятнее.  
+		</p>
+
+		<pre class="western">GAME-VOTER&gt; (ps ($$ (document ready)
+                  ($$ (&quot;input.btn&quot; click)
+                    (let ((text (chain ($ &quot;input.txt&quot;) (val) (trim))))
+                      (cond ((equal text &quot;&quot;) 
+                             ((@ ($ &quot;#error&quot;) fade-in))
+                             (return false)))))))</pre>
+	</div>
+</div>
+<div id="outline-container-sec-7" dir="ltr">
+	<h3 class="western"><a name="sec-7"></a>Написание набора тестов</h3>
+	<div id="text-7" dir="ltr">
+
+<p>К этому моменту ваше маленькое веб-приложение должно выглядеть фантастически. 
+		Оно простое, но мощное и расширяемое. Проведенный нами рефакторинг, 
+		хотя и довольно поверхностный, в значительной степени позволил 
+		сделать дальнейшую работу над системой возможной и легкой. 
+		Однако есть один раздел, которого нам не хватает, - это набор тестов. 
+		Сегодня большинство программистов в той или иной степени задействовано 
+		по линии модульного тестирования. Можно оказаться за бортом - я считаю, 
+		что наборы тестов должны содержать абсурдно малое количество логики и 
+		состоять из одного или двух утверждений на единичный тест. Даже в этом 
+		случае очень легко начать тестирование неправильного поведения или 
+		написание надуманных тестов. 
+		</p>
+
+<p>Имея в виду эти мысли, мы собираемся написать небольшой эффективный набор тестов. 
+		Мы будем делать это с помощью библиотеки <a href="https://web.archive.org/web/20171109223946/http://common-lisp.net/project/bese/FiveAM.html">FiveAM</a>. FiveAM 
+		привлекателен по нескольким причинам:  
+		</p>
+
+		<ul>
+			<li/>
+<p style="margin-bottom: 0cm">Он инкапсулирует тесты в логические блоки, 
+			называемые <b>suites</b>(наборами, сюитами, свитами), подобно тому, 
+			как функции, макросы и классы разбиты на пакеты.
+			</p>
+
+			<li/>
+<p style="margin-bottom: 0cm"> Оператор утверждения is прост. <code class="western">is</code>
+			принимает форму, и если ее результат не равен nil, утверждение проходит.
+			Если форма вычисляется в <code class="western">nil</code>,
+			assertion(утверждение) не выполняется. 
+			</p>
+
+			<li/>
+
+<p>Это позволяет использовать обертывающий макрос, называемый <b>fixture</b>(приспособление). 
+			В то время как в других сюитах тестирования используется термин 			<b>fixture</b> для описания заранее сконструированных данных, 
+			таких как записи в базе данных, FiveAM расширяет это понятие, включая
+			настройку и разборку тестов.  
+			</p>
+
+		</ul>
+
+<p>Первое, что вам нужно сделать, это создать место для проведения тестов. 
+			Вне основного каталога я просто создал(с помощью touch) 
+			<code class="western">test/test-game-voter.lisp</code>. 
+			<code class="western">test-game-voter</code> будет другим пакетом, 
+			поэтому объявите его:  
+		</p>
+
+		<pre class="western">(defpackage test-game-voter
+  (:use :cl :game-voter :elephant :fiveam))
+
+(in-package :test-game-voter)</pre>
+<p>
+		И мы напишем тест, чтобы убедиться, что все работает должным образом. 
+		Обязательно войдите в пакет.  
+		</p>
+
+		<pre class="western">TEST-GAME-VOTER&gt; (test sanity
+                   (is (= 4 (+ 2 2))))
+
+TEST-GAME-VOTER&gt; (run!)
+.
+ Did 1 check.
+    Pass: 1 (100%)
+    Skip: 0 ( 0%)
+    Fail: 0 ( 0%)</pre>
+<p>
+		Довольно мило, а? Чрезвычайно просто. Единственный период в выводе после 
+		команды <code class="western">run!</code> - это однократный пройденный тест,
+		аналогичный тому, что вы видели в производных от xUnit. Теперь давайте 
+		посмотрим, что произойдет, если тест не пройден(fails). 
+		</p>
+
+		<pre class="western">TEST-GAME-VOTER&gt; (test more-sanity
+                   (is (= 4 (+ 2 4))))
+
+TEST-GAME-VOTER&gt; (run!)
+.f
+ Did 2 checks.
+    Pass: 1 (50%)
+    Skip: 0 ( 0%)
+    Fail: 1 (50%)
+
+ Failure Details:
+ --------------------------------
+ MORE-SANITY []: 
+      (+ 2 4) evaluated to 6, which is not = to 4..
+ --------------------------------</pre>
+<p>
+		Опять же, огромное количество деталей. Теперь удалите эти тесты из 
+		набора/сюиты с помощью <code class="western">(rem-test 'sanity)</code> и 
+		<code class="western">(rem-test 'more-sanity)</code>. Нам нужно написать
+		настоящие тесты. 
+		</p>
+
+<p>Первые модульные тесты, которые мы собираемся провести, находятся на уровне модели - 
+		чтобы убедиться, что класс game, который мы создали в первом руководстве, 
+		работает так, как мы ожидаем. Однако это persistent/хранимый класс, и мы 
+		хотим убедиться, что сохраняем тестовые экземпляры где-то еще, кроме нашей
+		общедоступной базы данных. Итак, это первый шаг: определение конфигурации и
+		контроллера Elephant для хранения этих новых данных. Второй шаг - убедиться, 
+		что мы разделили наши модельные тесты на сюиты/наборы моделей.  
+		</p>
+
+		<pre class="western">(defparameter *test-database-config*
+  '(:clsql (:sqlite3 &quot;test-store&quot;))
+  &quot;The connection information and filename of the database used in the
+test suite.&quot;)
+
+(defparameter *test-database-controller*
+  (open-store *test-database-config*)
+  &quot;The database controller for the test suite. We open one here so
+that every test run doesn't open more.&quot;)
+
+(def-suite :suite-game-voter-model)
+(in-suite :suite-game-voter-model)</pre>
+<p>
+		Следующая часть будет немного сложной. Мы не хотим, чтобы каждый тест 
+		добавлял свои собственные результаты в базу данных, а затем использовал 
+		эту загрязненную базу данных в следующем тесте. Elephant предоставляет 
+		нам возможность управления транзакциями базы данных, но этого недостаточно. 
+		Нам нужно указать, что транзакция должна быть aborted(прервана/отменена). 
+		Это потребует погружения во внутреннее устройство того, что заставляет 
+		Elephant работать: пакеты clsql-sys и db-clsql. 
+		</p>
+
+<p>Не вдаваясь в подробности, скажу следующее. 
+		<code class="western">*test-database-controller*</code> - это наш 
+		экземпляр хранилища данных. В нем хранится информация, используемая для
+		отслеживания транзакций, включая статус транзакции. Это поле можно 
+		установить вручную, и если Elephant пытается закрыть транзакцию и 
+		обнаруживает, что она не удалась, он полностью откатывает ее. 
+		Как он узнает, что это не удалось? Он проверяет статус транзакции: 
+		<code class="western">:aborted</code>/прервана.  
+		</p>
+
+<p>Имея в виду это объяснение, вот что мы смотрим с точки зрения кода. Возможно, 
+		это не самый элегантный способ справиться с этим, но он отлично 
+		подходит для наших целей.  
+		</p>
+
+		<pre class="western">(def-fixture db-fixtures ()
+  (with-transaction (:store-controller *test-database-controller*)
+    (&amp;body)
+    (setf (clsql-sys::transaction-status
+           (clsql-sys::transaction
+            (db-clsql::controller-db *test-database-controller*))) :aborted)))</pre>
+<p>
+		<code class="western">def-fixture</code> это макрос FiveAM. Он работает 
+		почти так же, как <code class="western">defmacro</code>, вместо этого 
+		помещая описанный макрос в собственный набор/сюиту fixture/приборов FiveAM. 
+		<code class="western">with-transaction</code> находится в пространстве имен
+		 Elephant и принимает связанный список параметров. В этом случае мы хотим
+		 убедиться, что транзакция происходит на нашем тестовом контроллере. 
+		Тег <code class="western">&amp;body</code> неявно связан в 
+		<code class="western">def-fixture</code>, поэтому нам не нужно указывать его 
+		в списке аргументов. Наконец, мы <code class="western">setf</code>/устанавливаем
+		статус транзакции, в которой мы находимся в <code class="western">:aborted</code>.
+		Когда <code class="western">with-transaction</code> достигает конца этой формы,
+		она увидит, что транзакция failed(не удалась), и откатит все, что мы сделали 
+		в body(теле). 
+		</p>
+
+<p>А теперь приступим к написанию тестов! В уме я могу придумать пару вещей, 
+		которые мы хотели бы протестировать: добавление игры, голосование за игру,
+		получение игры на основе ее имени и обеспечение того, чтобы мы могли 
+		определить, сохранена ли игра, передавая её имя. Начнем с добавления игры.  
+		</p>
+
+		<pre class="western">(test test-add-game-name
+    (with-fixture db-fixtures ()
+      (let ((game (game-voter::add-game &quot;test game&quot;)))
+        (is (equal &quot;test game&quot; (game-voter::name game))))))
+
+(test test-add-game-votes
+    (with-fixture db-fixtures ()
+      (let ((game (game-voter::add-game &quot;test game&quot;)))
+        (is (= 0 (game-voter::votes game))))))</pre>
+<p>
+		Вызовите <code class="western">run!</code> снова и проверьте результаты. 
+		Вы получили два проходных проверки? Обратите внимание, что 
+		<code class="western">run!</code> сообщает общее количество проверок или
+		утверждений, а не количество тестов. Это связано с тем, что FiveAM продолжит
+		выполнение теста, даже если проверка завершится неудачно, и сообщит о 
+		прохождении всех проверок в тесте. 
+		</p>
+
+<p>Обратите внимание, что мы должны использовать нотацию с двойным двоеточием 
+		для наших game функций, поскольку мы не сделали их внешне видимыми 
+		из нашего пакета <code class="western">game-voter</code>.  
+		</p>
+
+<p>Выглядит неплохо, но мы можем удалить лишь часть дублирования, 
+		написав макрос для тестов, которые, как мы знаем, будут использовать 
+		базу данных. А именно:  
+		</p>
+
+		<pre class="western">(defmacro db-test (test-name &amp;body body)
+  `(test ,test-name
+     (with-fixture db-fixtures ()
+       ,@body)))
+
+(db-test test-add-game-name
+  (let ((game (game-voter::add-game &quot;test game&quot;)))
+    (is (equal &quot;test game&quot; (game-voter::name game)))))</pre>
+<p>
+		Напишите еще несколько тестов. Убедитесь, что 
+		<code class="western">game-from-name</code> возвращает правильные 
+		значения для игр, которые есть или нет в системе. Убедитесь, что 
+		не удалось добавить игру с повторяющимся именем. Затем напишите что-то 
+		вроде этого:  
+		</p>
+
+		<pre class="western">(db-test test-sanitized-game-name
+  (game-voter::add-game &quot;Foo&quot;)
+  (game-voter::add-game &quot;  Foo  &quot;)
+  (is (= 1 (length (game-voter::games)))))</pre>
+<p>
+		Что ж, это не удается! Мы не дезинфицируем наш ввод! Это даже не 
+		улавливается на стороне клиента. В этом и заключается суть написания 
+		хороших тестов - поиск небольших кусочков поведения, которые 
+		неожиданно дают сбой.
+		</p>
+
+<p>Мы можем гарантировать, что сервер позаботится о дополнительных отступах 
+		вокруг имени игры, обрезав его. <code class="western">string-trim</code> 
+		берет строку, называемую <b>char bag</b>, а затем строку, которую 
+		вы хотите обрезать. Поскольку все строки представляют собой массив символов,
+		функция <code class="western">string-trim</code>(обрезки строк) проходит по
+		char bag(сумке символов) и удаляет экземпляры каждого символа с обеих сторон 
+		вашего аргумента. 
+		</p>
+
+<p>Мы можем изменить функцию <code class="western">add-game</code>,
+		 как показано ниже:  
+		</p>
+
+		<pre class="western">(defun add-game (name)
+  (let ((sanitized-name (string-trim &quot; &quot; name)))
+    (with-transaction ()
+      (unless (game-stored? sanitized-name)
+        (make-instance 'persistent-game :name sanitized-name)))))</pre>
+<p>
+		После вычисления новой функции повторный запуск набора тестов 
+		должен пройти. 
+		</p>
+
+	</div>
+</div>
+<div id="outline-container-sec-8" dir="ltr">
+	<h3 class="western"><a name="sec-8"></a>Заключение</h3>
+	<div id="text-8" dir="ltr">
+
+<p>Отсюда есть куда пойти. Написанный нами CSS генерируется при каждой загрузке. 
+		Было бы неплохо иметь механизм кеширования. Невозможно удалить записи или
+		убедиться, что недобросовестные люди голосуют не более одного раза. 
+		Было бы здорово, если бы мы добавили в игры некоторую информацию, 
+		такую как издатель, год и т. Д. - возможно, даже бокс-арты и скриншоты, 
+		что означало бы иметь дело с загрузкой файлов. У нас нет тестов для наших 
+		функций контроллера.
+				</p>
+
+<p>Однако мы приблизили нашего маленького игрового избирателя к надежному современному 
+		веб-приложению. Я надеюсь, что мне удалось продемонстрировать, насколько 
+		легко расширить и реорганизовать небольшой проект Lisp, и пробудил ваш 
+		интерес к тому, чтобы попробовать его для веб-разработки. Вы будете удивлены,
+		насколько легко начать думать на Лиспе.  
+		</p>
+
+	</div>
+</div>
+
+<p><img src="lispweb2_html_d7e2174c31b48543.png" name="Image2" align="bottom" width="250" height="250" border="0"/>
+
+</p>
+
+<p>Copyright MMXVI <a href="https://web.archive.org/web/20171109223946/mailto:msnyder@msnyder.info">Matthew
+Snyder</a>. All rights reserved. My opinions are not necessarily my
+employer's. If you enjoyed this article, you may also like <a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2011/12/common-lisp-mustache/">From
+Spec to Test Suite in Common Lisp:&nbsp;Mustache</a>, and <a href="https://web.archive.org/web/20171109223946/http://msnyder.info/posts/2012/05/icloud-reminders-orgmode/">iCloud
+Reminders in Org-mode: Talking to OS X with&nbsp;Emacs</a>. You may
+also be interested in browsing the <a href="https://web.archive.org/web/20171109223946/http://msnyder.info/archives/">archives</a>.
+</p>
+
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

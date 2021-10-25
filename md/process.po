@@ -1,0 +1,4520 @@
+#
+# NuINu <don't@send.my>, 2021.
+#
+#. extracted from in_ed/process.md
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-22 19:54+0300\n"
+"PO-Revision-Date: 2021-10-25 09:07+0300\n"
+"Last-Translator: NuINu <don't@send.my>\n"
+"Language-Team: Russian <don't@send.my>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Gtranslator 2.91.7\n"
+"Plural-Forms: nplurals=5; plural=n==1 ? 0 : n==2 ? 1 : n<7 ? 2 : n<11 ? 3 : "
+"4;\n"
+
+#: in_ed/process.md:4
+msgid ""
+"---\n"
+"title: Threads\n"
+"---"
+msgstr ""
+"---\n"
+"title: Потоки/нити(Threads)\n"
+"---"
+
+#: in_ed/process.md:7
+msgid "<a name=\"intro\"></a>"
+msgstr ""
+
+#: in_ed/process.md:9
+msgid "## Introduction"
+msgstr "## Вступление"
+
+#: in_ed/process.md:18
+msgid ""
+"By _threads_, we mean separate execution strands within a single Lisp\n"
+"process, sharing the same address space. Typically, execution is\n"
+"automatically switched between these strands by the system (either by\n"
+"the lisp kernel or by the operating system) so that tasks appear to be\n"
+"completed in parallel (asynchronously). This page discusses the\n"
+"creation and management of threads and some aspects of interactions\n"
+"between them. For information about the interaction between lisp and\n"
+"other _processes_, see [Interfacing with your OS](os.html)."
+msgstr ""
+"Под _threads_(потоками) мы подразумеваем отдельные нити выполнения в \n"
+"одном процессе Lisp, совместно использующие одно и то же адресное "
+"пространство. \n"
+"Как правило, выполнение автоматически переключается между этими нитями "
+"системой \n"
+"(либо ядром lisp, либо операционной системой), так что кажется, что задачи "
+"выполняются \n"
+"параллельно (асинхронно). На этой странице обсуждается создание потоков и \n"
+"управление ими, а также некоторые аспекты взаимодействия между ними. Для "
+"получения \n"
+"информации о взаимодействии между lisp и другими процессами см. \n"
+"[Взаимодействие с вашей ОС](os.html)."
+
+#: in_ed/process.md:24
+msgid ""
+"An instant pitfall for the unwary is that most implementations refer\n"
+"(in nomenclature) to threads as _processes_ - this is a historical\n"
+"feature of a language which has been around for much longer than the\n"
+"term _thread_. Call this maturity a sign of stable implementations, if\n"
+"you will."
+msgstr ""
+"Моментальная ловушка для неосторожных людей заключается в том, что "
+"большинство \n"
+"реализаций ссылаются (в номенклатуре) на потоки как на _processes_ "
+"(процессы) \n"
+"- это историческая особенность языка, который существует гораздо дольше, \n"
+"чем термин _thread_ (поток). Если хотите, назовите эту зрелость признаком \n"
+"стабильных реализаций."
+
+#: in_ed/process.md:30
+msgid ""
+"The ANSI Common Lisp standard doesn't mention this topic. We will\n"
+"present here the portable\n"
+"[bordeaux-threads](https://github.com/sionescu/bordeaux-threads)\n"
+"library, an example implementation via [SBCL threads](http://www.sbcl.org/"
+"manual/#Threading) from the [SBCL Manual](http://www.sbcl.org/manual/), and "
+"the [lparallel](https://lparallel.org)\n"
+"library."
+msgstr ""
+"В стандарте ANSI Common Lisp эта тема не упоминается. Мы представим здесь \n"
+"переносимую библиотеку [bordeaux-threads](https://github.com/sionescu/"
+"bordeaux-threads), \n"
+"пример реализации через потоки SBCL - [SBCL threads](http://www.sbcl.org/"
+"manual/#Threading) \n"
+"из Руководства по SBCL - [SBCL Manual](http://www.sbcl.org/manual/) и "
+"библиотеку \n"
+"[lparallel](https://lparallel.org)."
+
+#: in_ed/process.md:33
+msgid ""
+"Bordeaux-threads is a de-facto standard portable library, that exposes\n"
+"rather low-level primitives. Lparallel builds on it and features:"
+msgstr ""
+"Bordeaux-thread - это де-факто стандартная переносимая библиотека, которая \n"
+"предоставляет довольно низкоуровневые примитивы. Lparallel основывается на \n"
+"нем и имеет следующие особенности: "
+
+#: in_ed/process.md:45
+msgid ""
+"-  a simple model of task submission with receiving queue\n"
+"-  constructs for expressing fine-grained parallelism\n"
+"-  **asynchronous condition handling** across thread boundaries\n"
+"-  **parallel versions of map, reduce, sort, remove**, and many others\n"
+"-  **promises**, futures, and delayed evaluation constructs\n"
+"-  computation trees for parallelizing interconnected tasks\n"
+"-  bounded and unbounded FIFO **queues**\n"
+"-  **channels**\n"
+"-  high and low priority tasks\n"
+"-  task killing by category\n"
+"-  integrated timeouts"
+msgstr ""
+"-  простая модель подчиненной задачи с очередью приема\n"
+"-   конструкции для выражения мелкозернистого параллелизма\n"
+"-  **асинхронная обработка условий** через границы потоков\n"
+"-  **параллельные версии map, reduce, sort, remove** и многие другие\n"
+"-  **promises**(обещания), futures(будущее) и конструкции отложенного "
+"выполнения\n"
+"-  деревья вычислений для распараллеливания взаимосвязанных задач\n"
+"-  ограниченные и неограниченные очереди - **queues** FIFO\n"
+"-  каналы - **channels**\n"
+"-  задачи с высоким и низким приоритетом\n"
+"-  убийство задач по категориям\n"
+"-  интегрированные таймауты"
+
+#: in_ed/process.md:48
+msgid ""
+"For more libraries on parallelism and concurrency, see the [Awesome CL list]"
+"(https://github.com/CodyReichert/awesome-cl#parallelism-and-concurrency)\n"
+"and [Quickdocs](http://quickdocs.org/) such as quickdocks on [thread]"
+"(https://quickdocs.org/-/search?q=thread) and [concurrency](https://"
+"quickdocs.org/-/search?q=concurrency)."
+msgstr ""
+"Дополнительные библиотеки по параллелизму и concurrency(одновременности) см. "
+"В \n"
+"[Awesome CL list](https://github.com/CodyReichert/awesome-cl#parallelism-and-"
+"concurrency), \n"
+"и [Quickdocs](http://quickdocs.org/) таких как quickdocks о [thread](https://"
+"quickdocs.org/-/search?q=thread) и [concurrency](https://quickdocs.org/-/"
+"search?q=concurrency)."
+
+#: in_ed/process.md:50
+msgid "<a name=\"why_bother\"></a>"
+msgstr ""
+
+#: in_ed/process.md:52
+msgid "### Why bother?"
+msgstr "### Зачем возиться?"
+
+#: in_ed/process.md:58
+msgid ""
+"The first question to resolve is: why bother with threads? Sometimes\n"
+"your answer will simply be that your application is so straightforward\n"
+"that you need not concern yourself with threads at all. But in many\n"
+"other cases it's difficult to imagine how a sophisticated application\n"
+"can be written without multi-threading. For example:"
+msgstr ""
+"Первый вопрос, который нужно решить: зачем возиться с потоками? \n"
+"Иногда ваш ответ будет заключаться в том, что ваше приложение настолько "
+"прямолинейно, \n"
+"что вам вообще не нужно беспокоиться о потоках. Но во многих других случаях "
+"трудно \n"
+"представить, как можно написать сложное приложение без многопоточности. \n"
+"Например: "
+
+#: in_ed/process.md:74
+msgid ""
+"*   you might be writing a server which needs to be able to respond to\n"
+"    more than one user / connection at a time (for instance: a web\n"
+"    server) on the Sockets page);\n"
+"*   you might want to perform some background activity, without\n"
+"    halting the main application while this is going on;\n"
+"*   you might want your application to be notified when a certain time\n"
+"    has elapsed;\n"
+"*   you might want to keep the application running and active while\n"
+"    waiting for some system resource to become available;\n"
+"*   you might need to interface with some other system which requires\n"
+"    multithreading (for example, \"windows\" under Windows which\n"
+"    generally run in their own threads);\n"
+"*   you might want to associate different contexts (e.g. different\n"
+"    dynamic bindings) with different parts of the application;\n"
+"*   you might even have the simple need to do two things at once."
+msgstr ""
+"*   вы можете писать сервер, который должен иметь возможность отвечать \n"
+"    более чем одному пользователю / соединению одновременно (например, \n"
+"    веб-сервер) на странице сокетов);\n"
+"*   вы можете захотеть выполнить некоторую фоновую активность, не "
+"останавливая \n"
+"    при этом основное приложение;\n"
+"*   вы можете захотеть, чтобы ваше приложение получало уведомление по "
+"истечении \n"
+"    определенного времени;\n"
+"*   вы можете захотеть оставить приложение работающим и активным, пока не "
+"станет \n"
+"    доступен какой-либо системный ресурс;\n"
+"*   вам может потребоваться взаимодействие с какой-либо другой системой, "
+"которая \n"
+"    требует многопоточности (например, \"windows\" под Windows, которые "
+"обычно \n"
+"    работают в своих собственных потоках);\n"
+"*   вы можете захотеть связать разные контексты (например, разные "
+"динамические \n"
+"    привязки) с разными частями приложения;\n"
+"*   у вас может даже возникнуть простая потребность сделать две вещи "
+"одновременно."
+
+#: in_ed/process.md:77
+msgid "<a name=\"emergency\"></a>"
+msgstr ""
+
+#: in_ed/process.md:79
+msgid "### What is Concurrency? What is Parallelism?"
+msgstr "### Что такое одновременность(Concurrency)? Что такое параллелизм? "
+
+#: in_ed/process.md:83
+msgid ""
+"*Credit: The following was first written on\n"
+"[z0ltan.wordpress.com](https://z0ltan.wordpress.com/2016/09/02/basic-"
+"concurrency-and-parallelism-in-common-lisp-part-3-concurrency-using-bordeaux-"
+"and-sbcl-threads/)\n"
+"by Timmy Jose.*"
+msgstr ""
+
+#: in_ed/process.md:88
+msgid ""
+"Concurrency is a way of running different, possibly related, tasks\n"
+"seemingly simultaneously. What this means is that even on a single\n"
+"processor machine, you can simulate simultaneity using threads (for\n"
+"instance) and context-switching them."
+msgstr ""
+"Одновременность(Concurrency) - это способ одновременного выполнения "
+"различных, \n"
+"возможно связанных задач. Это означает, что даже на однопроцессорной "
+"машине \n"
+"вы можете моделировать одновременность, используя потоки (например) и \n"
+"переключая их контекст."
+
+#: in_ed/process.md:92
+msgid ""
+"In the case of system (native OS) threads, the scheduling and context\n"
+"switching is ultimately determined by the OS. This is the case with\n"
+"Java threads and Common Lisp threads."
+msgstr ""
+"В случае системных (родных ОС) потоков планирование и переключение "
+"контекста \n"
+"в конечном итоге определяется ОС. Так обстоит дело с потоками Java и "
+"потоками \n"
+"Common Lisp."
+
+#: in_ed/process.md:97
+msgid ""
+"In the case of âgreenâ threads, that is to say threads that are\n"
+"completely managed by the program, the scheduling can be completely\n"
+"controlled by the program itself. Erlang is a great example of this\n"
+"approach."
+msgstr ""
+"В случае  “green/зеленых” потоков, то есть потоков, полностью управляемых \n"
+"программой, планирование может полностью контролироваться самой "
+"программой. \n"
+"Erlang - отличный пример такого подхода. "
+
+#: in_ed/process.md:103
+msgid ""
+"So what is the difference between Concurrency and Parallelism?\n"
+"Parallelism is usually defined in a very strict sense to mean\n"
+"independent tasks being run in parallel, simultaneously, on different\n"
+"processors or on different cores. In this narrow sense, you really\n"
+"cannot have parallelism on a single-core, single-processor machine."
+msgstr ""
+"Так в чем же разница между одновременностью и параллелизмом? Параллелизм \n"
+"обычно определяется в очень строгом смысле как означающий, что независимые \n"
+"задачи выполняются параллельно, одновременно, на разных процессорах или \n"
+"на разных ядрах. В этом узком смысле параллелизма на одноядерной \n"
+"однопроцессорной машине быть не может.\n"
+
+#: in_ed/process.md:111
+msgid ""
+"It rather helps to differentiate between these two related concepts on\n"
+"a more abstract level â concurrency primarily deals with providing the\n"
+"illusion of simultaneity to clients so that the system doesnât appear\n"
+"locked when a long running operation is underway. GUI systems are a\n"
+"wonderful example of this kind of system. Concurrency is therefore\n"
+"concerned with providing good user experience and not necessarily\n"
+"concerned with performance benefits."
+msgstr ""
+"Это скорее помогает различать эти две взаимосвязанные концепции на более \n"
+"абстрактном уровне - одновременность в первую очередь имеет дело с "
+"созданием \n"
+"иллюзии одновременности для клиентов, чтобы система не казалась "
+"заблокированной, \n"
+"когда выполняется длительная операция. Системы с графическим интерфейсом - \n"
+"прекрасный пример такого рода систем. Следовательно, одновременность "
+"связана \n"
+"с обеспечением хорошего взаимодействия с пользователем и не обязательно "
+"связана \n"
+"с повышением производительности."
+
+#: in_ed/process.md:116
+msgid ""
+"Javaâs Swing toolkit and JavaScript are both single-threaded, and yet\n"
+"they can give the appearance of simultaneity because of the context\n"
+"switching behind the scenes. Of course, concurrency is implemented\n"
+"using multiple threads/processes in most cases."
+msgstr ""
+"Набор инструментов Java Swing и JavaScript являются однопоточными, и все "
+"же \n"
+"они могут создавать впечатление одновременности из-за скрытого "
+"переключения \n"
+"контекста. Конечно, в большинстве случаев параллелизм реализуется с \n"
+"использованием нескольких потоков / процессов. "
+
+#: in_ed/process.md:123
+msgid ""
+"Parallelism, on the other hand, is mostly concerned with pure\n"
+"performance gains. For instance, if we are given a task to find the\n"
+"squares of all the even numbers in a given range, we could divide the\n"
+"range into chunks which are then run in parallel on different cores or\n"
+"different processors, and then the results can be collated together to\n"
+"form the final result. This is an example of Map-Reduce in action."
+msgstr ""
+"С другой стороны, параллелизм в основном связан с чистым увеличением \n"
+"производительности. Например, если нам дается задача найти квадраты всех \n"
+"четных чисел в заданном диапазоне, мы могли бы разделить диапазон на "
+"фрагменты, \n"
+"которые затем запускались параллельно на разных ядрах или разных "
+"процессорах, \n"
+"а затем результаты можно было сопоставить вместе, чтобы сформировать \n"
+"окончательный результат. Это пример Map-Reduce в действии."
+
+#: in_ed/process.md:134
+msgid ""
+"So now that we have separated the abstract meaning of Concurrency from\n"
+"that of Parallelism, we can talk a bit about the actual mechanism used\n"
+"to implement them. This is where most of the confusion arise for a lot\n"
+"of people. They tend to tie down abstract concepts with specific means\n"
+"of implementing them. In essence, both abstract concepts may be\n"
+"implemented using the same mechanisms! For instance, we may implement\n"
+"concurrent features and parallel features using the same basic thread\n"
+"mechanism in Java. Itâs only the conceptual intertwining or\n"
+"independence of tasks at an abstract level that makes the difference\n"
+"for us."
+msgstr ""
+"Итак, теперь, когда мы отделили абстрактное значение одновременности от \n"
+"параллелизма, мы можем немного поговорить о реальном механизме, "
+"используемом \n"
+"для их реализации. Именно здесь у многих возникает большая путаница. Они \n"
+"склонны связывать абстрактные концепции с конкретными средствами их "
+"реализации. \n"
+"По сути, обе абстрактные концепции могут быть реализованы с использованием "
+"одних \n"
+"и тех же механизмов! Например, мы можем реализовать одновременные функции "
+"и \n"
+"параллельные функции, используя один и тот же базовый механизм потоков в "
+"Java. \n"
+"Только концептуальное переплетение или независимость задач на абстрактном "
+"уровне \n"
+"имеет значение для нас. "
+
+#: in_ed/process.md:140
+msgid ""
+"For instance, if we have a task where part of the work can be done on\n"
+"a different thread (possibly on a different core/processor), but the\n"
+"thread which spawns this thread is logically dependent on the results\n"
+"of the spawned thread (and as such has to âjoinâ on that thread), it\n"
+"is still Concurrency!"
+msgstr ""
+"Например, если у нас есть задача, в которой часть работы может быть "
+"выполнена \n"
+"в другом потоке (возможно, на другом ядре / процессоре), но поток, который\n"
+"порождает этот поток, логически зависит от результатов порожденного потока \n"
+"(и как таковой должен join/присоединиться к этому потоку), это все еще "
+"одновременность!"
+
+#: in_ed/process.md:144
+msgid ""
+"So the bottomline is this â Concurrency and Parallelism are different\n"
+"concepts, but their implementations may be done using the same\n"
+"mechanisms â threads, processes, etc."
+msgstr ""
+"Итак, суть в следующем: одновременность и параллелизм - это разные "
+"концепции, \n"
+"но их реализации могут выполняться с использованием одних и тех же "
+"механизмов \n"
+"- потоков, процессов и т.Д."
+
+#: in_ed/process.md:147
+msgid "## Bordeaux threads"
+msgstr "## Потоки Bordeaux"
+
+#: in_ed/process.md:153
+msgid ""
+"The Bordeaux library provides a platform independent way to handle\n"
+"basic threading on multiple Common Lisp implementations. The\n"
+"interesting bit is that it itself does not really create any native\n"
+"threads â it relies entirely on the underlying implementation to do\n"
+"so."
+msgstr ""
+"Библиотека Bordeaux предоставляет независимый от платформы способ \n"
+"обработки базовых потоков в нескольких реализациях Common Lisp. \n"
+"Интересно то, что она сама по себе не создает никаких собственных \n"
+"потоков - для этого она полностью полагается на базовую реализацию."
+
+#: in_ed/process.md:156
+msgid ""
+"On the other hand, it does provide some useful extra features in its\n"
+"own abstractions over the lower-level threads."
+msgstr ""
+"С другой стороны, он предоставляет некоторые полезные дополнительные \n"
+"функциональности в своих собственных абстракциях над потоками \n"
+"нижнего уровня."
+
+#: in_ed/process.md:160
+msgid ""
+"Also, you can see from the demo programs that a lot of the Bordeaux\n"
+"functions seem quite similar to those used in SBCL. I donât really\n"
+"think that this is a coincidence."
+msgstr ""
+"Кроме того, вы можете видеть из демонстрационных программ, что многие \n"
+"функции Bordeaux кажутся очень похожими на те, которые используются \n"
+"в SBCL. Не думаю, что это совпадение."
+
+#: in_ed/process.md:163
+msgctxt "in_ed/process.md:163"
+msgid ""
+"You can refer to the documentation for more details (check the\n"
+"âWrap-upâ section)."
+msgstr ""
+"Вы можете обратиться к документации для получения более подробной \n"
+"информации (см. Раздел «Подведение итогов»). "
+
+#: in_ed/process.md:165
+msgid "### Installing Bordeaux Threads"
+msgstr "### Установка потоков Bordeaux"
+
+#: in_ed/process.md:167
+msgid "First letâs load up the Bordeaux library using Quicklisp:"
+msgstr "Сначала загрузим библиотеку Bordeaux с помощью Quicklisp: "
+
+#: in_ed/process.md:174
+msgid ""
+"~~~lisp\n"
+"CL-USER> (ql:quickload \"bt-semaphore\")\n"
+"To load \"bt-semaphore\":\n"
+"  Load 1 ASDF system:\n"
+"    bt-semaphore\n"
+"; Loading \"bt-semaphore\""
+msgstr ""
+
+#: in_ed/process.md:177
+msgid ""
+"(:BT-SEMAPHORE)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:180
+msgid "### Checking for thread support in Common Lisp"
+msgstr "### Проверка поддержки потоков в Common Lisp "
+
+#: in_ed/process.md:183
+msgid ""
+"Regardless of the Common Lisp implementation, there is a standard way\n"
+"to check for thread support availability:"
+msgstr ""
+"Независимо от реализации Common Lisp существует стандартный способ "
+"проверить \n"
+"доступность поддержки потоков: "
+
+#: in_ed/process.md:203
+msgid ""
+"~~~lisp\n"
+"CL-USER> (member :thread-support *FEATURES*)\n"
+"(:THREAD-SUPPORT :SWANK :QUICKLISP :ASDF-PACKAGE-SYSTEM :ASDF3.1 :ASDF3 :"
+"ASDF2\n"
+" :ASDF :OS-MACOSX :OS-UNIX :NON-BASE-CHARS-EXIST-P :ASDF-UNICODE :64-BIT\n"
+" :64-BIT-REGISTERS :ALIEN-CALLBACKS :ANSI-CL :ASH-RIGHT-VOPS :BSD\n"
+" :C-STACK-IS-CONTROL-STACK :COMMON-LISP :COMPARE-AND-SWAP-VOPS\n"
+" :COMPLEX-FLOAT-VOPS :CYCLE-COUNTER :DARWIN :DARWIN9-OR-BETTER :FLOAT-EQL-"
+"VOPS\n"
+" :FP-AND-PC-STANDARD-SAVE :GENCGC :IEEE-FLOATING-POINT :INLINE-CONSTANTS\n"
+" :INODE64 :INTEGER-EQL-VOP :LINKAGE-TABLE :LITTLE-ENDIAN\n"
+" :MACH-EXCEPTION-HANDLER :MACH-O :MEMORY-BARRIER-VOPS :MULTIPLY-HIGH-VOPS\n"
+" :OS-PROVIDES-BLKSIZE-T :OS-PROVIDES-DLADDR :OS-PROVIDES-DLOPEN\n"
+" :OS-PROVIDES-PUTWC :OS-PROVIDES-SUSECONDS-T :PACKAGE-LOCAL-NICKNAMES\n"
+" :PRECISE-ARG-COUNT-ERROR :RAW-INSTANCE-INIT-VOPS :SB-DOC :SB-EVAL :SB-LDB\n"
+" :SB-PACKAGE-LOCKS :SB-SIMD-PACK :SB-SOURCE-LOCATIONS :SB-TEST :SB-THREAD\n"
+" :SB-UNICODE :SBCL :STACK-ALLOCATABLE-CLOSURES :STACK-ALLOCATABLE-FIXED-"
+"OBJECTS\n"
+" :STACK-ALLOCATABLE-LISTS :STACK-ALLOCATABLE-VECTORS\n"
+" :STACK-GROWS-DOWNWARD-NOT-UPWARD :SYMBOL-INFO-VOPS :UD2-BREAKPOINTS :UNIX\n"
+" :UNWIND-TO-FRAME-AND-CALL-VOP :X86-64)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:205
+msgid ""
+"If there were no thread support, it would show âNILâ as the value of the "
+"expression."
+msgstr ""
+"Если бы не было поддержки потока, в качестве значения выражения было бы "
+"показано “NIL”.\n"
+
+#: in_ed/process.md:209
+msgid ""
+"Depending on the specific library being used, we may also have\n"
+"different ways of checking for concurrency support, which may be used\n"
+"instead of the common check mentioned above."
+msgstr ""
+"В зависимости от конкретной используемой библиотеки у нас также могут быть \n"
+"разные способы проверки поддержки одновременности(concurrency), которые "
+"могут \n"
+"использоваться вместо общей проверки, упомянутой выше."
+
+#: in_ed/process.md:214
+msgid ""
+"For instance, in our case, we are interested in using the Bordeaux\n"
+"library. To check whether there is support for threads using this\n"
+"library, we can see whether the *supports-threads-p* global variable\n"
+"is set to NIL (no support) or T (support available):"
+msgstr ""
+"Например, в нашем случае мы заинтересованы в использовании библиотеки \n"
+"Bordeaux. Чтобы проверить, есть ли поддержка потоков, использующих эту \n"
+"библиотеку, мы можем увидеть, установлено ли для глобальной переменной \n"
+"*supports-threads-p* значение NIL (нет поддержки) или T (поддержка "
+"доступна): "
+
+#: in_ed/process.md:219
+msgid ""
+"~~~lisp\n"
+"CL-USER> bt:*supports-threads-p*\n"
+"T\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:223
+msgid ""
+"Okay, now that weâve got that out of the way, letâs test out both the\n"
+"platform-independent library (Bordeaux) as well as the\n"
+"platform-specific support (SBCL in this case)."
+msgstr ""
+"Хорошо, теперь, когда мы разобрались с этим, давайте протестируем как \n"
+"платформо-независимую библиотеку (Bordeaux), так и поддержку конкретной "
+"платформы \n"
+"(в данном случае SBCL)."
+
+#: in_ed/process.md:225
+msgid "To do this, let us work our way through a number of simple examples:"
+msgstr "Для этого давайте рассмотрим несколько простых примеров: "
+
+#: in_ed/process.md:235
+msgid ""
+"-    Basics â list current thread, list all threads, get thread name\n"
+"-    Update a global variable from a thread\n"
+"-    Print a message onto the top-level using a thread\n"
+"-    Print a message onto the top-level â fixed\n"
+"-    Print a message onto the top-level â better\n"
+"-    Modify a shared resource from multiple threads\n"
+"-    Modify a shared resource from multiple threads â fixed using locks\n"
+"-    Modify a shared resource from multiple threads â using atomic "
+"operations\n"
+"-    Joining on a thread, destroying a thread example"
+msgstr ""
+"-    Основа - перечислить текущий поток, перечислить все потоки, получить "
+"имя потока\n"
+"-    Обновить глобальную переменную из потока\n"
+"-    Распечатать сообщение на верхнем уровне с используя поток\n"
+"-    Печатать сообщение на верхнем уровне - исправлено\n"
+"-    Распечатать сообщение на верхнем уровне - лучшее\n"
+"-    Изменять общий ресурс из нескольких потоков\n"
+"-    Изменение общего ресурса из нескольких потоков - с помощью блокировок "
+"исправлено\n"
+"-    Изменить общий ресурс из нескольких потоков - используя атомарные "
+"операции\n"
+"-    Присоединение к потоку, уничтожение примера потока "
+
+#: in_ed/process.md:237
+msgctxt "in_ed/process.md:237"
+msgid "### Basics â list current thread, list all threads, get thread name"
+msgstr ""
+"### Основы - перечислить текущий поток, перечислить все потоки, получить имя "
+"потока "
+
+#: in_ed/process.md:249
+msgid ""
+"~~~lisp\n"
+"    ;;; Print the current thread, all the threads, and the current thread's "
+"name\n"
+"    (defun print-thread-info ()\n"
+"      (let* ((curr-thread (bt:current-thread))\n"
+"             (curr-thread-name (bt:thread-name curr-thread))\n"
+"             (all-threads (bt:all-threads)))\n"
+"        (format t \"Current thread: ~a~%~%\" curr-thread)\n"
+"        (format t \"Current thread name: ~a~%~%\" curr-thread-name)\n"
+"        (format t \"All threads:~% ~{~a~%~}~%\" all-threads))\n"
+"      nil)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:251
+msgctxt "in_ed/process.md:251"
+msgid "And the output:"
+msgstr "И вывод: "
+
+#: in_ed/process.md:255
+msgctxt "in_ed/process.md:255"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (print-thread-info)\n"
+"    Current thread: #<THREAD \"repl-thread\" RUNNING {10043B8003}>"
+msgstr ""
+
+#: in_ed/process.md:257
+msgctxt "in_ed/process.md:257"
+msgid "    Current thread name: repl-thread"
+msgstr ""
+
+#: in_ed/process.md:266
+msgctxt "in_ed/process.md:266"
+msgid ""
+"    All threads:\n"
+"     #<THREAD \"repl-thread\" RUNNING {10043B8003}>\n"
+"    #<THREAD \"auto-flush-thread\" RUNNING {10043B7DA3}>\n"
+"    #<THREAD \"swank-indentation-cache-thread\" waiting on: #<WAITQUEUE  "
+"{1003A28103}> {1003A201A3}>\n"
+"    #<THREAD \"reader-thread\" RUNNING {1003A20063}>\n"
+"    #<THREAD \"control-thread\" waiting on: #<WAITQUEUE  {1003A19E53}> "
+"{1003A18C83}>\n"
+"    #<THREAD \"Swank Sentinel\" waiting on: #<WAITQUEUE  {1003790043}> "
+"{1003788023}>\n"
+"    #<THREAD \"main thread\" RUNNING {1002991CE3}>"
+msgstr ""
+
+#: in_ed/process.md:269
+msgctxt "in_ed/process.md:269"
+msgid ""
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:271
+msgid "Update a global variable from a thread:"
+msgstr "Обновите глобальную переменную из потока: "
+
+#: in_ed/process.md:274
+msgid ""
+"~~~lisp\n"
+"    (defparameter *counter* 0)"
+msgstr ""
+
+#: in_ed/process.md:282
+msgid ""
+"    (defun test-update-global-variable ()\n"
+"      (bt:make-thread\n"
+"       (lambda ()\n"
+"         (sleep 1)\n"
+"         (incf *counter*)))\n"
+"      *counter*)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:286
+msgid ""
+"We create a new thread using `bt:make-thread`, which takes a lambda\n"
+"abstraction as a parameter. Note that this lambda abstraction cannot\n"
+"take any parameters."
+msgstr ""
+"Мы создаем новый поток, используя `bt:make-thread`, которая принимает в \n"
+"качестве параметра лямбда-абстракцию. Обратите внимание, что эта \n"
+"лямбда-абстракция не может принимать никаких параметров."
+
+#: in_ed/process.md:291
+msgid ""
+"Another point to note is that unlike some other languages (Java, for\n"
+"instance), there is no separation from creating the thread object and\n"
+"starting/running it. In this case, as soon as the thread is created,\n"
+"it is executed."
+msgstr ""
+"Еще один момент, который следует отметить, заключается в том, что в "
+"отличие \n"
+"от некоторых других языков (например, Java), нет разделения между "
+"созданием \n"
+"объекта потока и его запуском. В этом случае, как только поток создается, \n"
+"он сразу начинает выполнятся."
+
+#: in_ed/process.md:293
+msgid "The output:"
+msgstr "Вывод: "
+
+#: in_ed/process.md:296
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (test-update-global-variable)"
+msgstr ""
+
+#: in_ed/process.md:301
+msgid ""
+"    0\n"
+"    CL-USER> *counter*\n"
+"    1\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:305
+msgid ""
+"As we can see, because the main thread returned immediately, the\n"
+"initial value of `*counter*` is 0, and then around a second later, it\n"
+"gets updated to 1 by the anonymous thread."
+msgstr ""
+"Как мы видим, поскольку основной поток вернулся немедленно, начальное \n"
+"значение *counter* равно 0, а примерно через секунду оно обновляется \n"
+"до 1 анонимным потоком."
+
+#: in_ed/process.md:307
+msgid "### Create a thread: print a message onto the top-level"
+msgstr "### Создать поток: распечатывающий сообщение на верхнем уровне "
+
+#: in_ed/process.md:317
+msgid ""
+"~~~lisp\n"
+"    ;;; Print a message onto the top-level using a thread\n"
+"    (defun print-message-top-level-wrong ()\n"
+"      (bt:make-thread\n"
+"       (lambda ()\n"
+"         (format *standard-output* \"Hello from thread!\"))\n"
+"       :name \"hello\")\n"
+"      nil)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:319
+msgctxt "in_ed/process.md:319"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:324
+msgctxt "in_ed/process.md:324"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (print-message-top-level-wrong)\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:330
+msgid ""
+"So what went wrong? The problem is variable binding. Now, the âtâ\n"
+"parameter to the format function refers to the top-level, which is a\n"
+"Common Lisp term for the main console stream, also referred to by the\n"
+"global variable `*standard-output*`. So we could have expected the\n"
+"output to be shown on the main console screen."
+msgstr ""
+"Так что же пошло не так? Проблема в привязке переменных. Теперь параметр \n"
+"’t’ функции форматирования относится к верхнему уровню, который является \n"
+"термином Common Lisp для основного консольного потока, также на который \n"
+"ссылается глобальная переменная `*standard-output*`. Таким образом, мы \n"
+"могли ожидать, что вывод будет отображаться на главном экране консоли."
+
+#: in_ed/process.md:338
+msgid ""
+"The same code would have run fine if we had not run it in a separate\n"
+"    thread. What happens is that each thread has its own stack where\n"
+"    the variables are rebound. In this case, even for\n"
+"    `*standard-output*`, which being a global variable, we would assume\n"
+"    should be available to all threads, is rebound inside each thread!\n"
+"    This is similar to the concept of ThreadLocal storage in Java.\n"
+"    Print a message onto the top-level â fixed:"
+msgstr ""
+"Тот же код работал бы нормально, если бы мы не запускали его в отдельном \n"
+"    потоке. Что происходит, так это то, что каждый поток имеет свой "
+"собственный \n"
+"    стек, в котором происходит повторное связывание переменных. В этом "
+"случае \n"
+"    даже для `*standard-output*`, который является глобальной переменной, \n"
+"    которая, как мы предполагаем, должна быть доступна для всех потоков,\n"
+"    происходит пересвязывание внутри каждого потока! Это похоже на "
+"концепцию \n"
+"    хранилища ThreadLocal в Java. \n"
+"Распечатать сообщение на верхнем уровне - исправлено:"
+
+#: in_ed/process.md:340
+msgid ""
+"So how do we fix the problem of the previous example? By binding the top-"
+"level at the time of thread creation of course. Pure lexical scoping to the "
+"rescue!"
+msgstr ""
+"Итак, как нам исправить проблему из предыдущего примера? Конечно, путем "
+"привязки \n"
+"верхнего уровня во время создания потока. На помощь приходит чистая "
+"лексическая \n"
+"область видимости! "
+
+#: in_ed/process.md:351
+msgid ""
+"~~~lisp\n"
+"    ;;; Print a message onto the top-level using a thread â fixed\n"
+"    (defun print-message-top-level-fixed ()\n"
+"      (let ((top-level *standard-output*))\n"
+"        (bt:make-thread\n"
+"         (lambda ()\n"
+"           (format top-level \"Hello from thread!\"))\n"
+"         :name \"hello\")))\n"
+"      nil)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:353
+msgctxt "in_ed/process.md:353"
+msgid "Which produces:"
+msgstr "Которая производит:"
+
+#: in_ed/process.md:359
+msgctxt "in_ed/process.md:359"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (print-message-top-level-fixed)\n"
+"    Hello from thread!\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:362
+msgid ""
+"Phew! However, there is another way of producing the same result using\n"
+"a very interesting reader macro as weâll see next."
+msgstr ""
+"Уф! Однако есть еще один способ получить тот же результат с использованием \n"
+"очень интересного макроса для чтения, как мы увидим дальше.\n"
+
+#: in_ed/process.md:364
+msgid "### Print a message onto the top-level â read-time eval macro"
+msgstr ""
+"### Распечатать сообщение на верхнем уровне - вычислением макроса во время "
+"чтения"
+
+#: in_ed/process.md:366
+msgid "Letâs take a look at the code first:"
+msgstr "Давайте сначала посмотрим на код: "
+
+#: in_ed/process.md:369
+msgctxt "in_ed/process.md:369"
+msgid ""
+"~~~lisp\n"
+"    ;;; Print a message onto the top-level using a thread - reader macro"
+msgstr ""
+
+#: in_ed/process.md:376
+msgid ""
+"    (eval-when (:compile-toplevel)\n"
+"      (defun print-message-top-level-reader-macro ()\n"
+"        (bt:make-thread\n"
+"         (lambda ()\n"
+"           (format #.*standard-output* \"Hello from thread!\")))\n"
+"        nil))"
+msgstr ""
+
+#: in_ed/process.md:379
+msgid ""
+"    (print-message-top-level-reader-macro)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:381
+msgctxt "in_ed/process.md:381"
+msgid "And the output:"
+msgstr "И вывод: "
+
+#: in_ed/process.md:387
+msgctxt "in_ed/process.md:387"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (print-message-top-level-reader-macro)\n"
+"    Hello from thread!\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:390
+msgid ""
+"So it works, but whatâs the deal with the eval-when and what is that\n"
+"strange #. symbol before `*standard-output*`?"
+msgstr ""
+"Итак, это работает, но в чем дело с eval-when и что это за странный  символ "
+"#. перед \n"
+" `*standard-output*`?"
+
+#: in_ed/process.md:394
+msgid ""
+"eval-when controls when evaluation of Lisp expressions takes place. We\n"
+"can have three targets â :compile-toplevel, :load-toplevel, and\n"
+":execute."
+msgstr ""
+"eval-when контролирует, когда происходит вычисление выражений Лиспа. У нас "
+"может \n"
+"быть три цели - :compile-toplevel, :load-toplevel и :execute."
+
+#: in_ed/process.md:401
+msgid ""
+"The `#.` symbol is what is called a âReader macroâ. A reader (or read)\n"
+"macro is called so because it has special meaning to the Common Lisp\n"
+"Reader, which is the component that is responsible for reading in\n"
+"Common Lisp expressions and making sense out of them. This specific\n"
+"reader macro ensures that the binding of `*standard-output*` is done\n"
+"at read time."
+msgstr ""
+"символ `#.`  - это то, что называется “макросом чтения“. Макрос чтения (или "
+"читатель) \n"
+"называется так, потому что он имеет особое значение для Считывателя(Reader) "
+"Common Lisp, \n"
+"который является компонентом, который отвечает за чтение выражений в Common "
+"Lisp и \n"
+"извлечение из них смысла. Этот конкретный макрос чтения гарантирует, что "
+"привязка \n"
+"`*standard-output*` выполняется во время чтения. "
+
+#: in_ed/process.md:405
+msgid ""
+"Binding the value at read-time ensures that the original value of\n"
+"`*standard-output*` is maintained when the thread is run, and the output\n"
+"is shown on the correct top-level."
+msgstr ""
+"Связывание значения во время чтения гарантирует, что исходное значение \n"
+"`*standard-output*` сохраняется при запуске потока, а вывод отображается \n"
+"на правильном верхнем уровне."
+
+#: in_ed/process.md:411
+msgid ""
+"Now this is where the eval-when bit comes into play. By wrapping the\n"
+"whole function definition inside the eval-when, and ensuring that\n"
+"evaluation takes place during compile time, the correct value of\n"
+"`*standard-output*` is bound. If we had skipped the eval-when, we would\n"
+"see the following error:"
+msgstr ""
+"Теперь в игру вступает  eval-when. Оборачивая все определение функции \n"
+"внутри eval-when и обеспечивая выполнение вычисления во время компиляции, \n"
+"привязывается правильное значение `*standard-output*`. Если бы мы "
+"пропустили \n"
+"eval-when, то увидели бы следующую ошибку: "
+
+#: in_ed/process.md:417
+msgid ""
+"~~~lisp\n"
+"      error:\n"
+"        don't know how to dump #<SWANK/GRAY::SLIME-OUTPUT-STREAM {100439EEA3}"
+"> (default MAKE-LOAD-FORM method called).\n"
+"        ==>\n"
+"          #<SWANK/GRAY::SLIME-OUTPUT-STREAM {100439EEA3}>"
+msgstr ""
+
+#: in_ed/process.md:423
+msgid ""
+"      note: The first argument never returns a value.\n"
+"      note:\n"
+"        deleting unreachable code\n"
+"        ==>\n"
+"          \"Hello from thread!\""
+msgstr ""
+"      note: The first argument never returns a value. \n"
+"      note:\n"
+"        deleting unreachable code\n"
+"        ==>\n"
+"          \"Hello from thread!\""
+
+#: in_ed/process.md:427
+msgid ""
+"    Compilation failed.\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:432
+msgid ""
+"And that makes sense because SBCL cannot make sense of what this\n"
+"output stream returns since it is a stream and not really a defined\n"
+"value (which is what the âformatâ function expects). That is why we\n"
+"see the âunreachable codeâ error."
+msgstr ""
+"И это имеет смысл, потому что SBCL не может понять, что возвращает этот \n"
+"выходной поток, поскольку это поток, а не определенное значение \n"
+"(чего ожидает функция «format»). Поэтому мы видим ошибку \n"
+"«недостижимый код».\n"
+
+#: in_ed/process.md:436
+msgid ""
+"Note that if the same code had been run on the REPL directly, there\n"
+"would be no problem since the resolution of all the symbols would be\n"
+"done correctly by the REPL thread."
+msgstr ""
+"Обратите внимание, что если бы тот же код был запущен непосредственно \n"
+"в REPL, не было бы проблем, поскольку разрешение всех символов было \n"
+"бы выполнено правильно потоком REPL."
+
+#: in_ed/process.md:439
+msgid "### Modify a shared resource from multiple threads"
+msgstr "### Изменить общий ресурс из нескольких потоков"
+
+#: in_ed/process.md:441
+msgid ""
+"Suppose we have the following setup with a minimal bank-account class (no "
+"error checks):"
+msgstr ""
+"Предположим, у нас есть следующая настройка с минимальным классом \n"
+"bank-account(банковского счета) (без проверки ошибок): "
+
+#: in_ed/process.md:444
+msgctxt "in_ed/process.md:444"
+msgid ""
+"~~~lisp\n"
+"    ;;; Modify a shared resource from multiple threads"
+msgstr ""
+
+#: in_ed/process.md:455
+msgctxt "in_ed/process.md:455"
+msgid ""
+"    (defclass bank-account ()\n"
+"      ((id :initarg :id\n"
+"           :initform (error \"id required\")\n"
+"           :accessor :id)\n"
+"       (name :initarg :name\n"
+"             :initform (error \"name required\")\n"
+"             :accessor :name)\n"
+"       (balance :initarg :balance\n"
+"                :initform 0\n"
+"                :accessor :balance)))"
+msgstr ""
+
+#: in_ed/process.md:458
+msgctxt "in_ed/process.md:458"
+msgid ""
+"    (defgeneric deposit (account amount)\n"
+"      (:documentation \"Deposit money into the account\"))"
+msgstr ""
+
+#: in_ed/process.md:461
+msgctxt "in_ed/process.md:461"
+msgid ""
+"    (defgeneric withdraw (account amount)\n"
+"      (:documentation \"Withdraw amount from account\"))"
+msgstr ""
+
+#: in_ed/process.md:464
+msgctxt "in_ed/process.md:464"
+msgid ""
+"    (defmethod deposit ((account bank-account) (amount real))\n"
+"      (incf (:balance account) amount))"
+msgstr ""
+
+#: in_ed/process.md:468
+msgid ""
+"    (defmethod withdraw ((account bank-account) (amount real))\n"
+"      (decf (:balance account) amount))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:470
+msgid ""
+"And we have a simple client which apparently does not believe in any form of "
+"synchronisation:"
+msgstr ""
+"И у нас есть простой клиент, который явно не верит ни в какие формы "
+"синхронизации: "
+
+#: in_ed/process.md:478
+msgid ""
+"~~~lisp\n"
+"    (defparameter *rich*\n"
+"      (make-instance 'bank-account\n"
+"                     :id 1\n"
+"                     :name \"Rich\"\n"
+"                     :balance 0))\n"
+"    ; compiling (DEFPARAMETER *RICH* ...)"
+msgstr ""
+
+#: in_ed/process.md:487
+msgid ""
+"    (defun demo-race-condition ()\n"
+"      (loop repeat 100\n"
+"         do\n"
+"           (bt:make-thread\n"
+"            (lambda ()\n"
+"              (loop repeat 10000 do (deposit *rich* 100))\n"
+"              (loop repeat 10000 do (withdraw *rich* 100))))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:493
+msgid ""
+"This is all we are doing â create a new bank account instance (balance\n"
+"0), and then create a 100 threads, each of which simply deposits an\n"
+"amount of 100 10000 times, and then withdraws the same amount the same\n"
+"number of times. So the final result should be the same as that of the\n"
+"opening balance, which is 0, right? Letâs check that and see."
+msgstr ""
+"Это все, что мы делаем - создаем новый экземпляр банковского счета (balance\n"
+"0), а затем создаем 100 потоков, каждый из которых просто вносит сумму 100 \n"
+"10000 раз, а затем снимает ту же сумму такое же количество раз. Итак, \n"
+"конечный результат должен быть таким же, как и начальный баланс, который \n"
+"равен 0, верно? Давай проверим и посмотрим."
+
+#: in_ed/process.md:495
+msgid "On a sample run, we might get the following results:"
+msgstr "При пробном запуске мы можем получить следующие результаты: "
+
+#: in_ed/process.md:505
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (:balance *rich*)\n"
+"    0\n"
+"    CL-USER> (dotimes (i 5)\n"
+"               (demo-race-condition))\n"
+"    NIL\n"
+"    CL-USER> (:balance *rich*)\n"
+"    22844600\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:509
+msgid ""
+"Whoa! The reason for this discrepancy is that incf and decf are not\n"
+"atomic operations â they consist of multiple sub-operations, and the\n"
+"order in which they are executed is not in our control."
+msgstr ""
+"Ого! Причина этого несоответствия в том, что incf и decf не являются \n"
+"атомарными операциями - они состоят из нескольких подопераций, и \n"
+"порядок, в котором они выполняются, не находится под нашим контролем."
+
+#: in_ed/process.md:516
+msgid ""
+"This is what is called a ârace conditionâ â multiple threads\n"
+"contending for the same shared resource with at least one modifying\n"
+"thread which, more likely than not, reads the wrong value of the\n"
+"object while modifying it. How do we fix it? One simple way it to use\n"
+"locks (mutex in this case, could be semaphores for more complex\n"
+"situations)."
+msgstr ""
+"Это то, что называется “состоянием состязания/гонки“ - несколько потоков \n"
+"конкурируют за один и тот же общий ресурс, по крайней мере, с одним \n"
+"модифицирующим потоком, который, скорее всего, считывает неправильное \n"
+"значение объекта при его изменении. Как это исправить? Один из простых \n"
+"способов - использовать блокировки (мьютекс в этом случае, и может быть \n"
+"семафором для более сложных ситуаций).\n"
+"\n"
+
+#: in_ed/process.md:518
+msgid "### Modify a shared resource from multiple threads â fixed using locks"
+msgstr ""
+"### Изменение общего ресурса из нескольких потоков - исправлено с помощью "
+"блокировок"
+
+#: in_ed/process.md:520
+msgid "Letâs rest the balance for the account back to 0 first:"
+msgstr "Давайте сначала вернем баланс аккаунта в 0: "
+
+#: in_ed/process.md:527
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (setf (:balance *rich*) 0)\n"
+"    0\n"
+"    CL-USER> (:balance *rich*)\n"
+"    0\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:529
+msgid ""
+"Now letâs modify the demo-race-condition function to access the shared "
+"resource using locks (created using bt:make-lock and used as shown):"
+msgstr ""
+"Теперь давайте изменим функцию demo-race-condition для доступа к общему "
+"ресурсу \n"
+"с помощью блокировок (созданных с помощью bt:make-lock и используемых, как "
+"показано): "
+
+#: in_ed/process.md:533
+msgid ""
+"~~~lisp\n"
+"    (defvar *lock* (bt:make-lock))\n"
+"    ; compiling (DEFVAR *LOCK* â¦)"
+msgstr ""
+
+#: in_ed/process.md:545
+msgid ""
+"    (defun demo-race-condition-locks ()\n"
+"      (loop repeat 100\n"
+"         do\n"
+"           (bt:make-thread\n"
+"            (lambda ()\n"
+"              (loop repeat 10000 do (bt:with-lock-held (*lock*)\n"
+"                                      (deposit *rich* 100)))\n"
+"              (loop repeat 10000 do (bt:with-lock-held (*lock*)\n"
+"                                      (withdraw *rich* 100)))))))\n"
+"    ; compiling (DEFUN DEMO-RACE-CONDITION-LOCKS ...)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:547
+msgid "And letâs do a bigger sample run this time around:"
+msgstr "И давайте на этот раз выполним более крупный прогон: "
+
+#: in_ed/process.md:555
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (dotimes (i 100)\n"
+"               (demo-race-condition-locks))\n"
+"    NIL\n"
+"    CL-USER> (:balance *rich*)\n"
+"    0\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:560
+msgid ""
+"Excellent! Now this is better. Of course, one has to remember that\n"
+"using a mutex like this is bound to affect performance. There is a\n"
+"better way in quite a few circumstances â using atomic operations when\n"
+"possible. Weâll cover that next."
+msgstr ""
+"Превосходно! Теперь это лучше. Конечно, нужно помнить, что использование \n"
+"такого мьютекса обязательно повлияет на производительность. В некоторых \n"
+"случаях есть лучший способ - использовать атомарные операции, когда это \n"
+"возможно. Мы поговорим об этом позже.\n"
+"\n"
+
+#: in_ed/process.md:562
+msgctxt "in_ed/process.md:562"
+msgid ""
+"### Modify a shared resource from multiple threads â using atomic operations"
+msgstr ""
+"### Измените общий ресурс из нескольких потоков - используя атомарные "
+"операции"
+
+#: in_ed/process.md:569
+msgid ""
+"Atomic operations are operations that are guaranteed by the system to\n"
+"all occur inside a conceptual transaction, i.e., all the\n"
+"sub-operations of the main operation all take place together without\n"
+"any interference from outside. The operation succeeds completely or\n"
+"fails completely. There is no middle ground, and there is no\n"
+"inconsistent state."
+msgstr ""
+"Атомарные операции - это операции, выполнение которых системой \n"
+"гарантируется внутри концептуальной транзакции, то есть все \n"
+"подоперации основной операции выполняются вместе без какого-либо \n"
+"вмешательства извне. Операция проходит полностью или \n"
+"полностью не выполняется. Нет золотой середины и нет \n"
+"противоречивого состояния. "
+
+#: in_ed/process.md:573
+msgid ""
+"Another advantage is that performance is far superior to using locks\n"
+"to protect access to the shared state. We will see this difference in\n"
+"the actual demo run."
+msgstr ""
+"Еще одно преимущество состоит в том, что производительность намного \n"
+"превосходит использование блокировок для защиты доступа к общему "
+"состоянию. \n"
+"Мы увидим эту разницу в реальном демонстрационном запуске."
+
+#: in_ed/process.md:578
+msgid ""
+"The Bordeaux library does not provide any real support for atomics, so\n"
+"we will have to depend on the specific implementation support for\n"
+"that. In our case, that is SBCL, and so we will have to defer this\n"
+"demo to the SBCL section."
+msgstr ""
+"Библиотека Bordeaux не обеспечивает реальной поддержки атомарности, \n"
+"поэтому нам придется полагаться на конкретную поддержку реализации \n"
+"для этого. В нашем случае это SBCL, поэтому нам придется отложить эту \n"
+"демонстрацию до раздела SBCL."
+
+#: in_ed/process.md:580
+msgid "### Joining on a thread, destroying a thread"
+msgstr "### Присоединение к потоку, уничтожение потока"
+
+#: in_ed/process.md:584
+msgid ""
+"To join on a thread, we use the `bt:join-thread` function, and for\n"
+"destroying a thread (not a recommended operation), we can use the\n"
+"`bt:destroy-thread` function."
+msgstr ""
+"Чтобы присоединиться к потоку, мы используем функцию `bt:join-thread`, \n"
+"а для уничтожения потока (не рекомендуемая операция) мы можем \n"
+"использовать функцию `bt:destroy-thread`.\n"
+
+#: in_ed/process.md:586
+msgid "A simple demo:"
+msgstr "Простая демонстрация: "
+
+#: in_ed/process.md:596
+msgid ""
+"~~~lisp\n"
+"    (defmacro until (condition &body body)\n"
+"      (let ((block-name (gensym)))\n"
+"        `(block ,block-name\n"
+"           (loop\n"
+"               (if ,condition\n"
+"                   (return-from ,block-name nil)\n"
+"                   (progn\n"
+"                       ,@body))))))"
+msgstr ""
+
+#: in_ed/process.md:624
+msgid ""
+"    (defun join-destroy-thread ()\n"
+"      (let* ((s *standard-output*)\n"
+"            (joiner-thread (bt:make-thread\n"
+"                            (lambda ()\n"
+"                              (loop for i from 1 to 10\n"
+"                                 do\n"
+"                                   (format s \"~%[Joiner Thread]  Working..."
+"\")\n"
+"                                   (sleep (* 0.01 (random 100)))))))\n"
+"            (destroyer-thread (bt:make-thread\n"
+"                               (lambda ()\n"
+"                                 (loop for i from 1 to 1000000\n"
+"                                    do\n"
+"                                      (format s \"~%[Destroyer Thread] "
+"Working...\")\n"
+"                                      (sleep (* 0.01 (random 10000))))))))\n"
+"        (format t \"~%[Main Thread] Waiting on joiner thread...\")\n"
+"        (bt:join-thread joiner-thread)\n"
+"        (format t \"~%[Main Thread] Done waiting on joiner thread\")\n"
+"        (if (bt:thread-alive-p destroyer-thread)\n"
+"            (progn\n"
+"              (format t \"~%[Main Thread] Destroyer thread alive... killing "
+"it\")\n"
+"              (bt:destroy-thread destroyer-thread))\n"
+"            (format t \"~%[Main Thread] Destroyer thread is already dead"
+"\"))\n"
+"        (until (bt:thread-alive-p destroyer-thread)\n"
+"               (format t \"[Main Thread] Waiting for destroyer thread to "
+"die...\"))\n"
+"        (format t \"~%[Main Thread] Destroyer thread dead\")\n"
+"        (format t \"~%[Main Thread] Adios!~%\")))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:626
+msgid "And the output on a run:"
+msgstr "И вывод при запуске: "
+
+#: in_ed/process.md:629
+msgctxt "in_ed/process.md:629"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (join-destroy-thread)"
+msgstr ""
+
+#: in_ed/process.md:648
+msgctxt "in_ed/process.md:648"
+msgid ""
+"    [Joiner Thread]  Working...\n"
+"    [Destroyer Thread] Working...\n"
+"    [Main Thread] Waiting on joiner thread...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Main Thread] Done waiting on joiner thread\n"
+"    [Main Thread] Destroyer thread alive... killing it\n"
+"    [Main Thread] Destroyer thread dead\n"
+"    [Main Thread] Adios!\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:653
+msgid ""
+"The until macro simply loops around until the condition becomes\n"
+"true. The rest of the code is pretty much self-explanatory â the main\n"
+"thread waits for the joiner-thread to finish, but it immediately\n"
+"destroys the destroyer-thread."
+msgstr ""
+"Макрос until просто выполняет цикл, пока условие не станет истинным. \n"
+"Остальная часть кода в значительной степени не требует пояснений - \n"
+"основной поток ожидает завершения присоединяемого потока, но он \n"
+"немедленно уничтожает поток-разрушитель."
+
+#: in_ed/process.md:657
+msgid ""
+"Again, it is not recommended to use `bt:destroy-thread`. Any conceivable\n"
+"situation which requires this function can probably be done better\n"
+"with another approach."
+msgstr ""
+"Опять же, не рекомендуется использовать `bt:destroy-thread`. Любая "
+"мыслимая \n"
+"ситуация, которая требует этой функции, вероятно, может быть лучше решена \n"
+"с помощью другого подхода."
+
+#: in_ed/process.md:660
+msgid ""
+"Now letâs move onto some more comprehensive examples which tie\n"
+"together all the concepts discussed thus far."
+msgstr ""
+"Теперь давайте перейдем к более подробным примерам, которые объединяют \n"
+"все концепции, обсужденные до сих пор. "
+
+#: in_ed/process.md:662
+msgctxt "in_ed/process.md:662"
+msgid "### Useful functions"
+msgstr "### Полезные функции"
+
+#: in_ed/process.md:666
+msgid ""
+"Here is a summary of the functions, macros and global variables which\n"
+"were used in the demo examples along with some extras. These should\n"
+"cover most of the basic programming scenarios:"
+msgstr ""
+"Вот сводка функций, макросов и глобальных переменных, которые "
+"использовались \n"
+"в демонстрационных примерах, а также некоторые дополнения. Они должны \n"
+"охватывать большинство основных сценариев программирования: "
+
+#: in_ed/process.md:678
+msgid ""
+"-    `bt:*supports-thread-p*` (to check for basic thread support)\n"
+"-    `bt:make-thread` (create a new thread)\n"
+"-    `bt:current-thread` (return the current thread object)\n"
+"-    `bt:all-threads` (return a list of all running threads)\n"
+"-    `bt:thread-alive-p` (checks if the thread is still alive)\n"
+"-    `bt:thread-name` (return the name of the thread)\n"
+"-    `bt:join-thread` (join on the supplied thread)\n"
+"-    `bt:interrupt-thread` (interrupt the given thread)\n"
+"-    `bt:destroy-thread` (attempt to abort the thread)\n"
+"-    `bt:make-lock` (create a mutex)\n"
+"-    `bt:with-lock-held` (use the supplied lock to protect critical code)"
+msgstr ""
+"-    `bt:*supports-thread-p*` (для проверки базовой поддержки потоков)\n"
+"-    `bt:make-thread` (создать новый поток)\n"
+"-    `bt:current-thread` (вернуть объект текущего потока)\n"
+"-    `bt:all-threads` (вернуть список всех запущенных потоков)\n"
+"-    `bt:thread-alive-p` (проверяет, жив ли поток)\n"
+"-    `bt:thread-name` (вернуть имя потока)\n"
+"-    `bt:join-thread` (присоединиться к предоставленному потоку)\n"
+"-    `bt:interrupt-thread` (прервать данный поток)\n"
+"-    `bt:destroy-thread` (попытка прервать поток)\n"
+"-    `bt:make-lock` (создать мьютекс)\n"
+"-    `bt:with-lock-held` (используйте прилагаемый замок для защиты "
+"критического кода)"
+
+#: in_ed/process.md:681
+msgid "## SBCL threads"
+msgstr "## Потоки SBCL\n"
+
+#: in_ed/process.md:685
+msgid ""
+"[SBCL](http://www.sbcl.org/) provides support for native threads via its [sb-"
+"thread](http://www.sbcl.org/manual/#Threading)\n"
+"package. These are very low-level functions, but we can build our own\n"
+"abstractions on top of these as shown in the demo examples."
+msgstr ""
+"[SBCL](http://www.sbcl.org/) обеспечивает поддержку собственных потоков "
+"через \n"
+"свой пакет [sb-thread](http://www.sbcl.org/manual/#Threading). Это очень \n"
+"низкоуровневые функции, но мы можем создавать собственные абстракции на \n"
+"их основе, как показано в демонстрационных примерах.\n"
+
+#: in_ed/process.md:688
+msgctxt "in_ed/process.md:688"
+msgid ""
+"You can refer to the documentation for more details (check the\n"
+"âWrap-upâ section)."
+msgstr ""
+"Вы можете обратиться к документации для получения более подробной \n"
+"информации (см. Раздел «Wrap-up/Заключение»).\n"
+
+#: in_ed/process.md:693
+msgid ""
+"You can see from the examples below that there is a strong\n"
+"correspondence between Bordeaux and SBCL Thread functions. In most\n"
+"cases, the only difference is the change of package name from bt to\n"
+"sb-thread."
+msgstr ""
+"Из приведенных ниже примеров видно, что существует сильное соответствие \n"
+"между функциями Bordeaux и SBCL Thread. В большинстве случаев единственная \n"
+"разница заключается в изменении имени пакета с bt на sb-thread.\n"
+
+#: in_ed/process.md:698
+msgid ""
+"It is evident that the Bordeaux thread library was more or less based\n"
+"on the SBCL implementation. As such, explanation will be provided only\n"
+"in those cases where there is a major difference in syntax or\n"
+"semantics."
+msgstr ""
+"Очевидно, что библиотека потоков Bordeaux была более или менее основана \n"
+"на реализации SBCL. Таким образом, объяснение будет предоставлено только \n"
+"в тех случаях, когда есть существенные различия в синтаксисе или семантике. "
+
+#: in_ed/process.md:700
+msgctxt "in_ed/process.md:700"
+msgid "### Basics â list current thread, list all threads, get thread name"
+msgstr ""
+"### Основы - перечислить текущий поток, перечислить все потоки, получить имя "
+"потока"
+
+#: in_ed/process.md:702
+msgctxt "in_ed/process.md:702"
+msgid "The code:"
+msgstr "Код:"
+
+#: in_ed/process.md:706
+msgid ""
+"~~~lisp\n"
+"    ;;; Print the current thread, all the threads, and the current thread's "
+"name"
+msgstr ""
+
+#: in_ed/process.md:716
+msgid ""
+"    (defun print-thread-info ()\n"
+"      (let* ((curr-thread sb-thread:*current-thread*)\n"
+"             (curr-thread-name (sb-thread:thread-name curr-thread))\n"
+"             (all-threads (sb-thread:list-all-threads)))\n"
+"        (format t \"Current thread: ~a~%~%\" curr-thread)\n"
+"        (format t \"Current thread name: ~a~%~%\" curr-thread-name)\n"
+"        (format t \"All threads:~% ~{~a~%~}~%\" all-threads))\n"
+"      nil)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:718
+msgctxt "in_ed/process.md:718"
+msgid "And the output:"
+msgstr "И вывод: "
+
+#: in_ed/process.md:722
+msgctxt "in_ed/process.md:722"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (print-thread-info)\n"
+"    Current thread: #<THREAD \"repl-thread\" RUNNING {10043B8003}>"
+msgstr ""
+
+#: in_ed/process.md:724
+msgctxt "in_ed/process.md:724"
+msgid "    Current thread name: repl-thread"
+msgstr ""
+
+#: in_ed/process.md:733
+msgctxt "in_ed/process.md:733"
+msgid ""
+"    All threads:\n"
+"     #<THREAD \"repl-thread\" RUNNING {10043B8003}>\n"
+"    #<THREAD \"auto-flush-thread\" RUNNING {10043B7DA3}>\n"
+"    #<THREAD \"swank-indentation-cache-thread\" waiting on: #<WAITQUEUE  "
+"{1003A28103}> {1003A201A3}>\n"
+"    #<THREAD \"reader-thread\" RUNNING {1003A20063}>\n"
+"    #<THREAD \"control-thread\" waiting on: #<WAITQUEUE  {1003A19E53}> "
+"{1003A18C83}>\n"
+"    #<THREAD \"Swank Sentinel\" waiting on: #<WAITQUEUE  {1003790043}> "
+"{1003788023}>\n"
+"    #<THREAD \"main thread\" RUNNING {1002991CE3}>"
+msgstr ""
+
+#: in_ed/process.md:736
+msgctxt "in_ed/process.md:736"
+msgid ""
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:738
+msgid "### Update a global variable from a thread"
+msgstr "### Обновить глобальную переменную из потока"
+
+#: in_ed/process.md:740
+msgctxt "in_ed/process.md:740"
+msgid "The code:"
+msgstr "Код: "
+
+#: in_ed/process.md:743
+msgid ""
+"~~~lisp\n"
+"    ;;; Update a global variable from a thread"
+msgstr ""
+
+#: in_ed/process.md:745
+msgid "    (defparameter *counter* 0)"
+msgstr ""
+
+#: in_ed/process.md:753
+msgid ""
+"    (defun test-update-global-variable ()\n"
+"      (sb-thread:make-thread\n"
+"       (lambda ()\n"
+"         (sleep 1)\n"
+"         (incf *counter*)))\n"
+"      *counter*)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:755
+msgctxt "in_ed/process.md:755"
+msgid "And the output:"
+msgstr "И вывод: "
+
+#: in_ed/process.md:760
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (test-update-global-variable)\n"
+"    0\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:762
+msgid "### Print a message onto the top-level using a thread"
+msgstr "### Распечатать сообщение на верхнем уровне используя поток"
+
+#: in_ed/process.md:764
+msgctxt "in_ed/process.md:764"
+msgid "The code:"
+msgstr "Код: "
+
+#: in_ed/process.md:767
+msgid ""
+"~~~lisp\n"
+"    ;;; Print a message onto the top-level using a thread"
+msgstr ""
+
+#: in_ed/process.md:774
+msgid ""
+"    (defun print-message-top-level-wrong ()\n"
+"      (sb-thread:make-thread\n"
+"       (lambda ()\n"
+"         (format *standard-output* \"Hello from thread!\")))\n"
+"      nil)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:776
+msgctxt "in_ed/process.md:776"
+msgid "And the output:"
+msgstr "И вывод: "
+
+#: in_ed/process.md:781
+msgctxt "in_ed/process.md:781"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (print-message-top-level-wrong)\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:783
+msgid "Print a message onto the top-level â fixed:"
+msgstr "Распечатать сообщение на верхнем уровне - исправлено:\n"
+
+#: in_ed/process.md:785
+msgctxt "in_ed/process.md:785"
+msgid "The code:"
+msgstr "Код: "
+
+#: in_ed/process.md:788
+msgid ""
+"~~~lisp\n"
+"    ;;; Print a message onto the top-level using a thread - fixed"
+msgstr ""
+
+#: in_ed/process.md:796
+msgid ""
+"    (defun print-message-top-level-fixed ()\n"
+"      (let ((top-level *standard-output*))\n"
+"        (sb-thread:make-thread\n"
+"         (lambda ()\n"
+"           (format top-level \"Hello from thread!\"))))\n"
+"      nil)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:798
+msgctxt "in_ed/process.md:798"
+msgid "And the output:"
+msgstr "И вывод: "
+
+#: in_ed/process.md:804
+msgctxt "in_ed/process.md:804"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (print-message-top-level-fixed)\n"
+"    Hello from thread!\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:806
+msgid "### Print a message onto the top-level â better"
+msgstr "### Распечатать сообщение на верхнем уровне - лучше"
+
+#: in_ed/process.md:808
+msgctxt "in_ed/process.md:808"
+msgid "The code:"
+msgstr "Код: "
+
+#: in_ed/process.md:811
+msgctxt "in_ed/process.md:811"
+msgid ""
+"~~~lisp\n"
+"    ;;; Print a message onto the top-level using a thread - reader macro"
+msgstr ""
+
+#: in_ed/process.md:819
+msgid ""
+"    (eval-when (:compile-toplevel)\n"
+"      (defun print-message-top-level-reader-macro ()\n"
+"        (sb-thread:make-thread\n"
+"         (lambda ()\n"
+"           (format #.*standard-output* \"Hello from thread!\")))\n"
+"        nil))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:821
+msgctxt "in_ed/process.md:821"
+msgid "And the output:"
+msgstr "И вывод: "
+
+#: in_ed/process.md:827
+msgctxt "in_ed/process.md:827"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (print-message-top-level-reader-macro)\n"
+"    Hello from thread!\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:829
+msgid "###    Modify a shared resource from multiple threads"
+msgstr "###    Изменить общий ресурс из нескольких потоков "
+
+#: in_ed/process.md:831
+msgctxt "in_ed/process.md:831"
+msgid "The code:"
+msgstr "Код:"
+
+#: in_ed/process.md:834
+msgctxt "in_ed/process.md:834"
+msgid ""
+"~~~lisp\n"
+"    ;;; Modify a shared resource from multiple threads"
+msgstr ""
+
+#: in_ed/process.md:845
+msgctxt "in_ed/process.md:845"
+msgid ""
+"    (defclass bank-account ()\n"
+"      ((id :initarg :id\n"
+"           :initform (error \"id required\")\n"
+"           :accessor :id)\n"
+"       (name :initarg :name\n"
+"             :initform (error \"name required\")\n"
+"             :accessor :name)\n"
+"       (balance :initarg :balance\n"
+"                :initform 0\n"
+"                :accessor :balance)))"
+msgstr ""
+
+#: in_ed/process.md:848
+msgctxt "in_ed/process.md:848"
+msgid ""
+"    (defgeneric deposit (account amount)\n"
+"      (:documentation \"Deposit money into the account\"))"
+msgstr ""
+
+#: in_ed/process.md:851
+msgctxt "in_ed/process.md:851"
+msgid ""
+"    (defgeneric withdraw (account amount)\n"
+"      (:documentation \"Withdraw amount from account\"))"
+msgstr ""
+
+#: in_ed/process.md:854
+msgctxt "in_ed/process.md:854"
+msgid ""
+"    (defmethod deposit ((account bank-account) (amount real))\n"
+"      (incf (:balance account) amount))"
+msgstr ""
+
+#: in_ed/process.md:857
+msgid ""
+"    (defmethod withdraw ((account bank-account) (amount real))\n"
+"      (decf (:balance account) amount))"
+msgstr ""
+
+#: in_ed/process.md:863
+msgid ""
+"    (defparameter *rich*\n"
+"      (make-instance 'bank-account\n"
+"                     :id 1\n"
+"                     :name \"Rich\"\n"
+"                     :balance 0))"
+msgstr ""
+
+#: in_ed/process.md:872
+msgid ""
+"    (defun demo-race-condition ()\n"
+"      (loop repeat 100\n"
+"         do\n"
+"           (sb-thread:make-thread\n"
+"            (lambda ()\n"
+"              (loop repeat 10000 do (deposit *rich* 100))\n"
+"              (loop repeat 10000 do (withdraw *rich* 100))))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:874
+msgctxt "in_ed/process.md:874"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:883
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (:balance *rich*)\n"
+"    0\n"
+"    CL-USER> (demo-race-condition)\n"
+"    NIL\n"
+"    CL-USER> (:balance *rich*)\n"
+"    3987400\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:885
+msgid ""
+"###    Modify a shared resource from multiple threads â fixed using locks"
+msgstr ""
+"###    Изменение общего ресурса из нескольких потоков - исправлено с помощью "
+"блокировок\n"
+
+#: in_ed/process.md:887
+msgctxt "in_ed/process.md:887"
+msgid "The code:"
+msgstr "Код:"
+
+#: in_ed/process.md:890
+msgid ""
+"~~~lisp\n"
+"    (defvar *lock* (sb-thread:make-mutex))"
+msgstr ""
+
+#: in_ed/process.md:901
+msgid ""
+"    (defun demo-race-condition-locks ()\n"
+"      (loop repeat 100\n"
+"         do\n"
+"           (sb-thread:make-thread\n"
+"            (lambda ()\n"
+"              (loop repeat 10000 do (sb-thread:with-mutex (*lock*)\n"
+"                                      (deposit *rich* 100)))\n"
+"              (loop repeat 10000 do (sb-thread:with-mutex (*lock*)\n"
+"                                      (withdraw *rich* 100)))))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:905
+msgid ""
+"The only difference here is that instead of make-lock as in Bordeaux,\n"
+"we have make-mutex and that is used along with the macro with-mutex as\n"
+"shown in the example."
+msgstr ""
+"Единственная разница здесь в том, что вместо make-lock, как в Bordeaux, \n"
+"у нас есть make-mutex, который используется вместе с макросом with-mutex, \n"
+"как показано в примере."
+
+#: in_ed/process.md:907
+msgctxt "in_ed/process.md:907"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:916
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (:balance *rich*)\n"
+"    0\n"
+"    CL-USER> (demo-race-condition-locks)\n"
+"    NIL\n"
+"    CL-USER> (:balance *rich*)\n"
+"    0\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:918
+msgctxt "in_ed/process.md:918"
+msgid ""
+"### Modify a shared resource from multiple threads â using atomic operations"
+msgstr ""
+"### Измените общий ресурс из нескольких потоков - используя атомарные "
+"операции\n"
+
+#: in_ed/process.md:920
+msgid "First, the code:"
+msgstr "Первый, код:"
+
+#: in_ed/process.md:923
+msgid ""
+"~~~lisp\n"
+"    ;;; Modify a shared resource from multiple threads - atomics"
+msgstr ""
+
+#: in_ed/process.md:926
+msgid ""
+"    (defgeneric atomic-deposit (account amount)\n"
+"      (:documentation \"Atomic version of the deposit method\"))"
+msgstr ""
+
+#: in_ed/process.md:929
+msgid ""
+"    (defgeneric atomic-withdraw (account amount)\n"
+"      (:documentation \"Atomic version of the withdraw method\"))"
+msgstr ""
+
+#: in_ed/process.md:932
+msgid ""
+"    (defmethod atomic-deposit ((account bank-account) (amount real))\n"
+"      (sb-ext:atomic-incf (car (cons (:balance account) nil)) amount))"
+msgstr ""
+
+#: in_ed/process.md:935
+msgid ""
+"    (defmethod atomic-withdraw ((account bank-account) (amount real))\n"
+"      (sb-ext:atomic-decf (car (cons (:balance account) nil)) amount))"
+msgstr ""
+
+#: in_ed/process.md:943
+msgid ""
+"    (defun demo-race-condition-atomics ()\n"
+"      (loop repeat 100\n"
+"         do (sb-thread:make-thread\n"
+"             (lambda ()\n"
+"               (loop repeat 10000 do (atomic-deposit *rich* 100))\n"
+"               (loop repeat 10000 do (atomic-withdraw *rich* 100))))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:945
+msgctxt "in_ed/process.md:945"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:951
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (dotimes (i 5)\n"
+"               (format t \"~%Opening: ~d\" (:balance *rich*))\n"
+"               (demo-race-condition-atomics)\n"
+"               (format t \"~%Closing: ~d~%\" (:balance *rich*)))"
+msgstr ""
+
+#: in_ed/process.md:954
+msgctxt "in_ed/process.md:954"
+msgid ""
+"    Opening: 0\n"
+"    Closing: 0"
+msgstr ""
+
+#: in_ed/process.md:957
+msgctxt "in_ed/process.md:957"
+msgid ""
+"    Opening: 0\n"
+"    Closing: 0"
+msgstr ""
+
+#: in_ed/process.md:960
+msgctxt "in_ed/process.md:960"
+msgid ""
+"    Opening: 0\n"
+"    Closing: 0"
+msgstr ""
+
+#: in_ed/process.md:963
+msgctxt "in_ed/process.md:963"
+msgid ""
+"    Opening: 0\n"
+"    Closing: 0"
+msgstr ""
+
+#: in_ed/process.md:968
+msgid ""
+"    Opening: 0\n"
+"    Closing: 0\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:972
+msgid ""
+"As you can see, SBCLâs atomic functions are a bit quirky. The two\n"
+"functions used here: `sb-ext:incf` and `sb-ext:atomic-decf` have the\n"
+"following signatures:"
+msgstr ""
+"Как видите, атомарные функции SBCL несколько необычны. Две используемые \n"
+"здесь функции: `sb-ext:incf` и `sb-ext:atomic-decf` имеют следующие \n"
+"сигнатуры: "
+
+#: in_ed/process.md:975
+msgid "    Macro: atomic-incf [sb-ext] place &optional diff"
+msgstr ""
+
+#: in_ed/process.md:977
+msgid "and"
+msgstr "и"
+
+#: in_ed/process.md:980
+msgid "    Macro: atomic-decf [sb-ext] place &optional diff"
+msgstr ""
+
+#: in_ed/process.md:983
+msgid ""
+"The interesting bit is that the âplaceâ parameter must be any of the\n"
+"following (as per the documentation):"
+msgstr ""
+"Интересно то, что параметр «place/место» должен иметь одно из следующих \n"
+"значений (согласно документации):\n"
+
+#: in_ed/process.md:987
+msgid ""
+"- a defstruct slot with declared type (unsigned-byte 64) or aref of a "
+"(simple-array (unsigned-byte 64) (*)) The type `sb-ext:word` can be used for "
+"these purposes.\n"
+"- car or cdr (respectively first or REST) of a cons.\n"
+"- a variable defined using defglobal with a proclaimed type of fixnum."
+msgstr ""
+"- слот defstruct с объявленным типом (unsigned-byte 64) или aref из \n"
+"(simple-array (unsigned-byte 64) (*)) Для этих целей можно использовать \n"
+"тип `sb-ext:word`.\n"
+"- car или cdr (соответственно first или REST) для cons.\n"
+"-   переменная, определенная с помощью defglobal с заявленным типом\n"
+"(proclaimed type) fixnum"
+
+#: in_ed/process.md:990
+msgid ""
+"This is the reason for the bizarre construct used in the\n"
+"`atomic-deposit` and `atomic-decf` methods."
+msgstr ""
+"Это причина причудливой конструкции, используемой в методах \n"
+"`atomic-deposit` и `atomic-decf`.\n"
+
+#: in_ed/process.md:995
+msgid ""
+"One major incentive to use atomic operations as much as possible is\n"
+"performance. Letâs do a quick run of the demo-race-condition-locks and\n"
+"demo-race-condition-atomics functions over 1000 times and check the\n"
+"difference in performance (if any):"
+msgstr ""
+"Одним из основных стимулов максимально использовать атомарные операции \n"
+"является производительность. Давайте быстро запустим функции \n"
+"demo-race-condition-locks и demo-race-condition-atomics более 1000 раз \n"
+"и проверим разницу в производительности (если есть):"
+
+#: in_ed/process.md:997
+msgid "With locks:"
+msgstr "С блокировками:"
+
+#: in_ed/process.md:1008
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (time\n"
+"                        (loop repeat 100\n"
+"                          do (demo-race-condition-locks)))\n"
+"    Evaluation took:\n"
+"      57.711 seconds of real time\n"
+"      431.451639 seconds of total run time (408.014746 user, 23.436893 "
+"system)\n"
+"      747.61% CPU\n"
+"      126,674,011,941 processor cycles\n"
+"      3,329,504 bytes consed"
+msgstr ""
+
+#: in_ed/process.md:1011
+msgctxt "in_ed/process.md:1011"
+msgid ""
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1013
+msgid "With atomics:"
+msgstr "С атомарными операциями:"
+
+#: in_ed/process.md:1025
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (time\n"
+"                        (loop repeat 100\n"
+"                         do (demo-race-condition-atomics)))\n"
+"    Evaluation took:\n"
+"      2.495 seconds of real time\n"
+"      8.175454 seconds of total run time (6.124259 user, 2.051195 system)\n"
+"      [ Run times consist of 0.420 seconds GC time, and 7.756 seconds non-GC "
+"time. ]\n"
+"      327.66% CPU\n"
+"      5,477,039,706 processor cycles\n"
+"      3,201,582,368 bytes consed"
+msgstr ""
+
+#: in_ed/process.md:1028
+msgctxt "in_ed/process.md:1028"
+msgid ""
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1031
+msgid ""
+"The results? The locks version took around 57s whereas the lockless\n"
+"atomics version took just 2s! This is a massive difference indeed!"
+msgstr ""
+"Результаты? Версия с блокировками заняла около 57 с, тогда как \n"
+"версия без блокировки с атомикой заняла всего 2 с! Это действительно \n"
+"огромная разница!"
+
+#: in_ed/process.md:1033
+msgid "### Joining on a thread, destroying a thread example"
+msgstr "### Присоединение к потоку, уничтожение примера потока\n"
+
+#: in_ed/process.md:1035
+msgctxt "in_ed/process.md:1035"
+msgid "The code:"
+msgstr "Код:"
+
+#: in_ed/process.md:1038
+msgid ""
+"~~~lisp\n"
+"    ;;; Joining on and destroying a thread"
+msgstr ""
+
+#: in_ed/process.md:1047
+msgid ""
+"    (defmacro until (condition &body body)\n"
+"      (let ((block-name (gensym)))\n"
+"        `(block ,block-name\n"
+"           (loop\n"
+"               (if ,condition\n"
+"                   (return-from ,block-name nil)\n"
+"                   (progn\n"
+"                       ,@body))))))"
+msgstr ""
+
+#: in_ed/process.md:1075
+msgid ""
+"    (defun join-destroy-thread ()\n"
+"      (let* ((s *standard-output*)\n"
+"            (joiner-thread (sb-thread:make-thread\n"
+"                            (lambda ()\n"
+"                              (loop for i from 1 to 10\n"
+"                                 do\n"
+"                                   (format s \"~%[Joiner Thread]  Working..."
+"\")\n"
+"                                   (sleep (* 0.01 (random 100)))))))\n"
+"            (destroyer-thread (sb-thread:make-thread\n"
+"                               (lambda ()\n"
+"                                 (loop for i from 1 to 1000000\n"
+"                                    do\n"
+"                                      (format s \"~%[Destroyer Thread] "
+"Working...\")\n"
+"                                      (sleep (* 0.01 (random 10000))))))))\n"
+"        (format t \"~%[Main Thread] Waiting on joiner thread...\")\n"
+"        (bt:join-thread joiner-thread)\n"
+"        (format t \"~%[Main Thread] Done waiting on joiner thread\")\n"
+"        (if (sb-thread:thread-alive-p destroyer-thread)\n"
+"            (progn\n"
+"              (format t \"~%[Main Thread] Destroyer thread alive... killing "
+"it\")\n"
+"              (sb-thread:terminate-thread destroyer-thread))\n"
+"            (format t \"~%[Main Thread] Destroyer thread is already dead"
+"\"))\n"
+"        (until (sb-thread:thread-alive-p destroyer-thread)\n"
+"               (format t \"[Main Thread] Waiting for destroyer thread to "
+"die...\"))\n"
+"        (format t \"~%[Main Thread] Destroyer thread dead\")\n"
+"        (format t \"~%[Main Thread] Adios!~%\")))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1077
+msgctxt "in_ed/process.md:1077"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:1080
+msgctxt "in_ed/process.md:1080"
+msgid ""
+"~~~lisp\n"
+"    CL-USER> (join-destroy-thread)"
+msgstr ""
+
+#: in_ed/process.md:1099
+msgctxt "in_ed/process.md:1099"
+msgid ""
+"    [Joiner Thread]  Working...\n"
+"    [Destroyer Thread] Working...\n"
+"    [Main Thread] Waiting on joiner thread...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Joiner Thread]  Working...\n"
+"    [Main Thread] Done waiting on joiner thread\n"
+"    [Main Thread] Destroyer thread alive... killing it\n"
+"    [Main Thread] Destroyer thread dead\n"
+"    [Main Thread] Adios!\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1101
+msgctxt "in_ed/process.md:1101"
+msgid "### Useful functions"
+msgstr "### Полезные функции"
+
+#: in_ed/process.md:1104
+msgid ""
+"Here is a summarised list of the functions, macros and global\n"
+"variables used in the examples along with some extras:"
+msgstr ""
+"Вот краткий список функций, макросов и глобальных переменных, \n"
+"используемых в примерах, а также некоторые дополнения:"
+
+#: in_ed/process.md:1116
+msgid ""
+"-    `(member :thread-support *features*)` (check thread support)\n"
+"-    `sb-thread:make-thread` (create a new thread)\n"
+"-    `sb-thread:*current-thread*` (holds the current thread object)\n"
+"-    `sb-thread:list-all-threads` (return a list of all running threads)\n"
+"-    `sb-thread:thread-alive-p` (checks if the thread is still alive)\n"
+"-    `sb-thread:thread-name` (return the name of the thread)\n"
+"-    `sb-thread:join-thread` (join on the supplied thread)\n"
+"-    `sb-thread:interrupt-thread` (interrupt the given thread)\n"
+"-    `sb-thread:destroy-thread` (attempt to abort the thread)\n"
+"-    `sb-thread:make-mutex` (create a mutex)\n"
+"-    `sb-thread:with-mutex` (use supplied lock to protect critical code)"
+msgstr ""
+"-    `(member :thread-support *features*)` (проверка поддержки потоков)\n"
+"-    `sb-thread:make-thread` (создать новый поток)\n"
+"-    `sb-thread:*current-thread*` (содержит объект текущего потока)\n"
+"-    `sb-thread:list-all-threads` (вернуть список всех запущенных потоков)\n"
+"-    `sb-thread:thread-alive-p` (проверяет, жив ли поток)\n"
+"-    `sb-thread:thread-name` (вернуть имя потока)\n"
+"-    `sb-thread:join-thread` (присоединиться к предоставленному потоку)\n"
+"-    `sb-thread:interrupt-thread` (прервать данный поток)\n"
+"-    `sb-thread:destroy-thread` (попытка уничтожить поток)\n"
+"-    `sb-thread:make-mutex` (создать мьютекс)\n"
+"-    `sb-thread:with-mutex` (используйте прилагаемую блокировку для защиты "
+"критического кода)"
+
+#: in_ed/process.md:1118
+msgid "## Wrap-up"
+msgstr ""
+"## краткая сводка новостей\n"
+"\t\n"
+"\n"
+
+#: in_ed/process.md:1124
+msgid ""
+"As you can see, concurrency support is rather primitive in Common\n"
+"Lisp, but thatâs primarily due to the glaring absence of this\n"
+"important feature in the ANSI Common Lisp specification. That does not\n"
+"detract in the least from the support provided by Common Lisp\n"
+"implementations, nor wonderful libraries like the Bordeaux library."
+msgstr ""
+"Как видите, поддержка параллелизма в Common Lisp довольно примитивна, \n"
+"но в первую очередь это связано с явным отсутствием этой важной функции \n"
+"в спецификации ANSI Common Lisp. Это нисколько не умаляет ни поддержки, \n"
+"предоставляемой реализациями Common Lisp, ни замечательных библиотек, \n"
+"таких как библиотека Bordeaux.\n"
+
+#: in_ed/process.md:1127
+msgid ""
+"You should follow up on your own by reading a lot more on this\n"
+"topic. I share some of my own references here:"
+msgstr ""
+"Вам следует продолжить работу самостоятельно, прочитав еще много "
+"информации \n"
+"по этой теме. Я поделюсь некоторыми своими ссылками здесь: "
+
+#: in_ed/process.md:1132
+msgid ""
+"-    [Common Lisp Recipes](http://weitz.de/cl-recipes/)\n"
+"-    [Bordeaux API Reference](https://trac.common-lisp.net/bordeaux-threads/"
+"wiki/ApiDocumentation)\n"
+"-    [SBCL Manual](http://www.sbcl.org/manual/) on [Threading](http://www."
+"sbcl.org/manual/#Threading) \n"
+"-    [The Common Lisp Hyperspec](https://www.lispworks.com/documentation/"
+"HyperSpec/Front/)"
+msgstr ""
+
+#: in_ed/process.md:1135
+msgid ""
+"Next up, the final post in this mini-series: parallelism in Common\n"
+"Lisp using the **lparallel** library."
+msgstr ""
+"Далее, последний пост в этой мини-серии: параллелизм в Common Lisp \n"
+"с использованием библиотеки **lparallel**."
+
+#: in_ed/process.md:1137
+msgid "## Parallel programming with lparallel"
+msgstr "## Параллельное программирование с lparallel"
+
+#: in_ed/process.md:1142
+msgid ""
+"It is important to note that lparallel also provides extensive support\n"
+"for asynchronous programming, and is not a purely parallel programming\n"
+"library. As stated before, parallelism is merely an abstract concept\n"
+"in which tasks are conceptually independent of one another."
+msgstr ""
+"Важно отметить, что lparallel также обеспечивает обширную поддержку \n"
+"асинхронного программирования и не является чисто параллельной библиотекой \n"
+"программирования. Как указывалось ранее, параллелизм - это просто "
+"абстрактное \n"
+"понятие, в котором задачи концептуально независимы друг от друга."
+
+#: in_ed/process.md:1145
+msgid ""
+"The lparallel library is built on top of the Bordeaux threading\n"
+"library."
+msgstr "Библиотека lparallel построена на основе библиотеки потоков Bordeaux. "
+
+#: in_ed/process.md:1150
+msgid ""
+"As mentioned previously, parallelism and concurrency can be\n"
+"(and usually are) implemented using the same means â threads,\n"
+"processes, etc. The difference between lies in their conceptual\n"
+"differences."
+msgstr ""
+"Как упоминалось ранее, параллелизм и одновременность могут быть \n"
+"(и обычно реализуются) с использованием одних и тех же средств \n"
+"- потоков, процессов и т. Д. Разница между ними заключается в \n"
+"их концептуальных различиях."
+
+#: in_ed/process.md:1155
+msgid ""
+"Note that not all the examples shown in this post are necessarily\n"
+"parallel. Asynchronous constructs such as Promises and Futures are, in\n"
+"particular, more suited to concurrent programming than parallel\n"
+"programming."
+msgstr ""
+"Обратите внимание, что не все примеры, показанные в этом посте, \n"
+"обязательно параллельны. Асинхронные конструкции, такие как \n"
+"Promises и Futures, в частности, больше подходят для параллельного \n"
+"программирования, чем для параллельного программирования."
+
+#: in_ed/process.md:1157
+msgid ""
+"The modus operandi of using the lparallel library (for a basic use case) is "
+"as follows:"
+msgstr ""
+"Порядок работы(modus operandi) с библиотекой lparallel (для базового "
+"варианта использования)\n"
+"выглядит следующим образом: "
+
+#: in_ed/process.md:1170
+msgid ""
+"- Create an instance of what the library calls a kernel using\n"
+"  `lparallel:make-kernel`. The kernel is the component that schedules\n"
+"  and executes tasks.\n"
+"-    Design the code in terms of futures, promises and other higher\n"
+"     level functional concepts. To this end, lparallel provides\n"
+"     support for **channels**, **promises**, **futures**, and **cognates**.\n"
+"-    Perform operations using what the library calls cognates, which\n"
+"     are simply functions which have equivalents in the Common Lisp\n"
+"     language itself. For instance, the `lparallel:pmap` function is\n"
+"     the parallel equivalent of the Common Lisp `map` function.\n"
+"-    Finally, close the kernel created in the first step using\n"
+"     `lparallel:end-kernel`."
+msgstr ""
+"- Создайте экземпляр того, что библиотека называет ядром(kernel), "
+"используя \n"
+"  `lparallel:make-kernel`. Ядро - это компонент, который планирует и "
+"выполняет \n"
+"   задачи.\n"
+"-    Разработайте код в терминах будущего(futures), обещаний(promises) и \n"
+"     других функциональных концепций более высокого уровня. С этой целью \n"
+"     lparallel обеспечивает поддержку **channels**(каналов), "
+"**promises**(обещаний), \n"
+"     **futures**(будущее) и **cognates**(родственных).\n"
+"-    Выполняйте операции, используя то, что библиотека называет "
+"родственными(cognates) \n"
+"     функциями, то есть просто функциями, имеющими эквиваленты в самом языке "
+"Common Lisp.\n"
+"     Например, функция `lparallel:pmap` является параллельным эквивалентом \n"
+"     функции `map` Common Lisp.\n"
+"-    Наконец, закройте ядро, созданное на первом шаге, с помощью `lparallel:"
+"end-kernel`."
+
+#: in_ed/process.md:1174
+msgid ""
+"Note that the onus of ensuring that the tasks being carried out are\n"
+"logically parallelisable as well as taking care of all mutable state\n"
+"is on the developer."
+msgstr ""
+"Обратите внимание, что ответственность за логическую параллелизацию \n"
+"выполняемых задач и заботу обо всех изменяемых состояниях лежит на \n"
+"разработчике. "
+
+#: in_ed/process.md:1177
+msgid ""
+"_Credit: this article first appeared on\n"
+"[z0ltan.wordpress.com](https://z0ltan.wordpress.com/2016/09/09/basic-"
+"concurrency-and-parallelism-in-common-lisp-part-4a-parallelism-using-"
+"lparallel-fundamentals/)._"
+msgstr ""
+
+#: in_ed/process.md:1179
+msgid "### Installation"
+msgstr "### Установка"
+
+#: in_ed/process.md:1181
+msgid "Letâs check if lparallel is available for download using Quicklisp:"
+msgstr ""
+"Давайте проверим, доступен ли lparallel для загрузки с помощью Quicklisp: "
+
+#: in_ed/process.md:1189
+msgid ""
+"~~~lisp\n"
+"CL-USER> (ql:system-apropos \"lparallel\")\n"
+"#<SYSTEM lparallel / lparallel-20160825-git / quicklisp 2016-08-25>\n"
+"#<SYSTEM lparallel-bench / lparallel-20160825-git / quicklisp 2016-08-25>\n"
+"#<SYSTEM lparallel-test / lparallel-20160825-git / quicklisp 2016-08-25>\n"
+"; No value\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1191
+msgid "Looks like it is. Letâs go ahead and install it:"
+msgstr "Похоже, это так. Давайте продолжим и установим его: "
+
+#: in_ed/process.md:1222
+msgid ""
+"~~~lisp\n"
+"CL-USER> (ql:quickload \"lparallel\")\n"
+"To load \"lparallel\":\n"
+"  Load 2 ASDF systems:\n"
+"    alexandria bordeaux-threads\n"
+"  Install 1 Quicklisp release:\n"
+"    lparallel\n"
+"; Fetching #<URL \"http://beta.quicklisp.org/archive/lparallel/2016-08-25/"
+"lparallel-20160825-git.tgz\">\n"
+"; 76.71KB\n"
+"==================================================\n"
+"78,551 bytes in 0.62 seconds (124.33KB/sec)\n"
+"; Loading \"lparallel\"\n"
+"[package lparallel.util]..........................\n"
+"[package lparallel.thread-util]...................\n"
+"[package lparallel.raw-queue].....................\n"
+"[package lparallel.cons-queue]....................\n"
+"[package lparallel.vector-queue]..................\n"
+"[package lparallel.queue].........................\n"
+"[package lparallel.counter].......................\n"
+"[package lparallel.spin-queue]....................\n"
+"[package lparallel.kernel]........................\n"
+"[package lparallel.kernel-util]...................\n"
+"[package lparallel.promise].......................\n"
+"[package lparallel.ptree].........................\n"
+"[package lparallel.slet]..........................\n"
+"[package lparallel.defpun]........................\n"
+"[package lparallel.cognate].......................\n"
+"[package lparallel]\n"
+"(:LPARALLEL)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1224
+msgid "And thatâs all it took! Now letâs see how this library actually works."
+msgstr ""
+"И это все, что нужно! Теперь посмотрим, как на самом деле работает эта "
+"библиотека."
+
+#: in_ed/process.md:1226
+msgid "### Preamble - get the number of cores"
+msgstr "### Преамбула - получить количество ядер\n"
+
+#: in_ed/process.md:1231
+msgid ""
+"First, letâs get hold of the number of threads that we are going to\n"
+"use for our parallel examples. Ideally, weâd like to have a 1:1 match\n"
+"between the number of worker threads and the number of available\n"
+"cores."
+msgstr ""
+"Во-первых, давайте определим количество потоков, которые мы собираемся \n"
+"использовать для наших параллельных примеров. В идеале мы хотели бы иметь \n"
+"соответствие 1: 1 между количеством рабочих потоков и количеством "
+"доступных \n"
+"ядер(cores)."
+
+#: in_ed/process.md:1234
+msgid ""
+"We can use the great **Serapeum** library to this end, which has a\n"
+"`count-cpus` function, that works on all major platforms."
+msgstr ""
+"Для этого мы можем использовать замечательную библиотеку **Serapeum**, \n"
+"которая имеет функцию `count-cpus`, которая работает на всех\n"
+"основных платформах."
+
+#: in_ed/process.md:1236
+msgid "Install it:"
+msgstr "Установите её: "
+
+#: in_ed/process.md:1240
+msgid ""
+"~~~lisp\n"
+"CL-USER> (ql:quickload \"serapeum\")\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1242
+msgid "and call it:"
+msgstr "и назови это: "
+
+#: in_ed/process.md:1247
+msgid ""
+"~~~lisp\n"
+"CL-USER> (serapeum:count-cpus)\n"
+"8\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1249
+msgid "and check that is correct."
+msgstr "и проверьте, что это правильно. "
+
+#: in_ed/process.md:1252
+msgid "### Common Setup"
+msgstr "### Общая настройка"
+
+#: in_ed/process.md:1255
+msgid ""
+"In this example, we will go through the initial setup bit, and also\n"
+"show some useful information once the setup is done."
+msgstr ""
+"В этом примере мы рассмотрим часть начальной настройки, а также покажем \n"
+"некоторую полезную информацию после завершения настройки."
+
+#: in_ed/process.md:1257
+msgid "Load the library:"
+msgstr "Загрузите библиотеку: "
+
+#: in_ed/process.md:1264
+msgid ""
+"~~~lisp\n"
+"CL-USER> (ql:quickload \"lparallel\")\n"
+"To load \"lparallel\":\n"
+"  Load 1 ASDF system:\n"
+"    lparallel\n"
+"; Loading \"lparallel\""
+msgstr ""
+
+#: in_ed/process.md:1267
+msgid ""
+"(:LPARALLEL)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1269
+msgid "Initialise the lparallel kernel:"
+msgstr "Инициализировать lparallel ядро:"
+
+#: in_ed/process.md:1274
+msgid ""
+"~~~lisp\n"
+"CL-USER> (setf lparallel:*kernel* (lparallel:make-kernel 8 :name \"custom-"
+"kernel\"))\n"
+"#<LPARALLEL.KERNEL:KERNEL :NAME \"custom-kernel\" :WORKER-COUNT 8 :USE-"
+"CALLER NIL :ALIVE T :SPIN-COUNT 2000 {1003141F03}>\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1278
+msgid ""
+"Note that the `*kernel*` global variable can be rebound â this allows\n"
+"multiple kernels to co-exist during the same run. Now, some useful\n"
+"information about the kernel:"
+msgstr ""
+"Обратите внимание, что глобальная переменная `*kernel*` может быть \n"
+"повторно связана - это позволяет нескольким ядрам сосуществовать \n"
+"во время одного запуска. Теперь немного полезной информации о ядре: "
+
+#: in_ed/process.md:1289
+msgid ""
+"~~~lisp\n"
+"CL-USER> (defun show-kernel-info ()\n"
+"           (let ((name (lparallel:kernel-name))\n"
+"                 (count (lparallel:kernel-worker-count))\n"
+"                 (context (lparallel:kernel-context))\n"
+"                 (bindings (lparallel:kernel-bindings)))\n"
+"             (format t \"Kernel name = ~a~%\" name)\n"
+"             (format t \"Worker threads count = ~d~%\" count)\n"
+"             (format t \"Kernel context = ~a~%\" context)\n"
+"             (format t \"Kernel bindings = ~a~%\" bindings)))"
+msgstr ""
+
+#: in_ed/process.md:1293
+msgid ""
+"WARNING: redefining COMMON-LISP-USER::SHOW-KERNEL-INFO in DEFUN\n"
+"SHOW-KERNEL-INFO"
+msgstr ""
+
+#: in_ed/process.md:1302
+msgid ""
+"CL-USER> (show-kernel-info)\n"
+"Kernel name = custom-kernel\n"
+"Worker threads count = 8\n"
+"Kernel context = #<FUNCTION FUNCALL>\n"
+"Kernel bindings = ((*STANDARD-OUTPUT* . #<SLIME-OUTPUT-STREAM {10044EEEA3}"
+">)\n"
+"                   (*ERROR-OUTPUT* . #<SLIME-OUTPUT-STREAM {10044EEEA3}>))\n"
+"NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1305
+msgid ""
+"End the kernel (this is important since `*kernel*` does not get\n"
+"garbage collected until we explicitly end it):"
+msgstr ""
+"Завершения ядра (это важно, поскольку `*kernel*`(ядро) не собирает мусор,\n"
+"пока мы явно не завершим его): "
+
+#: in_ed/process.md:1317
+msgid ""
+"~~~lisp\n"
+"CL-USER> (lparallel:end-kernel :wait t)\n"
+"(#<SB-THREAD:THREAD \"custom--kernel\" FINISHED values: NIL {100723FA83}>\n"
+" #<SB-THREAD:THREAD \"custom--kernel\" FINISHED values: NIL {100723FE23}>\n"
+" #<SB-THREAD:THREAD \"custom--kernel\" FINISHED values: NIL {10072581E3}>\n"
+" #<SB-THREAD:THREAD \"custom--kernel\" FINISHED values: NIL {1007258583}>\n"
+" #<SB-THREAD:THREAD \"custom--kernel\" FINISHED values: NIL {1007258923}>\n"
+" #<SB-THREAD:THREAD \"custom--kernel\" FINISHED values: NIL {1007258CC3}>\n"
+" #<SB-THREAD:THREAD \"custom--kernel\" FINISHED values: NIL {1007259063}>\n"
+" #<SB-THREAD:THREAD \"custom--kernel\" FINISHED values: NIL {1007259403}>)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1319
+msgid ""
+"Letâs move on to some more examples of different aspects of the lparallel "
+"library."
+msgstr ""
+"Давайте перейдем к еще нескольким примерам различных аспектов библиотеки "
+"lparallel.\n"
+
+#: in_ed/process.md:1321
+msgid ""
+"For these demos, we will be using the following initial setup from a coding "
+"perspective:"
+msgstr ""
+"Для этих демонстраций мы будем использовать следующую начальную настройку \n"
+"с точки зрения кодирования: "
+
+#: in_ed/process.md:1325
+msgid ""
+"~~~lisp\n"
+"(require âlparallel)\n"
+"(require âbt-semaphore)"
+msgstr ""
+"~~~lisp\n"
+"(require ‘lparallel)\n"
+"(require ‘bt-semaphore)"
+
+#: in_ed/process.md:1328
+msgid ""
+"(defpackage :lparallel-user\n"
+"  (:use :cl :lparallel :lparallel.queue :bt-semaphore))"
+msgstr ""
+
+#: in_ed/process.md:1330
+msgid "(in-package :lparallel-user)"
+msgstr ""
+
+#: in_ed/process.md:1334
+msgid ""
+";;; initialise the kernel\n"
+"(defun init ()\n"
+"  (setf *kernel* (make-kernel 8 :name \"channel-queue-kernel\")))"
+msgstr ""
+
+#: in_ed/process.md:1337
+msgid ""
+"(init)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1339
+msgid ""
+"So we will be using a kernel with 8 worker threads (one for each CPU core on "
+"the machine)."
+msgstr ""
+"Таким образом, мы будем использовать ядро с 8 рабочими потоками (по одному \n"
+"на каждое ядро процессора на машине).\n"
+
+#: in_ed/process.md:1342
+msgid ""
+"And once weâre done will all the examples, the following code will be\n"
+"run to close the kernel and free all used system resources:"
+msgstr ""
+"И как только мы закончим со всеми примерами, будет запущен следующий код, \n"
+"чтобы закрыть ядро и освободить все используемые системные ресурсы: "
+
+#: in_ed/process.md:1347
+msgid ""
+"~~~lisp\n"
+";;; shut the kernel down\n"
+"(defun shutdown ()\n"
+"  (end-kernel :wait t))"
+msgstr ""
+
+#: in_ed/process.md:1350
+msgid ""
+"(shutdown)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1352
+msgid "### Using channels and queues"
+msgstr "### Использование каналов и очередей"
+
+#: in_ed/process.md:1354
+msgid "First some definitions are in order."
+msgstr "Сначала несколько определений.\n"
+
+#: in_ed/process.md:1357
+msgid ""
+"A **task** is a job that is submitted to the kernel. It is simply a\n"
+"function object along with its arguments."
+msgstr ""
+"**task**(Задача) - это задание, которое передается ядру. Это просто \n"
+"объект функция вместе со своими аргументами."
+
+#: in_ed/process.md:1361
+msgid ""
+"A **channel** in lparallel is similar to the same concept in Go. A channel\n"
+"is simply a means of communication with a worker thread. In our case,\n"
+"it is one particular way of submitting tasks to the kernel."
+msgstr ""
+"**channel**(Канал) в lparallel аналогичен той же концепции в Go. Канал - \n"
+"это просто средство связи с рабочим потоком. В нашем случае это один \n"
+"из способов отправки задач ядру. "
+
+#: in_ed/process.md:1365
+msgid ""
+"A channel is created in lparallel using `lparallel:make-channel`. A\n"
+"task is submitted using `lparallel:submit-task`, and the results\n"
+"received via `lparallel:receive-result`."
+msgstr ""
+"Канал создается в lparallel с помощью `lparallel:make-channel`. \n"
+"Задача отправляется с помощью `lparallel:submit-task`, а результаты \n"
+"получаются с помощью `lparallel:receive-result`.\n"
+
+#: in_ed/process.md:1367
+msgid "For instance, we can calculate the square of a number as:"
+msgstr "Например, мы можем вычислить квадрат числа как: "
+
+#: in_ed/process.md:1378
+msgid ""
+"~~~lisp\n"
+"(defun calculate-square (n)\n"
+"  (let* ((channel (lparallel:make-channel))\n"
+"         (res nil))\n"
+"    (lparallel:submit-task channel #'(lambda (x)\n"
+"                                       (* x x))\n"
+"                           n)\n"
+"    (setf res (lparallel:receive-result channel))\n"
+"    (format t \"Square of ~d = ~d~%\" n res)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1380
+msgctxt "in_ed/process.md:1380"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:1386
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (calculate-square 100)\n"
+"Square of 100 = 10000\n"
+"NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1390
+msgid ""
+"Now letâs try submitting multiple tasks to the same channel. In this\n"
+"simple example, we are simply creating three tasks that square, triple,\n"
+"and quadruple the supplied input respectively."
+msgstr ""
+"Теперь давайте попробуем отправить несколько задач в один канал. В этом \n"
+"простом примере мы просто создаем три задачи, которые возводят в квадрат, \n"
+"по три и по четыре раза соответственно для предоставленных входных данных."
+
+#: in_ed/process.md:1392
+msgid ""
+"Note that in case of multiple tasks, the output will be in non-deterministic "
+"order:"
+msgstr ""
+"Обратите внимание, что в случае нескольких задач вывод будет в \n"
+"недетерминированном порядке: "
+
+#: in_ed/process.md:1409
+msgid ""
+"~~~lisp\n"
+"(defun test-basic-channel-multiple-tasks ()\n"
+"  (let ((channel (make-channel))\n"
+"        (res '()))\n"
+"    (submit-task channel #'(lambda (x)\n"
+"                             (* x x))\n"
+"                 10)\n"
+"    (submit-task channel #'(lambda (y)\n"
+"                             (* y y y))\n"
+"                 10)\n"
+"    (submit-task channel #'(lambda (z)\n"
+"                             (* z z z z))\n"
+"                 10)\n"
+"     (dotimes (i 3 res)\n"
+"       (push (receive-result channel) res))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1411
+msgctxt "in_ed/process.md:1411"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:1415
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (dotimes (i 3)\n"
+"                              (print (test-basic-channel-multiple-tasks)))"
+msgstr ""
+
+#: in_ed/process.md:1421
+msgid ""
+"(100 1000 10000)\n"
+"(100 1000 10000)\n"
+"(10000 1000 100)\n"
+"NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1425
+msgid ""
+"lparallel also provides support for creating a blocking queue in order\n"
+"to enable message passing between worker threads. A queue is created\n"
+"using `lparallel.queue:make-queue`."
+msgstr ""
+"lparallel также обеспечивает поддержку для создания блокирующей очереди , \n"
+"чтобы разрешить передачу сообщений между рабочими потоками. Очередь \n"
+"создается с помощью `lparallel.queue:make-queue`."
+
+#: in_ed/process.md:1427
+msgid "Some useful functions for using queues are:"
+msgstr "Некоторые полезные функции для использования очередей:\n"
+
+#: in_ed/process.md:1436
+msgid ""
+"-    `lparallel.queue:make-queue`: create a FIFO blocking queue\n"
+"-    `lparallel.queue:push-queue`: insert an element into the queue\n"
+"-    `lparallel.queue:pop-queue`: pop an item from the queue\n"
+"-    `lparallel.queue:peek-queue`: inspect value without popping it\n"
+"-    `lparallel.queue:queue-count`: the number of entries in the queue\n"
+"-    `lparallel.queue:queue-full-p`: check if the queue is full\n"
+"-    `lparallel.queue:queue-empty-p:chec`k if the queue is empty\n"
+"-    `lparallel.queue:with-locked-queue`: lock the queue during access"
+msgstr ""
+"-    `lparallel.queue:make-queue`: создает FIFO блокирующую очередь(blocking "
+"queue)\n"
+"-    `lparallel.queue:push-queue`: вставляет элемент в очередь\n"
+"-    `lparallel.queue:pop-queue`: извлекает элемент из очереди\n"
+"-    `lparallel.queue:peek-queue`: проверяет значение без его извлечения из "
+"очереди\n"
+"-    `lparallel.queue:queue-count`: количество записей в очереди\n"
+"-    `lparallel.queue:queue-full-p`: проверить, заполнена ли очередь\n"
+"-    `lparallel.queue:queue-empty-p`: проверить, пуста ли очередь\n"
+"-    `lparallel.queue:with-locked-queue`: заблокировать очередь во время "
+"доступа"
+
+#: in_ed/process.md:1438
+msgid "A basic demo showing basic queue properties:"
+msgstr "Базовая демонстрация, показывающая основные свойства очереди: "
+
+#: in_ed/process.md:1454
+msgid ""
+"~~~lisp\n"
+"    (defun test-queue-properties ()\n"
+"      (let ((queue (make-queue :fixed-capacity 5)))\n"
+"        (loop\n"
+"           when (queue-full-p queue)\n"
+"           do (return)\n"
+"           do (push-queue (random 100) queue))\n"
+"         (print (queue-full-p queue))\n"
+"        (loop\n"
+"           when (queue-empty-p queue)\n"
+"           do (return)\n"
+"           do (print (pop-queue queue)))\n"
+"        (print (queue-empty-p queue)))\n"
+"      nil)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1456
+msgctxt "in_ed/process.md:1456"
+msgid "Which produces:"
+msgstr "Что производит:"
+
+#: in_ed/process.md:1459
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-queue-properties)"
+msgstr ""
+
+#: in_ed/process.md:1469
+msgid ""
+"    T\n"
+"    17\n"
+"    51\n"
+"    55\n"
+"    42\n"
+"    82\n"
+"    T\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1475
+msgid ""
+"Note: `lparallel.queue:make-queue` is a generic interface which is\n"
+"actually backed by different types of queues. For instance, in the\n"
+"previous example, the actual type of the queue is\n"
+"`lparallel.vector-queue` since we specified it to be of fixed size using\n"
+"the `:fixed-capacity` keyword argument."
+msgstr ""
+"Примечание: `lparallel.queue:make-queue` - это обобщенный интерфейс, "
+"который \n"
+"фактически поддерживается разными типами очередей. Например, в предыдущем \n"
+"примере фактическим типом очереди является `lparallel.vector-queue`, \n"
+"поскольку мы указали, что она имеет фиксированный размер, используя "
+"аргумент \n"
+"ключевого слова `:fixed-capacity`."
+
+#: in_ed/process.md:1479
+msgid ""
+"The documentation doesnât actually specify what keyword arguments we\n"
+"can pass to `lparallel.queue:make-queue`, so letâs and find that out in\n"
+"a different way:"
+msgstr ""
+"В документации фактически не указано, какие ключевые аргументы мы можем \n"
+"передать в `lparallel.queue:make-queue`, поэтому давайте выясним это \n"
+"другим способом: "
+
+#: in_ed/process.md:1484
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (describe 'lparallel.queue:make-queue)\n"
+"    LPARALLEL.QUEUE:MAKE-QUEUE\n"
+"      [symbol]"
+msgstr ""
+
+#: in_ed/process.md:1490
+msgid ""
+"    MAKE-QUEUE names a compiled function:\n"
+"      Lambda-list: (&REST ARGS)\n"
+"      Derived type: FUNCTION\n"
+"      Documentation:\n"
+"        Create a queue."
+msgstr ""
+
+#: in_ed/process.md:1493
+msgid ""
+"        The queue contents may be initialized with the keyword argument\n"
+"        `initial-contents'."
+msgstr ""
+"        The queue contents may be initialized with the keyword argument\n"
+"        `initial-contents'."
+
+#: in_ed/process.md:1498
+msgid ""
+"        By default there is no limit on the queue capacity. Passing a\n"
+"        `fixed-capacity' keyword argument limits the capacity to the value\n"
+"        passed. `push-queue' will block for a full fixed-capacity queue.\n"
+"      Source file: /Users/z0ltan/quicklisp/dists/quicklisp/software/"
+"lparallel-20160825-git/src/queue.lisp"
+msgstr ""
+
+#: in_ed/process.md:1503
+msgid ""
+"    MAKE-QUEUE has a compiler-macro:\n"
+"      Source file: /Users/z0ltan/quicklisp/dists/quicklisp/software/"
+"lparallel-20160825-git/src/queue.lisp\n"
+"    ; No value\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1506
+msgid ""
+"So, as we can see, it supports the following keyword arguments:\n"
+"*:fixed-capacity*, and *initial-contents*."
+msgstr ""
+"Итак, как мы видим, она поддерживает следующие аргументы ключевого слова:\n"
+"*:fixed-capacity* и *initial-contents*."
+
+#: in_ed/process.md:1512
+msgid ""
+"Now, if we do specify `:fixed-capacity`, then the actual type of the\n"
+"queue will be `lparallel.vector-queue`, and if we skip that keyword\n"
+"argument, the queue will be of type `lparallel.cons-queue` (which is a\n"
+"queue of unlimited size), as can be seen from the output of the\n"
+"following snippet:"
+msgstr ""
+"Теперь, если мы укажем: `:fixed-capacity`, тогда фактическим типом \n"
+"очереди будет `lparallel.vector-queue`, и если мы пропустим этот \n"
+"аргумент ключевого слова, очередь будет иметь тип \n"
+"`lparallel.cons-queue` (который является очередью неограниченного \n"
+"размера), как видно из вывода следующего фрагмента: "
+
+#: in_ed/process.md:1519
+msgid ""
+"~~~lisp\n"
+"    (defun check-queue-types ()\n"
+"      (let ((queue-one (make-queue :fixed-capacity 5))\n"
+"            (queue-two (make-queue)))\n"
+"        (format t \"queue-one is of type: ~a~%\" (type-of queue-one))\n"
+"        (format t \"queue-two is of type: ~a~%\" (type-of queue-two))))"
+msgstr ""
+
+#: in_ed/process.md:1526
+msgid ""
+"    LPARALLEL-USER> (check-queue-types)\n"
+"    queue-one is of type: VECTOR-QUEUE\n"
+"    queue-two is of type: CONS-QUEUE\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1531
+msgid ""
+"Of course, you can always create instances of the specific queue types\n"
+"yourself, but it is always better, when you can, to stick to the\n"
+"generic interface and letting the library create the proper type of\n"
+"queue for you."
+msgstr ""
+"Конечно, вы всегда можете создавать экземпляры определенных типов \n"
+"очередей самостоятельно, но всегда лучше, когда это возможно, \n"
+"придерживаться общего интерфейса и позволить библиотеке создать \n"
+"для вас правильный тип очереди."
+
+#: in_ed/process.md:1533
+msgid "Now, letâs just see the queue in action!"
+msgstr "А теперь давайте просто посмотрим, как работает очередь! "
+
+#: in_ed/process.md:1549
+msgid ""
+"~~~lisp\n"
+"    (defun test-basic-queue ()\n"
+"      (let ((queue (make-queue))\n"
+"            (channel (make-channel))\n"
+"            (res '()))\n"
+"        (submit-task channel #'(lambda ()\n"
+"                         (loop for entry = (pop-queue queue)\n"
+"                            when (queue-empty-p queue)\n"
+"                            do (return)\n"
+"                            do (push (* entry entry) res))))\n"
+"        (dotimes (i 100)\n"
+"          (push-queue i queue))\n"
+"        (receive-result channel)\n"
+"        (format t \"~{~d ~}~%\" res)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1552
+msgid ""
+"Here we submit a single task that repeatedly scans the queue till itâs\n"
+"empty, pops the available values, and pushes them into the res list."
+msgstr ""
+"Здесь мы отправляем одну задачу, которая многократно сканирует очередь \n"
+"до тех пор, пока она не станет пустой, достает доступные значения и "
+"помещает \n"
+"их в список res."
+
+#: in_ed/process.md:1554
+msgctxt "in_ed/process.md:1554"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:1560
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-basic-queue)\n"
+"    9604 9409 9216 9025 8836 8649 8464 8281 8100 7921 7744 7569 7396 7225 "
+"7056 6889 6724 6561 6400 6241 6084 5929 5776 5625 5476 5329 5184 5041 4900 "
+"4761 4624 4489 4356 4225 4096 3969 3844 3721 3600 3481 3364 3249 3136 3025 "
+"2916 2809 2704 2601 2500 2401 2304 2209 2116 2025 1936 1849 1764 1681 1600 "
+"1521 1444 1369 1296 1225 1156 1089 1024 961 900 841 784 729 676 625 576 529 "
+"484 441 400 361 324 289 256 225 196 169 144 121 100 81 64 49 36 25 16 9 4 1 "
+"0\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1562
+msgid "###    Killing tasks"
+msgstr "###    Уничтожение задач"
+
+#: in_ed/process.md:1567
+msgid ""
+"A small note mentioning the `lparallel:kill-task` function would be\n"
+"apropos at this juncture. This function is useful in those cases when\n"
+"tasks are unresponsive. The lparallel documentation clearly states\n"
+"that this must only be used as a last resort."
+msgstr ""
+"Небольшая заметка, в которой упоминается функция `lparallel:kill-task`, \n"
+"была бы уместна на данном этапе. Эта функция полезна в тех случаях, \n"
+"когда задачи не отвечают. В документации lparallel четко указано, \n"
+"что это следует использовать только в крайнем случае.\n"
+"\n"
+"\n"
+
+#: in_ed/process.md:1571
+msgid ""
+"All tasks which are created are by default assigned a category of\n"
+":default. The dynamic property, `*task-category*` holds this value, and\n"
+"can be dynamically bound to different values (as we shall see)."
+msgstr ""
+"Всем созданным задачам по умолчанию присваивается категория :default. \n"
+"Динамическое свойство `*task-category*` содержит это значение и может\n"
+"быть динамически привязано к различным значениям (как мы увидим). "
+
+#: in_ed/process.md:1584
+msgid ""
+"~~~lisp\n"
+";;; kill default tasks\n"
+"(defun test-kill-all-tasks ()\n"
+"  (let ((channel (make-channel))\n"
+"        (stream *query-io*))\n"
+"    (dotimes (i 10)\n"
+"      (submit-task channel #'(lambda (x)\n"
+"                               (sleep (random 10))\n"
+"                               (format stream \"~d~%\" (* x x))) (random "
+"10)))\n"
+"    (sleep (random 2))\n"
+"    (kill-tasks :default)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1586
+msgctxt "in_ed/process.md:1586"
+msgid "Sample run:"
+msgstr "Пример запуска:"
+
+#: in_ed/process.md:1601
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (test-kill-all-tasks)\n"
+"16\n"
+"1\n"
+"8\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1607
+msgid ""
+"Since we had created 10 tasks, all the 8 kernel worker threads were\n"
+"presumably busy with a task each. When we killed tasks of category\n"
+":default, all these threads were killed as well and had to be\n"
+"regenerated (which is an expensive operation). This is part of the\n"
+"reason why `lparallel:kill-tasks` must be avoided."
+msgstr ""
+"Поскольку мы создали 10 задач, все 8 рабочих потоков ядра предположительно \n"
+"были заняты каждой задачей. Когда мы убивали задачи категории :default, \n"
+"все эти потоки также были убиты, и их нужно было регенерировать \n"
+"(что является дорогостоящей операцией). Это одна из причин, по которой \n"
+"следует избегать `lparallel:kill-tasks`."
+
+#: in_ed/process.md:1613
+msgid ""
+"Now, in the example above, all running tasks were killed since all of\n"
+"them belonged to the :default category. Suppose we wish to kill only\n"
+"specific tasks, we can do that by binding `*task-category*` when we\n"
+"create those tasks, and then specifying the category when we invoke\n"
+"`lparallel:kill-tasks`."
+msgstr ""
+"Теперь, в приведенном выше примере, все запущенные задачи были убиты, \n"
+"поскольку все они принадлежали к категории :default. Предположим, \n"
+"мы хотим убить только определенные задачи, мы можем сделать это, \n"
+"привязав `*task-category*` при создании этих задач, а затем указав \n"
+"категорию при вызове `lparallel:kill-tasks`."
+
+#: in_ed/process.md:1619
+msgid ""
+"For example, suppose we have two categories of tasks â tasks which\n"
+"square their arguments, and tasks which cube theirs. Letâs assign them\n"
+"categories âsquaring-tasks and âcubing-tasks respectively. Letâs then\n"
+"kill tasks of a randomly chosen category âsquaring-tasks or\n"
+"âcubing-tasks."
+msgstr ""
+"Например, предположим, что у нас есть две категории задач - задачи, "
+"которые \n"
+"возводят в квадрат свои аргументы, и задачи, которые возводят в куб свои. \n"
+"Давайте назначим им категории \"squaring-tasks\" и \"cubing-tasks\" "
+"соответственно. \n"
+"Затем давайте уберем задачи из случайно выбранной категории: squaring-"
+"tasks \n"
+"или cubing-tasks.\n"
+
+#: in_ed/process.md:1621
+msgid "Here is the code:"
+msgstr "Вот код: "
+
+#: in_ed/process.md:1646
+msgid ""
+"~~~lisp\n"
+";;; kill tasks of a randomly chosen category\n"
+"(defun test-kill-random-tasks ()\n"
+"  (let ((channel (make-channel))\n"
+"        (stream *query-io*))\n"
+"    (let ((*task-category* 'squaring-tasks))\n"
+"      (dotimes (i 5)\n"
+"        (submit-task channel #'(lambda (x)\n"
+"                                 (sleep (random 5))\n"
+"                                 (format stream \"~%[Squaring] ~d = ~d\" x "
+"(* x x))) i)))\n"
+"    (let ((*task-category* 'cubing-tasks))\n"
+"      (dotimes (i 5)\n"
+"        (submit-task channel #'(lambda (x)\n"
+"                                 (sleep (random 5))\n"
+"                                 (format stream \"~%[Cubing] ~d = ~d\" x (* "
+"x x x))) i)))\n"
+"    (sleep 1)\n"
+"    (if (evenp (random 10))\n"
+"        (progn\n"
+"          (print \"Killing squaring tasks\")\n"
+"          (kill-tasks 'squaring-tasks))\n"
+"        (progn\n"
+"          (print \"Killing cubing tasks\")\n"
+"          (kill-tasks 'cubing-tasks)))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1648
+msgid "And here is a sample run:"
+msgstr "А вот пример запуска: "
+
+#: in_ed/process.md:1651
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (test-kill-random-tasks)"
+msgstr ""
+
+#: in_ed/process.md:1662
+msgid ""
+"[Cubing] 2 = 8\n"
+"[Squaring] 4 = 16\n"
+"[Cubing] 4\n"
+" = [Cubing] 643 = 27\n"
+"\"Killing squaring tasks\"\n"
+"4\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker."
+msgstr ""
+
+#: in_ed/process.md:1665
+msgid ""
+"[Cubing] 1 = 1\n"
+"[Cubing] 0 = 0"
+msgstr ""
+
+#: in_ed/process.md:1667
+msgid "LPARALLEL-USER> (test-kill-random-tasks)"
+msgstr ""
+
+#: in_ed/process.md:1675
+msgid ""
+"[Squaring] 1 = 1\n"
+"[Squaring] 3 = 9\n"
+"\"Killing cubing tasks\"\n"
+"5\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker."
+msgstr ""
+
+#: in_ed/process.md:1679
+msgid ""
+"[Squaring] 2 = 4\n"
+"WARNING: lparallel: Replacing lost or dead worker.\n"
+"WARNING: lparallel: Replacing lost or dead worker."
+msgstr ""
+
+#: in_ed/process.md:1683
+msgid ""
+"[Squaring] 0 = 0\n"
+"[Squaring] 4 = 16\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1685
+msgid "### Using promises and futures"
+msgstr "### Использование обещаний и будущих "
+
+#: in_ed/process.md:1687
+msgid "Promises and Futures provide support for Asynchronous Programming."
+msgstr ""
+"Promises(обещения) и Futures(будущее) обеспечивают поддержку \n"
+"асинхронного программирования. "
+
+#: in_ed/process.md:1692
+msgid ""
+"In lparallel-speak, a `lparallel:promise` is a placeholder for a\n"
+"result which is fulfilled by providing it with a value. The promise\n"
+"object itself is created using `lparallel:promise`, and the promise is\n"
+"given a value using the `lparallel:fulfill` macro."
+msgstr ""
+"В lparallel-speak `lparallel:promise` является заполнителем для \n"
+"результата, который достигается путем предоставления ему значения. \n"
+"Сам объект promise(обещания) создается с помощью `lparallel:promise`, \n"
+"а обещанию присваивается значение с помощью макроса `lparallel:fulfill`."
+
+#: in_ed/process.md:1698
+msgid ""
+"To check whether the promise has been fulfilled yet or not, we can use\n"
+"the `lparallel:fulfilledp` predicate function.  Finally, the\n"
+"`lparallel:force` function is used to extract the value out of the\n"
+"promise. Note that this function blocks until the operation is\n"
+"complete."
+msgstr ""
+"Чтобы проверить, выполнено ли promise(обещание) или нет, мы можем \n"
+"использовать функцию предикат `lparallel:fulfilledp`. Наконец, функция \n"
+"`lparallel:force` используется для извлечения значения из "
+"обещания(promise). \n"
+"Обратите внимание, что эта функция блокируется до завершения операции."
+
+#: in_ed/process.md:1700
+msgid "Letâs solidify these concepts with a very simple example first:"
+msgstr "Давайте сначала закрепим эти концепции на очень простом примере: "
+
+#: in_ed/process.md:1711
+msgid ""
+"~~~lisp\n"
+"(defun test-promise ()\n"
+"  (let ((p (promise)))\n"
+"    (loop\n"
+"       do (if (evenp (read))\n"
+"              (progn\n"
+"                (fulfill p 'even-received!)\n"
+"                (return))))\n"
+"    (force p)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1713
+msgid "Which generates the output:"
+msgstr "Что генерирует вывод :"
+
+#: in_ed/process.md:1722
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (test-promise)\n"
+"5\n"
+"1\n"
+"3\n"
+"10\n"
+"EVEN-RECEIVED!\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1727
+msgid ""
+"Explanation: This simple example simply keeps looping forever until an\n"
+"even number has been entered. The promise is fulfilled inside the loop\n"
+"using `lparallel:fulfill`, and the value is then returned from the\n"
+"function by forcing it with `lparallel:force`."
+msgstr ""
+"Объяснение: В этом простом примере цикл продолжается бесконечно, пока не \n"
+"будет введено четное число. Обещание(promise) выполняется внутри цикла \n"
+"с помощью `lparallel:fulfill`, а затем значение возвращается из функции \n"
+"путем принудительного выполнения с помощью `lparallel:force`."
+
+#: in_ed/process.md:1732
+msgid ""
+"Now, letâs take a bigger example. Assuming that we donât want to have\n"
+"to wait for the promise to be fulfilled, and instead have the current\n"
+"do some useful work, we can delegate the promise fulfillment to\n"
+"external explicitly as seen in the next example."
+msgstr ""
+"А теперь давайте рассмотрим более крупный пример. Предполагая, что мы не "
+"хотим, \n"
+"чтобы нам приходилось ждать выполнения обещания, а вместо этого чтобы "
+"текущий \n"
+"выполнял некоторую полезную работу, мы можем явно делегировать выполнение \n"
+"обещания внешнему, как показано в следующем примере.\n"
+
+#: in_ed/process.md:1737
+msgid ""
+"Consider we have a function that squares its argument. And, for the\n"
+"sake of argument, it consumes a lot of time doing so. From our client\n"
+"code, we want to invoke it, and wait till the squared value is\n"
+"available."
+msgstr ""
+"Предположим, у нас есть функция, которая возводит в квадрат свой аргумент. \n"
+"И, ради аргумента, на это уходит много времени. Из нашего клиентского кода \n"
+"мы хотим вызвать его и подождать, пока не станет доступно значение в "
+"квадрате. "
+
+#: in_ed/process.md:1762
+msgid ""
+"~~~lisp\n"
+"(defun promise-with-threads ()\n"
+"  (let ((p (promise))\n"
+"        (stream *query-io*)\n"
+"        (n (progn\n"
+"             (princ \"Enter a number: \")\n"
+"             (read))))\n"
+"    (format t \"In main function...~%\")\n"
+"    (bt:make-thread\n"
+"     #'(lambda ()\n"
+"         (sleep (random 10))\n"
+"         (format stream \"Inside thread... fulfilling promise~%\")\n"
+"         (fulfill p (* n n))))\n"
+"    (bt:make-thread\n"
+"     #'(lambda ()\n"
+"         (loop\n"
+"            when (fulfilledp p)\n"
+"            do (return)\n"
+"            do (progn\n"
+"                 (format stream \"~d~%\" (random 100))\n"
+"                 (sleep (* 0.01 (random 100)))))))\n"
+"    (format t \"Inside main function, received value: ~d~%\" (force p))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1764
+msgctxt "in_ed/process.md:1764"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:1779
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (promise-with-threads)\n"
+"Enter a number: 19\n"
+"In main function...\n"
+"44\n"
+"59\n"
+"90\n"
+"34\n"
+"30\n"
+"76\n"
+"Inside thread... fulfilling promise\n"
+"Inside main function, received value: 361\n"
+"NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1783
+msgid ""
+"Explanation: There is nothing much in this example. We create a\n"
+"promise object p, and we spawn off a thread that sleeps for some\n"
+"random time and then fulfills the promise by giving it a value."
+msgstr ""
+"Пояснение: В этом примере нет ничего особенного. Мы создаем объект \n"
+"обещания(promise) p и порождаем поток, который спит в течение \n"
+"некоторого случайного времени, а затем выполняет обещание, \n"
+"присваивая ему значение.\n"
+
+#: in_ed/process.md:1789
+msgid ""
+"Meanwhile, in the main thread, we spawn off another thread that keeps\n"
+"checking if the promise has been fulfilled or not. If not, it prints\n"
+"some random number and continues checking. Once the promise has been\n"
+"fulfilled, we can extract the value using `lparallel:force` in the main\n"
+"thread as shown."
+msgstr ""
+"Между тем, в основном потоке мы порождаем другой поток, который продолжает \n"
+"проверять, выполнено ли обещание или нет. Если нет, он печатает какое-то \n"
+"случайное число и продолжает проверку. Как только обещание выполнено, \n"
+"мы можем извлечь значение с помощью `lparallel:force` в основном потоке, \n"
+"как показано."
+
+#: in_ed/process.md:1795
+msgid ""
+"This shows that promises can be fulfilled by different threads while\n"
+"the code that created the promise need not wait for the promise to be\n"
+"fulfilled. This is especially important since, as mentioned before,\n"
+"`lparallel:force` is a blocking call. We want to delay forcing the\n"
+"promise until the value is actually available."
+msgstr ""
+"Это показывает, что обещания могут выполняться разными потоками, в то \n"
+"время как код, создавший обещание, не должен ждать выполнения обещания. \n"
+"Это особенно важно, поскольку, как упоминалось ранее, `lparallel:force` \n"
+"является блокирующим вызовом. Мы хотим отложить принудительное выполнение \n"
+"обещания до тех пор, пока значение не станет доступным.\n"
+
+#: in_ed/process.md:1800
+msgid ""
+"Another point to note when using promises is that once a promise has\n"
+"been fulfilled, invoking force on the same object will always return\n"
+"the same value. That is to say, a promise can be successfully\n"
+"fulfilled only once."
+msgstr ""
+"Еще один момент, на который следует обратить внимание при использовании \n"
+"обещаний, заключается в том, что после выполнения обещания применение \n"
+"силы к одному и тому же объекту всегда будет возвращать одно и то же \n"
+"значение. То есть обещание может быть успешно выполнено только один раз."
+
+#: in_ed/process.md:1802
+msgid "For instance:"
+msgstr "Например: "
+
+#: in_ed/process.md:1810
+msgid ""
+"~~~lisp\n"
+"(defun multiple-fulfilling ()\n"
+"  (let ((p (promise)))\n"
+"    (dotimes (i 10)\n"
+"      (fulfill p (random 100))\n"
+"      (format t \"~d~%\" (force p)))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1812
+msgctxt "in_ed/process.md:1812"
+msgid "Which produces:"
+msgstr "Которая выдает:"
+
+#: in_ed/process.md:1827
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (multiple-fulfilling)\n"
+"15\n"
+"15\n"
+"15\n"
+"15\n"
+"15\n"
+"15\n"
+"15\n"
+"15\n"
+"15\n"
+"15\n"
+"NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1829
+msgid "So how does a future differ from a promise?"
+msgstr "Так чем же будущее(future) отличается от обещания(promise)?"
+
+#: in_ed/process.md:1834
+msgid ""
+"A `lparallel:future` is simply a promise that is run in parallel, and as\n"
+"such, it does not block the main thread like a default use of\n"
+"`lparallel:promise` would. It is executed in its own thread (by\n"
+"the lparallel library, of course)."
+msgstr ""
+"`lparallel:future` - это просто обещание, которое выполняется параллельно, \n"
+"и поэтому оно не блокирует основной поток, как при использовании \n"
+"`lparallel:promise` по умолчанию. Оно выполняется в собственном потоке \n"
+"(конечно, библиотекой lparallel)."
+
+#: in_ed/process.md:1836
+msgid "Here is a simple example of a future:"
+msgstr "Вот простой пример будущего(future):"
+
+#: in_ed/process.md:1849
+msgid ""
+"~~~lisp\n"
+"(defun test-future ()\n"
+"  (let ((f (future\n"
+"             (sleep (random 5))\n"
+"             (print \"Hello from future!\"))))\n"
+"    (loop\n"
+"       when (fulfilledp f)\n"
+"       do (return)\n"
+"       do (sleep (* 0.01 (random 100)))\n"
+"         (format t \"~d~%\" (random 100)))\n"
+"    (format t \"~d~%\" (force f))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1851
+msgctxt "in_ed/process.md:1851"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:1861
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (test-future)\n"
+"5\n"
+"19\n"
+"91\n"
+"11\n"
+"Hello from future!\n"
+"NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1868
+msgid ""
+"Explanation: This exactly is similar to the `promise-with-threads`\n"
+"example. Observe two differences, however - first of all, the\n"
+"`lparallel:future` macro has a body as well. This allows the future to\n"
+"fulfill itself! What this means is that as soon as the body of the\n"
+"future is done executing, `lparallel:fulfilledp` will always return true\n"
+"for the future object."
+msgstr ""
+"Объяснение: Это в точности похоже на пример с `promise-with-threads`. \n"
+"Однако обратите внимание на два отличия - во-первых, у макроса \n"
+"`lparallel:future` есть тело. Это позволяет будущему(future) \n"
+"реализоваться! Это означает, что как только тело future будет \n"
+"выполнено, `lparallel:fulfilledp` всегда будет возвращать true \n"
+"для объекта future.\n"
+
+#: in_ed/process.md:1874
+msgid ""
+"Secondly, the future itself is spawned off on a separate thread by the\n"
+"library, so it does not interfere with the execution of the current\n"
+"thread very much unlike promises as could be seen in the\n"
+"promise-with-threads example (which needed an explicit thread for the\n"
+"fulfilling code in order to avoid blocking the current thread)."
+msgstr ""
+"Во-вторых, само будущее(future) порождается библиотекой в ​​отдельном "
+"потоке, \n"
+"поэтому он не мешает выполнению текущего потока, в отличие от "
+"promises(обещаний), \n"
+"как можно увидеть в примере с обещанием с потоками (которому требовался "
+"явный \n"
+"поток для исполняющего кода, чтобы избежать блокировки текущего потока).\n"
+
+#: in_ed/process.md:1880
+msgid ""
+"The most interesting bit is that (even in terms of the actual theory\n"
+"propounded by Dan Friedman and others), a Future is conceptually\n"
+"something that fulfills a Promise. That is to say, a promise is a\n"
+"contract that some value will be generated sometime in the future, and\n"
+"a future is precisely that âsomethingâ that does that job."
+msgstr ""
+"Самым интересным моментом является то, что (даже с точки зрения \n"
+"фактической теории, предложенной Дэном Фридманом и другими), \n"
+"Future(будущее) концептуально является чем-то, что выполняет \n"
+"Promise(обещание). Иными словами, обещание - это контракт о том, \n"
+"что некоторое значение будет создана когда-нибудь в будущем, \n"
+"и будущее(future) - это именно то «нечто», что выполняет эту работу."
+
+#: in_ed/process.md:1884
+msgid ""
+"What this means is that even when using the lparallel library, the\n"
+"basic use of a future would be to fulfill a promise. This means that\n"
+"hacks like promise-with-threads need not be made by the user."
+msgstr ""
+"Это означает, что даже при использовании библиотеки lparallel основное \n"
+"использование future будет заключаться в выполнении обещания. Это "
+"означает, \n"
+"что пользователю не нужно делать такие хаки, как обещание с потоками\n"
+"(promise-with-threads).\n"
+
+#: in_ed/process.md:1887
+msgid ""
+"Letâs take a small example to demonstrate this point (a pretty\n"
+"contrived example, I must admit!)."
+msgstr ""
+"Давайте рассмотрим небольшой пример, чтобы продемонстрировать это \n"
+"(должен признать, довольно надуманный пример!)."
+
+#: in_ed/process.md:1892
+msgid ""
+"Hereâs the scenario: we want to read in a number and calculate its\n"
+"square. So we offload this work to another function, and continue with\n"
+"our own work. When the result is ready, we want it to be printed on\n"
+"the console without any intervention from us."
+msgstr ""
+"Вот сценарий: мы хотим прочитать число и вычислить его квадрат. Поэтому мы \n"
+"перекладываем эту работу на другую функцию и продолжаем свою работу. Когда \n"
+"результат будет готов, мы хотим, чтобы он был напечатан на консоли без \n"
+"нашего вмешательства.\n"
+
+#: in_ed/process.md:1894
+msgid "Hereâs how the code looks:"
+msgstr "Вот как выглядит код: "
+
+#: in_ed/process.md:1913
+msgid ""
+"~~~lisp\n"
+";;; Callback example using promises and futures\n"
+"(defun callback-promise-future-demo ()\n"
+"  (let* ((p (promise))\n"
+"         (stream *query-io*)\n"
+"         (n (progn\n"
+"              (princ \"Enter a number: \")\n"
+"              (read)))\n"
+"         (f (future\n"
+"              (sleep (random 10))\n"
+"              (fulfill p (* n n))\n"
+"              (force (future\n"
+"                       (format stream \"Square of ~d = ~d~%\" n (force "
+"p)))))))\n"
+"    (loop\n"
+"       when (fulfilledp f)\n"
+"       do (return)\n"
+"       do (sleep (* 0.01 (random 100))))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1915
+msgctxt "in_ed/process.md:1915"
+msgid "And the output:"
+msgstr "И вывод:"
+
+#: in_ed/process.md:1922
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (callback-promise-future-demo)\n"
+"Enter a number: 19\n"
+"Square of 19 = 361\n"
+"NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1926
+msgid ""
+"Explanation: All right, so first off, we create a promise to hold the\n"
+"squared value when it is generated. This is the p object. The input\n"
+"value is stored in the local variable n."
+msgstr ""
+"Объяснение: Хорошо, поэтому сначала мы создаем обещание для хранения \n"
+"квадрата значения, когда оно будет сгенерировано. Это объект p. Входное \n"
+"значение сохраняется в локальной переменной n."
+
+#: in_ed/process.md:1931
+msgid ""
+"Then we create a future object f. This future simply squares the input\n"
+"value and fulfills the promise with this value. Finally, since we want\n"
+"to print the output in its own time, we force an anonymous future\n"
+"which simply prints the output string as shown."
+msgstr ""
+"Затем мы создаем объект будущее(future) f. Это future просто возводит в \n"
+"квадрат входное значение и выполняет обещание(promise) с этим значением. \n"
+"Наконец, поскольку мы хотим напечатать вывод в свое время, мы "
+"принудительно \n"
+"используем анонимный future, который просто печатает строку вывода, \n"
+"как показано."
+
+#: in_ed/process.md:1936
+msgid ""
+"Note that this is very similar to the situation in an environment like\n"
+"Node, where we pass callback functions to other functions with the\n"
+"understanding that the callback will be called when the invoked\n"
+"function is done with its work."
+msgstr ""
+"Обратите внимание, что это очень похоже на ситуацию в такой среде, \n"
+"как Node, где мы передаем функции обратного вызова другим функциям с \n"
+"пониманием того, что обратный вызов будет вызываться, когда вызванная \n"
+"функция завершит свою работу.\n"
+
+#: in_ed/process.md:1939
+msgid ""
+"Finally note that the following snippet is still fine (even if it uses\n"
+"the blocking `lparallel:force` call because itâs on a separate thread):"
+msgstr ""
+"Наконец, обратите внимание, что следующий фрагмент все еще в порядке \n"
+"(даже если он использует блокирующий вызов `lparallel:force`, потому \n"
+"что он находится в отдельном потоке): "
+
+#: in_ed/process.md:1945
+msgid ""
+"~~~lisp\n"
+"(force (future\n"
+"(format stream \"Square of ~d = ~d~%\" n (force p))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:1949
+msgid ""
+"To summarise, the general idiom of usage is: **define objects which will\n"
+"hold the results of asynchronous computations in promises, and use\n"
+"futures to fulfill those promises**."
+msgstr ""
+"Подводя итог, можно сказать, что общая идиома использования такова: "
+"**определять \n"
+"объекты, которые будут содержать результаты асинхронных вычислений в "
+"обещаниях, \n"
+"и использовать будущее(future) для выполнения этих обещаний**.\n"
+"\n"
+
+#: in_ed/process.md:1951
+msgid "### Using cognates - parallel equivalents of Common Lisp counterparts"
+msgstr ""
+"### Использование родственных(cognates) функций - параллельных эквивалентов "
+"двойников Common Lisp"
+
+#: in_ed/process.md:1956
+msgid ""
+"Cognates are arguably the raison dâetre of the lparallel\n"
+"library. These constructs are what truly provide parallelism in the\n"
+"lparallel. Note, however, that most (if not all) of these constructs\n"
+"are built on top of futures and promises."
+msgstr ""
+"Возможно, родственные функции являются смыслом существования библиотеки \n"
+"lparallel. Эти конструкции действительно обеспечивают параллелизм в "
+"lparallel. \n"
+"Однако обратите внимание, что большинство (если не все) из этих "
+"конструкций \n"
+"построены на основе будущего(futures) и обещаний(promises)."
+
+#: in_ed/process.md:1961
+msgid ""
+"To put it in a nutshell, cognates are simply functions that are\n"
+"intended to be the parallel equivalents of their Common Lisp\n"
+"counterparts. However, there are a few extra lparallel cognates that\n"
+"have no Common Lisp equivalents."
+msgstr ""
+"Короче говоря, cognates(родственные) функции - это просто функции, \n"
+"которые должны быть параллельными эквивалентами своих аналогов в \n"
+"Common Lisp. Однако есть несколько дополнительных параллельных родственных \n"
+"функций, у которых нет эквивалентов Common Lisp.\n"
+
+#: in_ed/process.md:1963
+msgid ""
+"At this juncture, it is important to know that cognates come in two basic "
+"flavours:"
+msgstr ""
+"На данном этапе важно знать, что родственные функции бывают двух основных "
+"видов: "
+
+#: in_ed/process.md:1967
+msgid ""
+"-    Constructs for fine-grained parallelism: `defpun`, `plet`, `plet-if`, "
+"etc.\n"
+"-   Explicit functions and macros for performing parallel operations -\n"
+"    `pmap`, `preduce`, `psort`, `pdotimes`, etc."
+msgstr ""
+"-    Конструкции для сильно-дробленого(fine-grained) параллелизма: \n"
+"     `defpun`, `plet`, `plet-if`, и т. Д.\n"
+"-    Явные функции и макросы для выполнения параллельных операций - \n"
+"    `pmap`, `preduce`, `psort`, `pdotimes` и т. д."
+
+#: in_ed/process.md:1972
+msgid ""
+"In the first case we donât have much explicit control over the\n"
+"operations themselves. We mostly rely on the fact that the library\n"
+"itself will optimise and parallelise the forms to whatever extent it\n"
+"can. In this post, we will focus on the second category of cognates."
+msgstr ""
+"В первом случае у нас нет явного контроля над самими операциями. \n"
+"Мы в основном полагаемся на то, что сама библиотека будет оптимизировать\n"
+"и распараллеливать формы, насколько это возможно. В этом посте \n"
+"мы сосредоточимся на второй категории родственных функций."
+
+#: in_ed/process.md:1976
+msgid ""
+"Take, for instance, the cognate function `lparallel:pmap` is exactly\n"
+"the same as the Common Lisp equivalent, `map`, but it runs in\n"
+"parallel. Letâs demonstrate that through an example."
+msgstr ""
+"Возьмем, к примеру, родственную функцию `lparallel:pmap` точно так же, \n"
+"как эквивалент Common Lisp, `map`, но она выполняется параллельно. \n"
+"Продемонстрируем это на примере."
+
+#: in_ed/process.md:1979
+msgid ""
+"Suppose we had a list of random strings of length varying from 3 to\n"
+"10, and we wished to collect their lengths in a vector."
+msgstr ""
+"Предположим, у нас есть список случайных строк длиной от 3 до 10, \n"
+"и мы хотим собрать их длины в векторе."
+
+#: in_ed/process.md:1981
+msgid ""
+"Letâs first set up the helper functions that will generate the random "
+"strings:"
+msgstr ""
+"Давайте сначала настроим вспомогательные функции, которые будут генерировать "
+"случайные строки: "
+
+#: in_ed/process.md:1990
+msgid ""
+"~~~lisp\n"
+"(defvar *chars*\n"
+"  (remove-duplicates\n"
+"   (sort\n"
+"    (loop for c across \"The quick brown fox jumps over the lazy dog\"\n"
+"       when (alpha-char-p c)\n"
+"       collect (char-downcase c))\n"
+"    #'char<)))"
+msgstr ""
+
+#: in_ed/process.md:1998
+msgid ""
+"(defun get-random-strings (&optional (count 100000))\n"
+"  \"generate random strings between lengths 3 and 10\"\n"
+"  (loop repeat count\n"
+"     collect\n"
+"       (concatenate 'string  (loop repeat (+ 3 (random 8))\n"
+"                           collect (nth (random 26) *chars*)))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2000
+msgid ""
+"And hereâs how the Common Lisp map version of the solution might look like:"
+msgstr "А вот как может выглядеть версия решения с map Common Lisp: "
+
+#: in_ed/process.md:2006
+msgid ""
+"~~~lisp\n"
+";;; map demo\n"
+"(defun test-map ()\n"
+"  (map 'vector #'length (get-random-strings 100)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2008
+msgid "And letâs have a test run:"
+msgstr "И давайте проведем тестовый запуск: "
+
+#: in_ed/process.md:2013
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (test-map)\n"
+"#(7 5 10 8 7 5 3 4 4 10)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2015
+msgid "And hereâs the `lparallel:pmap` equivalent:"
+msgstr "А вот эквивалент `lparallel:pmap`: "
+
+#: in_ed/process.md:2021
+msgid ""
+"~~~lisp\n"
+";;;pmap demo\n"
+"(defun test-pmap ()\n"
+"  (pmap 'vector #'length (get-random-strings 100)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2023
+msgid "which produces:"
+msgstr "которая производит:"
+
+#: in_ed/process.md:2029
+msgid ""
+"~~~lisp\n"
+"LPARALLEL-USER> (test-pmap)\n"
+"#(8 7 6 7 6 4 5 6 5 7)\n"
+"LPARALLEL-USER>\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2034
+msgid ""
+"As you can see from the definitions of test-map and test-pmap, the\n"
+"syntax of the `lparallel:map` and `lparallel:pmap` functions are exactly\n"
+"the same (well, almost - `lparallel:pmap` has a few more optional\n"
+"arguments)."
+msgstr ""
+"Как вы можете видеть из определений test-map и test-pmap, \n"
+"синтаксис функций `lparallel:map` и `lparallel:pmap` точно такой же \n"
+"(ну, почти - `lparallel:pmap` имеет еще несколько дополнительных \n"
+"аргументов)."
+
+#: in_ed/process.md:2039
+msgid ""
+"Some useful cognate functions and macros (all of them are functions\n"
+"except when marked so explicitly. Note that there are quite a few\n"
+"cognates, and I have chosen a few to try and represent every category\n"
+"through an example:"
+msgstr ""
+"Некоторые полезные родственные функции и макросы (все они являются \n"
+"функциями, если они не отмечены так явно. Обратите внимание, что \n"
+"родственных функций довольно много, и я выбрал несколько, чтобы \n"
+"попытаться представить каждую категорию на примере:\n"
+
+#: in_ed/process.md:2041
+msgid "#### lparallel:pmap: parallel version of map."
+msgstr "#### lparallel:pmap: параллельная версия map."
+
+#: in_ed/process.md:2049
+msgid ""
+"Note that all the mapping functions (`lparallel:pmap`,\n"
+"**lparallel:pmapc**,`lparallel:pmapcar`, etc.) take two special keyword\n"
+"arguments\n"
+"- `:size`, specifying the number of elements of the input\n"
+"sequence(s) to process, and\n"
+"- `:parts` which specifies the number of parallel parts to divide the\n"
+"sequence(s) into."
+msgstr ""
+"Обратите внимание, что все функции сопоставления/mapping (`lparallel:pmap`,\n"
+"**lparallel:pmapc**,`lparallel:pmapcar` и т. Д.) Принимают два специальных \n"
+"аргумента ключевого слова.\n"
+"- `:size`, определяющий количество элементов входной "
+"последовательности(ей) \n"
+"для обработки, и\n"
+"- `:parts` указывающие количество параллельных частей, на которые нужно \n"
+"разделить последовательность(и)."
+
+#: in_ed/process.md:2060
+msgid ""
+"~~~lisp\n"
+"    ;;; pmap - function\n"
+"    (defun test-pmap ()\n"
+"      (let ((numbers (loop for i below 10\n"
+"                        collect i)))\n"
+"        (pmap 'vector #'(lambda (x)\n"
+"                          (* x x))\n"
+"              :parts (length numbers)\n"
+"              numbers)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2062
+msgctxt "in_ed/process.md:2062"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2065
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-pmap)"
+msgstr ""
+
+#: in_ed/process.md:2068
+msgid ""
+"    #(0 1 4 9 16 25 36 49 64 81)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2070
+msgid "#### lparallel:por: parallel version of or."
+msgstr "#### lparallel:por: параллельная версия или."
+
+#: in_ed/process.md:2074
+msgid ""
+"The behaviour is that it returns the first non-nil element amongst its\n"
+"arguments. However, due to the parallel nature of this macro, that\n"
+"element varies."
+msgstr ""
+"Поведение таково, что она возвращает первый элемент, отличный от nil, \n"
+"среди своих аргументов. Однако из-за параллельного характера этого \n"
+"макроса этот элемент меняется. "
+
+#: in_ed/process.md:2085
+msgid ""
+"~~~lisp\n"
+"    ;;; por - macro\n"
+"    (defun test-por ()\n"
+"      (let ((a 100)\n"
+"            (b 200)\n"
+"            (c nil)\n"
+"            (d 300))\n"
+"        (por a b c d)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2087
+msgctxt "in_ed/process.md:2087"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2091
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (dotimes (i 10)\n"
+"                      (print (test-por)))"
+msgstr ""
+
+#: in_ed/process.md:2104
+msgid ""
+"    300\n"
+"    300\n"
+"    100\n"
+"    100\n"
+"    100\n"
+"    300\n"
+"    100\n"
+"    100\n"
+"    100\n"
+"    100\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2107
+msgid ""
+"In the case of the normal or operator, it would always have returned\n"
+"the first non-nil element viz. 100."
+msgstr ""
+"В случае обычного оператора  or он всегда возвращал бы первый элемент, \n"
+"отличный от nil, а именно. 100."
+
+#: in_ed/process.md:2110
+msgid "#### lparallel:pdotimes: parallel version of dotimes."
+msgstr "#### lparallel:pdotimes: параллельная версия dotimes."
+
+#: in_ed/process.md:2112
+msgid "Note that this macro also take an optional `:parts` argument."
+msgstr ""
+"Обратите внимание, что этот макрос также принимает необязательный аргумент `:"
+"parts`."
+
+#: in_ed/process.md:2121
+msgid ""
+"~~~lisp\n"
+"    ;;; pdotimes - macro\n"
+"    (defun test-pdotimes ()\n"
+"      (pdotimes (i 5)\n"
+"        (declare (ignore i))\n"
+"        (print (random 100))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2123
+msgctxt "in_ed/process.md:2123"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2126
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-pdotimes)"
+msgstr ""
+
+#: in_ed/process.md:2134
+msgid ""
+"    39\n"
+"    29\n"
+"    81\n"
+"    42\n"
+"    56\n"
+"    NIL\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2136
+msgid "####  lparallel:pfuncall: parallel version of funcall."
+msgstr "####  lparallel:pfuncall: параллельная версия funcall."
+
+#: in_ed/process.md:2143
+msgid ""
+"~~~lisp\n"
+"    ;;; pfuncall - macro\n"
+"    (defun test-pfuncall ()\n"
+"      (pfuncall #'* 1 2 3 4 5))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2145
+msgctxt "in_ed/process.md:2145"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2148
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-pfuncall)"
+msgstr ""
+
+#: in_ed/process.md:2151
+msgid ""
+"    120\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2153
+msgid "####    lparallel:preduce: parallel version of reduce."
+msgstr "####    lparallel:preduce: параллельная версия reduce."
+
+#: in_ed/process.md:2158
+msgid ""
+"This very important function also takes two optional keyword\n"
+"arguments:  `:parts` (same meaning as explained), and `:recurse`. If\n"
+"`:recurse` is non-nil, it recursively applies `lparallel:preduce` to its\n"
+"arguments, otherwise it default to using reduce."
+msgstr ""
+"Эта очень важная функция также принимает два необязательных аргумента \n"
+"ключевого слова: `:parts` (то же значение, что и объяснено) и `:recurse`. \n"
+"Если: `:recurse` не равен нулю, она рекурсивно применяет `lparallel:"
+"preduce` \n"
+"к своим аргументам, в противном случае по умолчанию используется reduce. "
+
+#: in_ed/process.md:2169
+msgid ""
+"~~~lisp\n"
+"    ;;; preduce - function\n"
+"    (defun test-preduce ()\n"
+"      (let ((numbers (loop for i from 1 to 100\n"
+"                        collect i)))\n"
+"        (preduce #'+\n"
+"                 numbers\n"
+"                 :parts (length numbers)\n"
+"                 :recurse t)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2171
+msgctxt "in_ed/process.md:2171"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2174
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-preduce)"
+msgstr ""
+
+#: in_ed/process.md:2177
+msgid ""
+"    5050\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2179
+msgid "####    lparallel:premove-if-not: parallel version of remove-if-not."
+msgstr "####    lparallel:premove-if-not: параллельная версия remove-if-not."
+
+#: in_ed/process.md:2181
+msgid ""
+"This is essentially equivalent to âfilterâ in Functional Programming "
+"parlance."
+msgstr ""
+"По сути, это эквивалентно «filter/фильтру» на языке функционального "
+"программирования. "
+
+#: in_ed/process.md:2190
+msgid ""
+"~~~lisp\n"
+"    ;;; premove-if-not\n"
+"    (defun test-premove-if-not ()\n"
+"      (let ((numbers (loop for i from 1 to 100\n"
+"                        collect i)))\n"
+"        (premove-if-not #'evenp numbers)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2192
+msgctxt "in_ed/process.md:2192"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2195
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-premove-if-not)"
+msgstr ""
+
+#: in_ed/process.md:2199
+msgid ""
+"    (2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 "
+"52 54\n"
+"     56 58 60 62 64 66 68 70 72 74 76 78 80 82 84 86 88 90 92 94 96 98 100)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2201
+msgid "####    lparallel:pevery: parallel version of every."
+msgstr "####    lparallel:pevery: параллельная версия  every."
+
+#: in_ed/process.md:2211
+msgid ""
+"~~~lisp\n"
+"    ;;; pevery - function\n"
+"    (defun test-pevery ()\n"
+"      (let ((numbers (loop for i from 1 to 100\n"
+"                        collect i)))\n"
+"        (list (pevery #'evenp numbers)\n"
+"              (pevery #'integerp numbers))))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2213
+msgctxt "in_ed/process.md:2213"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2216
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-pevery)"
+msgstr ""
+
+#: in_ed/process.md:2219
+msgid ""
+"    (NIL T)\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2223
+msgid ""
+"In this example, we are performing two checks - firstly, whether all\n"
+"the numbers in the range [1,100] are even, and secondly, whether all\n"
+"the numbers in the same range are integers."
+msgstr ""
+"В этом примере мы выполняем две проверки: во-первых, все ли числа \n"
+"в диапазоне [1,100] четны, а во-вторых, все ли числа в одном диапазоне \n"
+"являются целыми числами. "
+
+#: in_ed/process.md:2225
+msgid "#### lparallel:count: parallel version of count."
+msgstr "#### lparallel:count: параллельная версия count."
+
+#: in_ed/process.md:2232
+msgid ""
+"~~~lisp\n"
+"    ;;; pcount - function\n"
+"    (defun test-pcount ()\n"
+"      (let ((chars \"The quick brown fox jumps over the lazy dog\"))\n"
+"        (pcount #\\e chars)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2234
+msgctxt "in_ed/process.md:2234"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2237
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-pcount)"
+msgstr ""
+
+#: in_ed/process.md:2240
+msgid ""
+"    3\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2242
+msgid "####    lparallel:psort: parallel version of sort."
+msgstr "####    lparallel:psort: параллельная версия sort."
+
+#: in_ed/process.md:2249
+msgid ""
+"~~~lisp\n"
+"    ;;; psort - function\n"
+"    (defstruct person\n"
+"      name\n"
+"      age)"
+msgstr ""
+
+#: in_ed/process.md:2265
+msgid ""
+"    (defun test-psort ()\n"
+"      (let* ((names (list \"Rich\" \"Peter\" \"Sybil\" \"Basil\" \"Candy\" "
+"\"Slava\" \"Olga\"))\n"
+"             (people (loop for name in names\n"
+"                        collect (make-person :name name :age (+ (random 20) "
+"20)))))\n"
+"        (print \"Before sorting...\")\n"
+"        (print people)\n"
+"        (fresh-line)\n"
+"        (print \"After sorting...\")\n"
+"        (psort\n"
+"         people\n"
+"         #'(lambda (x y)\n"
+"             (< (person-age x)\n"
+"                (person-age y)))\n"
+"         :test #'=)))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2267
+msgctxt "in_ed/process.md:2267"
+msgid "Sample run:"
+msgstr "Пробный прогон: "
+
+#: in_ed/process.md:2270
+msgid ""
+"~~~lisp\n"
+"    LPARALLEL-USER> (test-psort)"
+msgstr ""
+
+#: in_ed/process.md:2276
+msgid ""
+"    \"Before sorting...\"\n"
+"    (#S(PERSON :NAME \"Rich\" :AGE 38) #S(PERSON :NAME \"Peter\" :AGE 24)\n"
+"     #S(PERSON :NAME \"Sybil\" :AGE 20) #S(PERSON :NAME \"Basil\" :AGE 22)\n"
+"     #S(PERSON :NAME \"Candy\" :AGE 23) #S(PERSON :NAME \"Slava\" :AGE 37)\n"
+"     #S(PERSON :NAME \"Olga\" :AGE 33))"
+msgstr ""
+
+#: in_ed/process.md:2283
+msgid ""
+"    \"After sorting...\"\n"
+"    (#S(PERSON :NAME \"Sybil\" :AGE 20) #S(PERSON :NAME \"Basil\" :AGE 22)\n"
+"     #S(PERSON :NAME \"Candy\" :AGE 23) #S(PERSON :NAME \"Peter\" :AGE 24)\n"
+"     #S(PERSON :NAME \"Olga\" :AGE 33) #S(PERSON :NAME \"Slava\" :AGE 37)\n"
+"     #S(PERSON :NAME \"Rich\" :AGE 38))\n"
+"~~~"
+msgstr ""
+
+#: in_ed/process.md:2288
+msgid ""
+"In this example, we first define a structure of type person for\n"
+"storing information about people. Then we create a list of 7 people\n"
+"with randomly generated ages (between 20 and 39). Finally, we sort\n"
+"them by age in non-decreasing order."
+msgstr ""
+"В этом примере мы сначала определяем структурный тип person для \n"
+"хранения информации о людях. Затем мы создаем список из 7 человек \n"
+"со случайным образом сгенерированным возрастом (от 20 до 39). \n"
+"Наконец, мы сортируем их по возрасту в неубывающем порядке. "
+
+#: in_ed/process.md:2290
+msgid "### Error handling"
+msgstr "### Обработка Ошибок"
+
+#: in_ed/process.md:2294
+msgid ""
+"To see how lparallel handles error handling (hint: with\n"
+"`lparallel:task-handler-bind`), please read\n"
+"[https://z0ltan.wordpress.com/2016/09/10/basic-concurrency-and-parallelism-"
+"in-common-lisp-part-4b-parallelism-using-lparallel-error-handling/](https://"
+"z0ltan.wordpress.com/2016/09/10/basic-concurrency-and-parallelism-in-common-"
+"lisp-part-4b-parallelism-using-lparallel-error-handling/)."
+msgstr ""
+"Чтобы узнать, как lparallel обрабатывает ошибки (подсказка: с \n"
+"`lparallel:task-handler-bind`), прочтите\n"
+"[https://z0ltan.wordpress.com/2016/09/10/basic-concurrency-and-parallelism-"
+"in-common-lisp-part-4b-parallelism-using-lparallel-error-handling/](https://"
+"z0ltan.wordpress.com/2016/09/10/basic-concurrency-and-parallelism-in-common-"
+"lisp-part-4b-parallelism-using-lparallel-error-handling/)."
+
+#: in_ed/process.md:2297
+msgid "## Monitoring and controlling threads with Slime"
+msgstr "## Мониторинг и управление потоками с помощью Slime "
+
+#: in_ed/process.md:2301
+msgid ""
+"**M-x slime-list-threads** (you can also access it through the\n"
+"*slime-selector*, shortcut **t**) will list running threads by their\n"
+"names, and their statuses."
+msgstr ""
+"**M-x slime-list-threads** (вы также можете получить к нему доступ \n"
+"через *slime-selector*, ярлык **t**) будет перечислять запущенные \n"
+"потоки по их именам и их статусам.\n"
+
+#: in_ed/process.md:2305
+msgid ""
+"The thread on the current line can be killed with **k**, or if thereâs a\n"
+"lot of threads to kill, several lines can be selected and **k** will kill\n"
+"all the threads in the selected region."
+msgstr ""
+"Поток в текущей строке можно убить с помощью **k**, или, если нужно убить \n"
+"много потоков, можно выбрать несколько строк, и **k** уничтожит все \n"
+"потоки в выбранной области."
+
+#: in_ed/process.md:2311
+msgid ""
+"**g** will update the thread list, but when you have a lot of threads\n"
+"starting and stopping it may be too cumbersome to always press **g**, so\n"
+"thereâs a variable `slime-threads-update-interval`, when set to a number\n"
+"X the thread list will be automatically updated each X seconds, a\n"
+"reasonable value would be 0.5."
+msgstr ""
+"**g** обновит список потоков, но когда у вас много запускаемых и \n"
+"останавливающихся потоков, может быть слишком громоздко всегда нажимать "
+"**g**, \n"
+"поэтому есть переменная `slime-threads-update-interval`, когда установлено \n"
+"число X, список потоков будет будут автоматически обновляться каждые X "
+"секунд, \n"
+"разумным значением будет 0.5."
+
+#: in_ed/process.md:2313
+msgid "Thanks to [Slime tips](https://slime-tips.tumblr.com/)."
+msgstr "Thanks to [Slime tips](https://slime-tips.tumblr.com/)."
+
+#: in_ed/process.md:2316
+msgid "## References"
+msgstr "## Ссылки"
+
+#: in_ed/process.md:2322
+msgid ""
+"There are, of course, a lot more functions, objects, and idiomatic\n"
+"ways of performing parallel computations using the lparallel\n"
+"library. This post barely scratches the surface on those. However, the\n"
+"general flow of operation is amply demonstrated here, and for further\n"
+"reading, you may find the following resources useful:"
+msgstr ""
+"Конечно, существует гораздо больше функций, объектов и идиоматических \n"
+"способов выполнения параллельных вычислений с использованием библиотеки \n"
+"lparallel. Этот пост даже поверхностно об этом не говорит. Однако здесь \n"
+"подробно демонстрируется общий процесс работы, и для дальнейшего чтения \n"
+"вам могут быть полезны следующие ресурсы: "
+
+#: in_ed/process.md:2328
+msgid ""
+"- [The official homepage of the lparallel library, including documentation]"
+"(https://lparallel.org/)\n"
+"- [The Common Lisp Hyperspec](https://www.lispworks.com/documentation/"
+"HyperSpec/Front/), and, of course\n"
+"- Your Common Lisp implementationâs\n"
+"  manual. [For SBCL, here is a link to the official manual](http://www.sbcl."
+"org/manual/)\n"
+"- [Common Lisp recipes](http://weitz.de/cl-recipes/) by the venerable Edi "
+"Weitz.\n"
+"- more concurrency and threading libraries on the [Awesome-cl#parallelism-"
+"and-concurrency](https://github.com/CodyReichert/awesome-cl#parallelism-and-"
+"concurrency) list."
+msgstr ""
