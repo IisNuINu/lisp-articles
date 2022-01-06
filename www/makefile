@@ -1,6 +1,7 @@
 
 HTML = ElephantUserManual.html  Hunchentoot.html  lispweb2.html  \
-       lispweb.html
+       lispweb.html lispweb3.html \
+       lisp-for-the-web-5.html
 
 
 %.html : %.po

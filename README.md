@@ -22,6 +22,26 @@ lisp-journey_gitlab_io/models-and-databases-mito-sxql.html - ОРМ-базы д�
 </p>
 
 <p>
+Надергал еще всяких разных статей <br>
+Вот хаскелист делится впечатлениями от работы год лиспером: <br>
+2018-03-28-one-year-common-lisp-developer-part-1-the-good-m.html - отмечая хорошее<br>
+2018-03-28-one-year-common-lisp-developer-part-2-the-bad-m.html  - и плохое в лиспе<br>
+<br>
+continuations-in-common-lisp.html - что такое продолжения в лиспе <br>
+Exceptional-Situations-1990.html  - обработка исключительных ситуаций в лиспе<br>
+Condition-Handling-2001.html      - она же система условий <br>
+introduction-to-asdf.html         - немного про ASDF<br>
+package-management-in-common-lisp-the-clim-way.html - как правильно создавать пакеты<br>
+SimpleCLX.html                    - программируем XWindow из лиспа с помощью CLX<br>
+UnderstandingPowerLISP.html       - сила Лиспа<br>
+
+
+
+
+</p>
+
+
+<p>
 Статьи в формате md<br>
 взято из https://github.com/LispCookbook/cl-cookbook <br>
 md/md_process.html - средства программирования потоков в лиспе с лисп cookbook<br>
@@ -33,6 +53,8 @@ www/ElephantUserManual.html - описание библиотеки Elephant-с�
 www/Hunchentoot.html  - лисп веб сервер<br>
 www/lispweb.html      - лисп для генерации веб-страниц<br>
 www/lispweb2.html     - и дополняющая статья<br>
+www/lispweb3.html     - и еще одна статья<br>
+www/lisp-for-the-web-5.html - и еще одна, читайте! <br>
 </p>
 
 
