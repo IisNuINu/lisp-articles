@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-12-26T22:27:15.286331027"/>
+	<meta name="changed" content="2021-12-26T22:29:59.180534411"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western"><a name="e7a8"></a>Введение в ASDF</h1>
+<h2 class="western"><a name="fe90"></a>Де-факто стандартное средство сборки для Common Lisp </h2>
+
+<p><a href="https://ashok-khanna.medium.com/?source=post_page-----d25efe2780c2-----------------------------------">
+  <font color="#000080">
+    <img src="introduction-to-asdf_html_4b6b6a58fd97f750.jpg" name="Image1" alt="Ashok Khanna" align="bottom" width="28" height="28" border="1"/>
+  </font>
+</a>
+</p>
+
+<p><a href="https://ashok-khanna.medium.com/?source=post_page-----d25efe2780c2-----------------------------------">Ashok
+Khanna</a></p>
+
+<p><a href="https://ashok-khanna.medium.com/introduction-to-asdf-d25efe2780c2?source=post_page-----d25efe2780c2-----------------------------------">Aug
+13Â·4 min read</a></p>
+
+<p><a name="fc2b"></a>Сегодня мы сделаем базовое введение в <a href="https://common-lisp.net/project/asdf/" target="_blank">ASDF</a>, умную аббревиатуру для Another System Definition Facility
+ и де-факто средство сборки для Common Lisp. </p>
+
+<h1 class="western"><a name="620c"></a>1: Установка ASDF</h1>
+
+<p><a name="9f7f"></a><strong>Ссылка</strong>: <a href="https://common-lisp.net/project/asdf/asdf.html#Loading-ASDF" target="_blank"> Официальная документация по загрузке ASDF</a></p>
+
+<p><a name="9a39"></a>ASDF обычно устанавливается с большинством реализаций 
+Common Lisp, так что здесь делать нечего. В конце концов, мы сказали, что это 
+была <em>по факту</em> встроенная функциональность Common Lisp :-)</p>
+
+<h1 class="western"><a name="ccd4"></a>2: Настройка ASDF</h1>
+
+<p><a name="c187"></a><strong>Ссылка</strong>: <a href="https://common-lisp.net/project/asdf/asdf.html#Configuring-ASDF" target="_blank">Официальная документация по 
+настройке  ASDF</a></p>
+
+<p><a name="4a4a"></a>ASDF работает, загружая файлы <code class="western">.asd</code>. 
+По умолчанию он будет искать эти файлы в<code class="western">~/common-lisp/</code> и 
+<code class="western">~/.local/share/common-lisp/source/</code>. Мы можем добавить наши 
+собственные папки в приведенный выше список:</p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a name="66b7"></a>Создайте
+	каталог <code class="western">~/.config/common-lisp/source-registry.conf.d/</code></p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="f6ec"></a> Внутри этого каталога создайте файл с 
+	любым именем, но с окончанием на <code class="western">.conf</code>, например  
+	<code class="western">50-user-lisp.conf</code></p>
+
+	<li/>
+
+<p><a name="d1b7"></a> Внутри этого файла добавьте следующее, чтобы указать ASDF 
+	<strong><em>рекурсивно</em></strong> <strong><em>сканировать</em></strong>  
+	все подкаталоги по указанному пути (замените «/home/user/lisp/» ниже на 
+	выбранный вами путь к папке): </p>
+
+</ul>
+<pre class="western" style="margin-bottom: 0.5cm"><a name="c752"></a>(:tree “/home/user/lisp/”)</pre><h1 class="western">
+<a name="4697"></a>3: Определение системы ASDF</h1>
+
+<p><a name="ba0a"></a><a name="rmm"></a><strong>Ссылка</strong>:
+<a href="https://common-lisp.net/project/asdf/asdf.html#Defining-systems-with-defsystem" target="_blank">Официальная документация по определению систем ASDF</a></p>
+
+<p><a name="6b9f"></a>Определение системы ASDF - это файл <code class="western">.asd</code>, 
+который сообщает ASDF, каковы зависимости системы и как загружать ее файлы 
+(то есть в каком порядке).
+</p>
+
+<p><a name="dca5"></a>Ниже приведен пример. Он в основном говорит 
+сам за себя, со следующими примечаниями: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a name="4c93"></a><code class="western">:depends-on</code>
+	это место, где вы указываете свои внешние зависимости</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="070b"></a><code class="western">:serial
+	t</code> загружает все файлы последовательно в том порядке, в котором 
+	они указаны в определении системы</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="96a2"></a>Мы не добавляем 
+	<code class="western">.lisp</code> в конец имен файлов - это автоматически 
+	принимается ASDF. Например, было бы ошибкой, если бы вы написали 
+	<code class="western">utilities.lisp</code>, поскольку ASDF затем 
+	будет искать <code class="western">utilities.lisp.lisp</code> и не найдет его.
+</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="de21"></a>ASDF скомпилирует 
+	все файлы, поэтому нет необходимости обращаться к вашим файлам 
+	<code class="western">.fasl</code> (FASL - это расширение файла для 
+	скомпилированных файлов Lisp).</p>
+
+	<li/>
+
+<p><a name="c6d9"></a><code class="western">:module</code> используется для 
+	ссылки на файлы в подкаталогах (подкаталог <code class="western">mod
+	</code> в нашем примере) - вы можете видеть вложенную рекурсию во время игры 
+	- мы снова ссылаемся на <code class="western">:components</code> с помощью
+	<code class="western">:module</code>, и, таким образом, мы можем вложить много 
+	папок вниз </p>
+
+</ul>
+<pre class="western"><a name="4c43"></a>(defsystem &quot;my-system&quot;
+  :description &quot;My System Description&quot;
+  :version &quot;0.0.1&quot;
+  :author &quot;Firstname Lastname &lt;email@email.com&gt;&quot;
+  :license &quot;GPL&quot;
+  :depends-on (&quot;bknr.datastore&quot; &quot;bknr.indices&quot; &quot;bknr.impex&quot;)
+  :serial t
+  :components
+        ((:file &quot;utilities&quot;)
+        (:module &quot;mod&quot;
+                 :components ((:file &quot;another-file&quot;)))
+        (:file &quot;another-file-2&quot;)))</pre>
+<p>
+<a name="8124"></a>Чтобы собрать приведенный выше пример, <a href="https://github.com/fare/asdf/blob/master/doc/best_practices.md#simple_system" target="_blank">
+рекомендуется</a> полагаться на <code class="western">:depends-on</code> для 
+явного указания зависимостей каждого файла по сравнению с более простой опцией 
+<code class="western">:serial t</code>, которая указывает загрузку файлов по порядку. 
+Ниже приведен пример. </p>
+
+<pre class="western"><a name="8a15"></a>(defsystem &quot;foobar&quot;
+  :depends-on (&quot;alexandria&quot; &quot;trivia&quot; &quot;trivia.ppcre&quot;)
+  :components
+  ((:file &quot;package&quot;)
+   (:file &quot;utils&quot; :depends-on (&quot;package&quot;))
+   (:file &quot;foo&quot; :depends-on (&quot;utils&quot;))
+   (:file &quot;bar&quot; :depends-on (&quot;utils&quot;))
+   (:file &quot;foobar&quot; :depends-on (&quot;foo&quot; &quot;bar&quot;))))</pre><h1 class="western">
+<a name="2914"></a>4: Более сложный пример</h1>
+
+<p><a name="2772"></a>Ниже приведен более сложный пример (в частности, см. 
+Выделенные жирным шрифтом части). Ключевые моменты здесь: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a name="ac78"></a><code class="western">:depends-on</code>
+	 всегда ищет файлы в  <strong><em>текущем наборе компонентов</em></strong></p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="6b57"></a>Таким образом, мы не можем записать 
+	<code class="western">(:file “another-file” :depends-on (“utilities”))</code> 
+	ниже, потому что в подпапке нет «utilities.lisp» (он находится в папке выше)
+</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="a513"></a>Вместо этого мы добавляем предложение
+	<code class="western">:depends-on</code> в предложение
+	<code class="western">:module</code>, а не в предложение
+	<code class="western">:file</code>.
+</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a name="5217"></a>Точно так же мы не можем записать 
+	<code class="western">(:file &quot;another-file-2&quot;
+	:depends-on (&quot;another-file&quot;))</code>, поскольку «another-file.lisp» 
+	находится не в этом каталоге, а в подкаталоге</p>
+
+	<li/>
+
+<p><a name="ab82"></a>Вместо этого мы можем обратиться к модулю напрямую 
+	с помощью  <code class="western">(:file &quot;another-file-2&quot;
+	:depends-on (&quot;mod&quot;))</code></p>
+
+</ul>
+<pre class="western"><a name="ba44"></a>(defsystem &quot;my-system&quot;
+  :description &quot;My System Description&quot;
+  :version &quot;0.0.1&quot;
+  :author &quot;Firstname Lastname &lt;email@email.com&gt;&quot;
+  :license &quot;GPL&quot;
+  :depends-on (&quot;bknr.datastore&quot; &quot;bknr.indices&quot; &quot;bknr.impex&quot;)
+  :serial t
+  :components
+        ((:file &quot;utilities&quot;)
+        (:module <strong>&quot;mod&quot;</strong>
+                 <strong>:depends-on (&quot;utilities&quot;)  </strong>               
+                 :components ((:file &quot;another-file&quot;)))
+        (:file &quot;another-file-2&quot; <strong>:depends-on (&quot;mod&quot;)</strong>)))</pre>
+<p>
+<a name="8d64"></a>Наконец, полезное руководство по определению систем ASDF 
+было написано Марио Моммером, и его можно найти <a href="https://common-lisp.net/~mmommer/asdf-howto.shtml#sec6" target="_blank">здесь</a>.</p>
+
+<h1 class="western"><a name="7469"></a>5: Загрузка системы ASDF</h1>
+
+<p><a name="384f"></a>Загрузить систему ASDF так же просто, как ввести 
+следующую команду в REPL (заменив «my-system» на имя системы, которую 
+вы хотите загрузить): </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><a name="e437"></a>(asdf:load-system &quot;my-system&quot;)</pre><h1 class="western">
+<a name="38af"></a>6: Разное</h1>
+
+<p><a name="a2c0"></a>В заключение этого руководства ниже приведены 
+некоторые (надеюсь, полезные) заметки, которые я почерпнул. </p>
+
+<h2 class="western"><a name="ff9e"></a>Сканирование папок &amp; Дубликаты
+</h2>
+
+<p><a name="7fe1"></a>ASDF будет рекурсивно сканировать пути к папкам 
+в своих настройках конфигурации, поэтому вам просто нужно убедиться, 
+что ваши файлы <code class="western">.asd</code> сохранены где-то в 
+каталогах, сканируемых ASDF.</p>
+
+<p><a name="d22b"></a>Кроме того, ASDF загружает первое определение 
+системы, обнаруженное для данного имени, и любое определение системы 
+с таким же именем, обнаруженное после этого в процессе сканирования, 
+не загружается. </p>
+
+<h2 class="western"><a name="30cc"></a>РЕДАКТИРОВАНО: СПАСИБО DAEWOK ON 
+R/REDDIT за пояснения ниже</h2>
+<p style="margin-left: 1cm; margin-right: 1cm"><a name="abb9"></a>Это не гарантируется. 
+ASDF утверждает, что результаты не определены, если система может 
+быть получена из нескольких файлов. В настоящее время она берет строку 
+с самой короткой строкой имени (вероятно, будет первой найденной, но не 
+обязательно). В будущем это может сигнализировать об ошибке.</p>
+
+<h2 class="western"><a name="2bc1"></a>Компиляция файлов</h2>
+
+<p><a name="64db"></a>Чтобы заставить ASDF перекомпилировать все ваши файлы, 
+передайте аргумент <code class="western">:force</code> : </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><a name="6a48"></a>(asdf:load-system &quot;my-system&quot; <strong>:force t</strong>)</pre><h2 class="western">
+<a name="1c1f"></a>В обход Quicklisp</h2>
+
+<p><a name="4bdc"></a>Мы можем обойти Quicklisp, убедившись, что у 
+нас есть все необходимые зависимости, сохраненные в путях к папкам ASDF. 
+Обратите внимание, что зависимость может иметь свои собственные зависимости, 
+поэтому это рекурсивный процесс.</p>
+
+<p><a name="232f"></a>В качестве альтернативы используйте Quicklisp 
+для загрузки всех зависимостей, а затем укажите нужные зависимости в 
+определении вашей системы. Таким образом, вам больше не нужно вызывать 
+QuickLisp или другие менеджеры библиотек в вашей программе, поскольку 
+ваши файлы ASD будут напрямую загружать необходимые зависимости.</p>
+
+<p><a name="690a"></a>На момент написания Quicklisp сохранял следующие
+ файлы (это было на Mac). Quicklisp устанавливает этот путь в конфигурацию 
+ASDF, но вы можете скопировать файлы зависимостей отсюда и в вашу основную 
+папку проекта Common Lisp (при условии, что эта папка также была установлена
+в вашу конфигурацию ASDF). </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><a name="ae6c"></a>/Users/username/.quicklisp/dists/quicklisp/software/</pre><p style="margin-bottom: 0cm; line-height: 100%">
+<br/>
+
+</p>
+
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-12-19T14:40:03.371870181"/>
+	<meta name="changed" content="2021-12-19T14:46:20.849039359"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		h5.cjk { font-family: "Noto Sans CJK SC" }
+		h5.ctl { font-family: "Lohit Devanagari" }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Уроки, извлеченные за год работы разработчиком Common Lisp - Плохое</h1>
+
+<p><a href="https://cdagostino.io/posts/2018-03-28-one-year-common-lisp-developer-part-2-the-bad.html">March
+28, 2018</a> 
+</p>
+
+<p><em>As mentioned in my previous post, all the Lisp I wrote was
+using the Franz AllegroCL compiler, so other people might have
+different experiences.</em></p>
+
+<p><em>Also as mentioned in my previous post, all opinions are my
+own, nobody pays me to write in my blog, etc.</em></p>
+
+<h2 class="western"><a name="intro"></a>вступление</h2>
+
+<p>В <a href="https://cdagostino.io/posts/2018-03-28-one-year-common-lisp-developer-part-1-the-good.html">первой части этих постов</a> я рассказал обо всем, что мне действительно нравилось 
+в Lisp, но вскользь упомянул, что некоторые из хороших вещей иногда могут быть плохими. 
+Есть такие вещи, но, конечно, есть вещи и просто плохие. </p>
+
+<h2 class="western"><a name="lessons"></a>Уроки</h2>
+<h3 class="western"><a name="the-bad-cl-is-a-double-edged-sword-that-will-also-shoot-you-in-the-foot"></a>
+Плохое: CL - обоюдоострый меч, который также выстрелит вам в ногу.</h3>
+
+<p>То, что я слышал в прошлом от других <em>лисперов</em>, заключалось в том, что 
+«CL - это высокоуровневый язык нижнего уровня». Потребовалось время, чтобы это понять, 
+но, в конце концов, это имеет последствия.</p>
+
+<p>Вещи в CL, даже самые красивые, могут вернуться, чтобы сильно вас укусить. 
+И если вы станете дерзким, ожидайте много боли. </p>
+
+<h5 class="western"><a name="beware-of-using-lists-everywhere"></a>Остерегайтесь использовать списки повсюду</h5>
+
+<p>Списки хороши тем, что их можно использовать для представления практически любой другой структуры данных.</p>
+
+<p>Объедините это со всеми функциями доступа(accessors) списка: <code class="western">CAR,
+CDR, CAAR, CADR, CDAR, CDDR, CAAAR, CAADR, CADAR, CADDR, CDAAR,
+CDADR, CDDAR, CDDDR, CAAAAR, CAAADR, CAADAR, CAADDR, CADAAR, CADADR,
+CADDAR, CADDDR, CDAAAR, CDAADR, CDADAR, CDADDR, CDDAAR, CDDADR,
+CDDDAR, CDDDDR</code></p>
+
+<p>И к концу этого вы хотите вырвать волосы, точно зная, к каким данным 
+осуществляется доступ в каждый момент времени.</p>
+
+<p>Пожалуйста, не используйте списки, в которых <a href="http://www.lispworks.com/documentation/HyperSpec/Body/m_defstr.htm">struct</a> имеет больше смысла, и чаще 
+<strong>используйте классы</strong>. </p>
+
+<p>â<b>Common Lisp Type Hierarchyâ by Greg
+Pfeil</b><br/>
+<a href="http://sellout.github.io/2012/03/03/common-lisp-type-hierarchy/">http://sellout.github.io/2012/03/03/common-lisp-type-hierarchy/</a></p>
+
+<h5 class="western"><a name="beware-of-declaim"></a>Остерегайтесь <code class="western">declaim</code></h5>
+
+<p>Это одна из вещей, о которых я упоминал ранее, и она мне нравится, но при 
+неправильном использовании это может стать настоящей головной болью.</p>
+
+<p>Получается, что не весь код можно или нужно оптимизировать, потому что мы, 
+разработчики, иногда допускаем определенные вольности, которых, возможно, 
+не должны, например чрезмерное использование макросов.</p>
+
+<p>Короче говоря, у нас был случай, когда повсеместное использование 
+<code class="western">declaim</code> <strong>без</strong> использования 
+<code class="western">(eval-when
+(:compile-toplevel) ...)</code> приводило к ошибке сегментации. Да, 
+вы правильно прочитали. Segfault. </p>
+
+<p>Дело в том, что когда у вас есть проект, содержащий более 10 тысяч строк кода, 
+вы в конечном итоге начинаете сталкиваться с проблемами и вещами, которых не 
+должно происходить (тм).</p>
+
+<p>Большинство компиляторов CL поставляются с <em>безопасными</em> настройками оптимизации 
+по умолчанию, и если вы злоупотребляете ими, будьте готовы к боли </p>
+
+<h5 class="western"><a name="beware-of-thinking-you-really-know-what-youre-doing"></a>
+Опасайтесь думайть, что вы  <em>действительно</em> знаете, что делаете
+</h5>
+
+<p>Что ж, учитывая вышесказанное, в основном речь идет об этом. У вас может 
+быть самый оптимизированный и безопасный доступный код, а затем вы включаете 
+в свой проект новую зависимость, которая, возможно, выполняет какую-то причудливую 
+оптимизацию, а затем внезапно ваше приложение "загорается", как никакое другое.</p>
+
+<p>Короче говоря, <em>очень</em> сложно <strong>точно</strong> знать, что происходит 
+с вашим приложением и как оно будет взаимодействовать с существующим кодом Lisp, и 
+если вы станете слишком самоуверенным, вы заплатите страшную цену. И, честно говоря, 
+это могло быть верно для многих других языков программирования, но я никогда не видел, 
+чтобы это происходило так часто, как в CL. </p>
+
+<h5 class="western"><a name="beware-of-macros-or-the-macrology"></a>стерегайтесь макросов (… или «<em>macrology/макрологии</em>»)</h5>
+
+<p>Как было сказано ранее, макросы прекрасны, они позволяют абстрагироваться 
+от шаблонов, создавать собственные формы и в целом делать ваш код более адаптируемым.</p>
+
+<p>Знаете, что нехорошо? Увеличенное время компиляции, которое вы получаете из-за 
+злоупотребления ими. Опять же, я говорю о приложениях, размер которых превышает 
+10 000 LOC.</p>
+
+<p>Кроме того, как я упоминал выше, одним из основных моментов CL является то, 
+что код должен быть <strong>reloadable/перезагружаемым</strong>, чтобы вам не 
+приходилось закрывать образ Lisp. 
+Угадайте, что сделает чрезмерное использование макросов? Уничтожит это свойство
+почти полностью.</p>
+
+<p>Видите ли, макросы расширяются во время компиляции, поэтому, если у 
+вас есть ошибка в макросе, и вы ее исправляете, простая перезагрузка определения 
+макроса ничего не даст, и ваш код все равно будет содержать ошибки. Это означает 
+перекомпиляцию всего этого или очень локализованные места, где его нужно перезагрузить. 
+Это действительно выбрасывает интерактивную разработку из всего опыта - и, честно говоря, 
+это создает огромную головную боль. </p>
+
+<h5 class="western"><a name="beware-the-dirty-lisp-image"></a>Остерегайтесь «грязного» 
+лисп образа</h5>
+
+<p>Снова интерактивная разработка:</p>
+
+<p>При всех хороших вещах, которые у неё есть, у неё есть серьезная ошибка, 
+заключающаяся в том, что она не гарантирует, что при перезапуске Lisp все 
+будет работать так же хорошо, как в вашем REPL.</p>
+
+<p>В CL порядок загрузки имеет значение, поэтому особенность интерактивной разработки 
+заключается в том, что случайно добавить циклические зависимости между файлами в 
+вашем проекте до глупости просто.</p>
+
+<p>Ничто не является таким плохим, как исправление ошибки в REPL, 
+при выполнения тестов они все проходят, а затем интеграция терпит неудачу, 
+потому что Lisp не компилируется из-за проблемы с упорядочением загрузки, 
+которую вы не заметили при погружении в интерактивную разработку.</p>
+
+<p>Не очень хороший вид.</p>
+
+<h5 class="western"><a name="lots-of-other-things-are-still-problems"></a>
+Многие другие вещи по-прежнему остаются проблемами</h5>
+
+<p>В основном тот факт, что сообщество очень маленькое, делает его таким, 
+что всякий раз, когда вам нужна интеграция для какого-либо провайдера, 
+такого как AWS, вы редко найдете какие-либо ресурсы в Интернете. Затем вы 
+в конечном итоге разворачиваете свою собственную, которая обычно не так полна, 
+как если бы ее разработало здоровое сообщество с открытым исходным кодом.</p>
+
+<p>Это повторяющаяся картина в мире CL, где на самом деле нет «сообщества», 
+а в основном это просто сборище «одиноких волков». Никакой связности или 
+какой-либо стандартизации (кроме, конечно, отличной спецификации).</p>
+
+<p><a name="fnref1"></a>Я видел, как PHP получил свое дерьмо(популярность) вместе с 
+<a href="https://www.php-fig.org/">PHP-FIG</a>, и я думаю, что, если не 
+произойдет чего-то столь же радикального, CL просто продолжит иметь много 
+«одиноких волков» вокруг<a href="2018-03-28-one-year-common-lisp-developer-part-2-the-bad.html#fn1"><sup>1</sup></a>.</p>
+
+<h5 class="western"><a name="dont-use-cl-json.-just-dont."></a>НЕ используйте 
+<code class="western">cl-json</code>. Просто не работайте с ним.</h5>
+
+<p>Я даже не буду ссылаться на это г.</p>
+
+<p>Я понимаю, вероятно, это было написано много лет назад. Я действительно 
+не знаю всей истории, стоящей за ним. Что я точно знаю, так это то, что на 
+самом деле нет веских причин использовать эту библиотеку вместо 
+ <code class="western"><a href="https://github.com/madnificent/jsown">jsown</a></code>.</p>
+
+<p>И, может быть, даже лучше, если вы работаете в SBCL или CCL, используйте  
+<code class="western"><a href="http://rudolph-miller.github.io/jonathan/overview.html">Jonathan</a></code>.</p>
+
+<h5 class="western"><a name="hurts-to-say-but-it-might-just-be-a-dying-language"></a>
+Больно говорить, но это может быть просто умирающий язык</h5>
+
+<p>Я думаю, что в 2018 году я думаю, что Lisp очень хорошо держится по сравнению 
+с современными языками, даже лучше, чем подавляющее большинство из них (насколько 
+мне известно).</p>
+
+<p><a name="fnref2"></a>Однако это может быть умирающий язык не потому, что в нем 
+отсутствуют какие-либо функции, а потому, что люди просто о нем забывают. Я имею в виду, 
+конечно, у вас есть elisp, который может поддерживать «лисповость», но CL даже не появился 
+в опросе StackOverflow Survey <a href="2018-03-28-one-year-common-lisp-developer-part-2-the-bad.html#fn2"><sup>2</sup></a>  за 2018 год:</p>
+
+<p><b>Stack Overflow Developer Survey
+2018</b><br/>
+<a href="https://insights.stackoverflow.com/survey/2018/">https://insights.stackoverflow.com/survey/2018/</a></p>
+
+<p>Я сам  из первых рук знаю, как трудно найти разработчиков CL или даже 
+способных разработчиков, желающих изучать CL.</p>
+
+<p><a name="fnref3"></a>С моей точки зрения, CL не умрет из-за того, что ему 
+не хватает каких-либо функций или мощности (потому что, как я надеюсь, у него 
+много и того, и другого), а потому, что люди просто стекаются к разным языкам. 
+Это могло быть связано с прошлым, например, когда я учился в колледже, большинство 
+людей выбирали либо Ruby, либо Python, а я начал знакомиться с Haskell, потому 
+что прошел дополнительный курс формальной проверки<a href="2018-03-28-one-year-common-lisp-developer-part-2-the-bad.html#fn3"><sup>3</sup></a>.</p>
+
+<p>Как бы то ни было, будущее CL кажется довольно мрачным. Но опять же, 
+кажется, что люди говорят это уже около 15 лет, и вот мы здесь. Я вполне 
+могу ошибаться, и я на это надеюсь! </p>
+
+<h2 class="western"><a name="goodbye-cl"></a>Прощай, CL(Прощай годовалый разработчик, как говориться, по усам текло, а рот не попало)</h2>
+
+<p>Если бы вы могли увидеть все мои бредни, то в первую очередь СПАСИБО за то, 
+что прочитали мой блог! Во-вторых, если это еще не очевидно, у меня есть много 
+вещей, которые мне нравятся в Lisp, и много вещей, которые, возможно, я не 
+люблю так сильно.</p>
+
+<p>Как и все, в нем есть свои плюсы и минусы. Особенность CL в том, что 
+хорошее - это так хорошо, а плохое - настолько плохо, что это делает его языком, 
+за которые большинство людей либо полностью его любят, либо абсолютно ненавидят. 
+Ну, во всяком случае, те, кто об этом знает.
+</p>
+
+<p>Я так рад, что получил возможность писать ориентированный на клиента 
+и критически важный код на языке, имеющем такую богатую историю и от которого 
+многие языки имеют свои корни. Но пока я должен попрощаться с CL и моими друзьями, 
+по крайней мере, в обозримом будущем, поскольку я решил продлить свое пребывание 
+в Австралии, включив в него работу на месте. К счастью для меня, я снова буду писать 
+на Haskell, так что вместо этого я могу писать посты, любящие его или разглагольствующие о нем.</p>
+
+<p>Все поправки к этому посту можно найти  <a href="https://github.com/carlosdagos/blog/commits/master/posts/2018-03-28-one-year-common-lisp-developer-part-2-the-bad.md">здесь</a>.</p>
+
+<h2 class="western"><a name="footnotes"></a>Footnotes</h2>
+
+<p><b>European Lisp Symposium in San Pedro, Marbella,
+Spain</b><br/>
+<a href="https://www.european-lisp-symposium.org/2018/index.html">https://www.european-lisp-symposium.org/2018/index.html</a></p>
+
+<hr/>
+
+<ol>
+	<li/>
+
+<p><a name="fn1"></a>Of course, Lispers get together, too! You
+	can check out the European Lisp Symposium, happening in Southern
+	Spain!<a href="2018-03-28-one-year-common-lisp-developer-part-2-the-bad.html#fnref1">â©ï¸</a></p>
+
+	<li/>
+
+<p><a name="fn2"></a>Though honestly SO might be dying as
+	well, so who knows.<a href="2018-03-28-one-year-common-lisp-developer-part-2-the-bad.html#fnref2">â©ï¸</a></p>
+
+	<li/>
+
+<p><a name="fn3"></a>But then again, I find myself questioning
+	<em>why</em> I like CL and Haskell. In truth, any technology that
+	dares to do things differently is enough to get my attention. I
+	think that diversity is important, and when a certain technology
+	dares to change things from a fundamental perspective, I think it
+	adds positively to the mix. I would never come into an office and
+	demand that all Python code be replaced with Haskell, or that all
+	deployments should be done in Nix instead of CentOS, but I <strong>do</strong>
+	believe that we can take ideas from all places and apply them in
+	practice. If you always do things âthe way theyâve always been,â
+	then you run the risk of being outdated sooner or later</p>
+
+</ol>
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

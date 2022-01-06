@@ -1,0 +1,731 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-12-28T08:11:02.891849983"/>
+	<meta name="changed" content="2021-12-28T10:04:19.434510581"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		h5.cjk { font-family: "Noto Sans CJK SC" }
+		h5.ctl { font-family: "Lohit Devanagari" }
+		h6.cjk { font-family: "Noto Sans CJK SC" }
+		h6.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Карлос Д. - Уроки, полученные после одного года работы разработчиком Common Lisp - Хорошее </h1>
+
+<p><a href="https://cdagostino.io/posts/2018-03-28-one-year-common-lisp-developer-part-1-the-good.html">March
+28, 2018</a> 
+</p>
+
+<p><em>Я задумал это как небольшой пост с некоторыми уроками, извлеченными после 
+одного года работы разработчиком CL, однако он оказался довольно длинным (две части!). 
+Как всегда: все мнения мои собственные. Этот пост никем не одобрен.</em></p>
+
+<p><em>Этот пост включает в себя некоторый код Lisp, который работает для AllegroCL, 
+поэтому все «уроки», упомянутые здесь, сделаны после года написания CL с 
+использованием компилятора Franz AllegroCL, который представляет собой реализацию 
+Common Lisp с очень большим количеством батарей. Так что мой опыт будет отличаться 
+от опыта человека, имеющего профессиональный опыт, скажем, с SBCL или LispWorks.</em></p>
+
+<h2 class="western"><a name="intro"></a>вступление</h2>
+
+<p>Если это еще  ясно, мой любимый язык - Haskell. Если бы я мог, я бы всегда 
+профессионально работал разработчиком Haskell, но это невозможно, так как 
+работу с Haskell найти сложно, потому что, честно говоря, не так много мест, 
+где подходит Haskell.</p>
+
+<h2 class="western"><a name="landing-a-cl-job"></a>Получение работы CL</h2>
+
+<p>Как я уже упоминал ранее, я стал писать CL на полную ставку. Мне посчастливилось быть 
+интересным для компании, даже имея опыт работы с CL, который ограничивался просто вознёй 
+с ним дома и с другими Lisp-ами. Я даже не знал Emacs, что, конечно, не требовалось, но 
+если вы пишете CL профессионально в чем-либо, кроме Emacs, пожалуйста, отправьте мне 
+сообщение, потому что я заинтересован в вашей настройке - я не мог работать без 
+проблем, кроме как в Emacs + Slime / Sly / Или что там у вас.</p>
+
+<h3 class="western"><a name="book-recommendation"></a>Рекомендация книги</h3>
+
+<p><a name="fnref1"></a>Как только я принял предложение о работе, мне нужно было <strong>очень быстро</strong>
+подготовиться и изучить CL. Мне сказали, что мне не следует торопиться, но я все равно 
+чувствовал, что должен. Я не хотел быть тем парнем, который задает глупости в свой первый 
+день<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. 
+Конечно, многое приходит только с опытом, но я нашел книгу, которая позволила мне сразу же 
+взяться за дело.</p>
+
+<p>Книга Питера Сейбеля называется <strong>Practical Common Lisp, by Peter Seibel</strong>, и ее онлайн-версию можно найти здесь(есть русский перевод):</p>
+
+<p>â<b>Practical Common Lispâ by Peter
+Seibel</b><br/>
+<a href="http://gigamonkeys.com/book/">http://gigamonkeys.com/book/</a></p>
+
+<p>Я добавил в закладки много ссылок из неё, и у меня также есть версия в твердом переплете. 
+Это бессмертная книга. Вам, конечно, не обязательно получать версию в твердом переплете, 
+поскольку она находится в свободном доступе в Интернете и является отличным справочником по
+закладкам, когда вы пишете какое-то выражение <code>format</code> и забыли, как, черт возьми,
+печатать числа с 3 десятичными разрядами.</p>
+
+<h2 class="western"><a name="lessons"></a>Уроки</h2>
+
+<p>Так много вещей, которые я считаю «хорошими» в Лиспе, могут очень легко превратиться 
+в «плохие», и наоборот. Я думаю, это может быть характерной чертой почти всего: слишком 
+много делающее что-то хорошее может стать (и, скорее всего, будет) плохим.</p>
+
+<h3 class="western"><a name="the-good-cl-is-fancy-and-fast"></a>Плюсы: CL модный и  <em>быстрый</em></h3>
+
+<p>Некоторые люди (даже бывшие коллеги) постоянно упоминали о том, что скобки «некрасивы». 
+На мой взгляд, это абсолютно неверно.</p>
+
+<p>Скобки - один из немногих синтаксических знаков языка. В таком языке, как Haskell, 
+у вас есть некоторые зарезервированные «токены» языка, которые вы не можете изменить, 
+и у вас не может быть конфликта имени идентификатора с зарезервированным токеном.</p>
+
+<p><a name="fnref2"></a>Так, например, в Haskell я не могу вызвать идентификатор <code>let</code> или 
+<code>module</code>, потому что он ожидает, что это будут зарезервированные слова 
+языка<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. 
+Во многом так же, как в Java вы не можете вызвать переменный <code>class</code>, поэтому 
+все просто пишут <code>klass</code>, когда они делают некоторые явно неверные вещи с 
+помощью Reflection.</p>
+
+<p>Lisp также может быть <em>быстрым</em>. Безумно быстрым. Об этом я напишу ниже.</p>
+
+<h5 class="western"><a name="one-structure-for-everything"></a>Одна структура для всего</h5>
+
+<p>Как известно многим, <strong>LISP</strong> расшифровывается как 
+<strong>LIS</strong>t <strong>P</strong>rocessing. Сам язык - это <strong>чертов список</strong>, 
+и действительно, вначале все было списком. Однако это уже не так: есть массивы, структуры, 
+классы (и довольно хорошо развитая иерархия классов), разумная система условий и т. Д.</p>
+
+<p>Что касается системы условий в CL, она не <em>просто</em> разумна, но и не имеет себе равных. 
+Не стесняйтесь убедить себя здесь:</p>
+
+<p>â<b>Condition Handling in the Lisp Language Familyâ by Kent M.
+Pitman</b><br/>
+<a href="http://www.nhplace.com/kent/Papers/Condition-Handling-2001.html">http://www.nhplace.com/kent/Papers/Condition-Handling-2001.html</a></p>
+
+<h5 class="western"><a name="almost-everything-is-a-macro"></a>Почти все является макросом</h5>
+
+<p>Вы знаете, что было забавным опытом? Видеть, сколько вещей в Лиспе являются макросами.</p>
+
+<p>Вы могли бы подумать, что a <href="http://clhs.lisp.se/Body/m_defun.htm"><code>defun</code></a>
+(для определения функции) будет своего рода встроенной функцией языка, которая добавляет 
+некоторый AST к некоторому внутреннему механизму сопоставления функций, верно? Что ж, да, 
+она это делает, но она не встроена!</p>
+
+<div id="gist88316462" dir="ltr">
+	<pre class="western"><font size="1" style="font-size: 8pt">CL-USER&gt; (macroexpand `(defun foo () 'foo))</font>
+<font size="1" style="font-size: 8pt">(PROGN</font>
+  <font size="1" style="font-size: 8pt">(EVAL-WHEN (:COMPILE-TOPLEVEL)</font>
+    <font size="1" style="font-size: 8pt">(EXCL::CHECK-LOCK-DEFINITIONS-COMPILE-TIME 'FOO 'FUNCTION 'DEFUN (FBOUNDP 'FOO))</font>
+    <font size="1" style="font-size: 8pt">(PUSH 'FOO EXCL::.FUNCTIONS-DEFINED.</font>
+          <font size="1" style="font-size: 8pt">(PROGN (EVAL-WHEN (:COMPILE-TOPLEVEL)</font>
+                   <font size="1" style="font-size: 8pt">(EXCL::CHECK-DE-ARGDECL-CHANGE 'FOO 'NIL))</font>
+                 <font size="1" style="font-size: 8pt">(DECLAIM (EXCL::DYNAMIC-EXTENT-ARGUMENTS NIL FOO)))</font>
+          <font size="1" style="font-size: 8pt">(SETF (FDEFINITION 'FOO)</font>
+                <font size="1" style="font-size: 8pt">(LET ((EXCL::F (NAMED-ANNOTATED-FUNCTION FOO (LAMBDA NIL (BLOCK FOO 'FOO)))))</font>
+                  <font size="1" style="font-size: 8pt">(EXCL::SET-FUNC_NAME EXCL::F 'FOO NIL) EXCL::F))</font>
+          <font size="1" style="font-size: 8pt">(EXCL::PUT-PROPERTY 'FOO NIL 'EXCL::%FUN-DOCUMENTATION)</font>
+          <font size="1" style="font-size: 8pt">(RECORD-SOURCE-FILE 'FOO) 'FOO)))</font></pre>
+</div>
+<div id="Section1" dir="ltr">
+	<p style="margin-bottom: 0cm"><a href="https://gist.github.com/carlosdagos/ff9bca552369d56cbc9e2fb81b294fad/raw/51ea831a63903dcaec7e263be9df0548e089c2af/defun-is-a-macro.lisp">view
+	raw</a> <a href="https://gist.github.com/carlosdagos/ff9bca552369d56cbc9e2fb81b294fad#file-defun-is-a-macro-lisp">defun-is-a-macro.lisp
+	</a>hosted with â¤ by <a href="https://github.com/">GitHub</a> 
+	</p>
+
+</div>
+<div id="Section3" dir="ltr">
+
+<p><br/>
+<br/>
+
+	</p>
+
+</div>
+
+<p>На самом деле, я не знаю, что <em>реально</em> делает это макрорасширение, но я знаю его конечный результат - добавление функции.</p>
+
+<p>Как насчет <code class="western"><a href="http://clhs.lisp.se/Body/m_case_.htm">case</a></code>?
+Конечно же, <code class="western">case</code> - это встроенный механизм, не так ли? 
+Не так быстро: </p>
+
+<div id="gist88316669" dir="ltr">
+	<pre class="western"><font size="2" style="font-size: 10pt">CL-USER&gt; (macroexpand `(case x ((:foo) 'foo) ((:bar) 'bar)))</font>
+<font size="2" style="font-size: 10pt">(LET ()</font>
+  <font size="2" style="font-size: 10pt">(COND ((OR (EQL ':FOO X)) 'FOO)</font>
+        <font size="2" style="font-size: 10pt">((OR (EQL ':BAR X)) 'BAR)))</font></pre>
+</div>
+<div id="Section7" dir="ltr">
+	<p style="margin-bottom: 0cm"><a href="https://gist.github.com/carlosdagos/b92fd39bcc311fde799d7f530a22b56f/raw/5cbec977719cfaab276a4242106e46940effb727/case-is-a-macro.lisp">view
+	raw</a> <a href="https://gist.github.com/carlosdagos/b92fd39bcc311fde799d7f530a22b56f#file-case-is-a-macro-lisp">case-is-a-macro.lisp
+	</a>hosted with â¤ by <a href="https://github.com/">GitHub</a> 
+	</p>
+
+</div>
+<div id="Section9" dir="ltr">
+	<pre class="western"></pre>
+</div>
+
+<p>Итак, <code class="western">case</code> построен на основе <code class="western"><a href="http://clhs.lisp.se/Body/m_cond.htm">cond</a></code>! Значит, <code class="western">cond</code> 
+<strong>должен</strong> быть встроенным… не так ли? Вы можете увидеть, к чему это идет: </p>
+
+<div id="gist88316746" dir="ltr">
+	<pre class="western"><font size="2" style="font-size: 10pt">CL-USER&gt; (macroexpand  `(cond ((eq x :foo) 'foo)</font>
+                              <font size="2" style="font-size: 10pt">((eq x :bar) 'bar)</font>
+                              <font size="2" style="font-size: 10pt">(t           'baz)))</font>
+<font size="2" style="font-size: 10pt">(IF (EQ X :FOO)</font>
+    <font size="2" style="font-size: 10pt">(PROGN 'FOO)</font>
+    <font size="2" style="font-size: 10pt">(COND ((EQ X :BAR) 'BAR) (T 'BAZ)))</font></pre>
+</div>
+<div id="Section13" dir="ltr">
+	<p style="margin-bottom: 0cm"><a href="https://gist.github.com/carlosdagos/39da016e13a365b29db444601acb7f4f/raw/5b01e8f0ddee3452ed0960a209301b66fc4738a7/cond-is-a-recursive-macro.lisp">view
+	raw</a> <a href="https://gist.github.com/carlosdagos/39da016e13a365b29db444601acb7f4f#file-cond-is-a-recursive-macro-lisp">cond-is-a-recursive-macro.lisp
+	</a>hosted with â¤ by <a href="https://github.com/">GitHub</a> 
+	</p>
+
+</div>
+<div id="Section15" dir="ltr">
+	<pre class="western"></pre>
+</div>
+
+<p>Таким образом, <code class="western">cond</code> - это не только макрос, но и 
+рекурсивный макрос, построенный на основе <code class="western">if</code> и самого себя 
+до некоторого базового случая.
+</p>
+
+<p>Здесь <a href="http://clhs.lisp.se/Body/s_if.htm"><code class="western">if</code> - 
+это специальный оператор</a>, но для меня это открыло глаза, сколько форм - это просто 
+макросы поверх макросов.</p>
+
+<h5 class="western"><a name="you-can-talk-with-the-compiler-lot-i.e.-the-programmable-programming-language"></a>
+Вы можете поговорить с компилятором (т.е. «программируемым языком программирования»)</h5>
+<h6 class="western"><a name="execute-code-in-different-stages-of-the-compiler"></a>
+Выполнять код на разных этапах компилятора </h6>
+
+<p>В CL можно сделать так много замечательных вещей.</p>
+
+<p>Вы хотите объявить функцию, которая будет доступна <em>только</em> во время компиляции? 
+Или как насчет выполнения какого-либо действия, например, указания компилятору оптимизировать
+компилируемый файл для максимальной скорости?</p>
+
+<p>Хорошо: просто используйте <code class="western">eval-when</code>! 
+<a href="http://clhs.lisp.se/Body/s_eval_w.htm"><em>Специальный оператор</em>  
+<code class="western">eval-when</code></a> позволит вам загружать и выполнять фрагменты кода 
+на разных этапах компилятора, и это может быть чрезвычайно мощным.
+</p>
+
+<p>Это может быть сложно? Конечно, может, просто спросите  <a href="https://twitter.com/fare">Fare</a>:</p>
+
+<p>â<b>EVAL-WHEN considered harmful to your mental healthâ by
+FranÃ§ois-RenÃ© Rideau</b> <a href="https://fare.livejournal.com/146698.html">https://fare.livejournal.com/146698.html</a></p>
+
+<h6 class="western"><a name="only-compile-expressions-when-certain-features-are-available"></a>
+Компилировать выражения только тогда, когда доступны определенные «features/функциональности»</h6>
+
+<p>Несмотря на трудности, <code class="western">eval-when</code> <strong>широко</strong>
+используется для вставки ключевых слов в переменную с именем <code class="western"><a href="http://www.lispworks.com/documentation/lw50/CLHS/Body/v_featur.htm">*features*</a>, что позволит вам 
+на более позднем этапе процесса компиляции решить, что вы хотите компилировать, а что нет.</p>
+
+<p>Например, вы можете загрузить свой лисп и попытаться запустить 
+<code class="western">swank</code>, но только если библиотека загружена. Если нет, 
+вы можете использовать это для запуска альтернативного сервера. В этой ситуации вы могли 
+бы сделать: </p>
+
+<div id="gist88318167" dir="ltr">
+	<div id="file-use-of-a-feature-lisp" dir="ltr">
+		<pre class="western"><font size="2" style="font-size: 10pt">(defun do-whatever-with-swank-or-die ()</font>
+  <font size="2" style="font-size: 10pt">#+swank</font>
+  <font size="2" style="font-size: 10pt">(progn</font>
+    <font size="2" style="font-size: 10pt">(warn &quot;Swank is loaded, so we can use it!&quot;)</font>
+    <font size="2" style="font-size: 10pt">(swank:do-whatever))</font>
+
+  <font size="2" style="font-size: 10pt">#-swank</font>
+  <font size="2" style="font-size: 10pt">(error &quot;Can't do anything without Swank. Sorry. Dying.&quot;))</font></pre>
+	</div>
+</div>
+
+<p>Это лучшая вещь на свете? Конечно нет. Это может быть опасно? Конечно да. Тем не менее, 
+это круто? Да  (IMHO).</p>
+
+<h6 class="western"><a name="create-your-own-reader-macros"></a>Создайте 
+свой собственный макрос для чтения</h6>
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm">Вы пишете длинные многострочные строки в своем коде 
+	и вас раздражают разделители, такие как двойные кавычки, которых вы хотите
+	избегать? 
+	</p>
+
+	<li/>
+<p style="margin-bottom: 0cm">Вы бы предпочли писать 
+	метки времени в формате ANSI? 
+	</p>
+
+	<li/>
+
+<p> Вы бы предпочли набирать структуры JSON в сокращенном формате, 
+	но просто получать их в структуре CL?  
+	</p>
+
+</ul>
+
+<p><strong>Больше ни слова:</strong></p>
+
+<p>Рассмотрим следующий фрагмент, в котором мы объявляем некоторые служебные функции 
+и создаем <strong><a href="https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node192.html">readtable</a></strong>(таблицу для чтения) с определенными символами диспетчеризации(распределения функциональности). 
+</p>
+
+<div id="gist88318946" dir="ltr">
+
+<p><br/>
+<br/>
+
+	</p>
+
+	<div id="file-my-readtable-lisp" dir="ltr">
+		<pre class="western">;; You would have to have some json parser loaded, but we can
+;; just fake it for now
+
+(defun json-parse (string)
+  &quot;Return some mock thing right now&quot;
+  (declare (ignore string))
+  `(cons :obj '((&quot;Hello&quot; . &quot;World!&quot;))))
+
+(defun parse-ansi-time (string)
+  &quot;Parse the time string into a timestamp&quot;
+  (let ((year  (parse-integer string :start 0 :end 4))
+        (month (parse-integer string :start 6 :end 7))
+        (day   (parse-integer string :start 9 :end 10)))
+    (- (+ (* year   31556926) ;; no. of seconds in a year
+          (* month  2629743)  ;; no. of seconds in a month
+          (* day    86400))   ;; no. of seconds in a day
+       (* 1900 31556926))))   ;; lisp timestamps start at 1900
+
+(defun read-delimited-string (stream)
+  &quot;Reads a string delimited by any char after the
+   macro reader&quot;
+  (loop
+     with terminator = (read-char stream)
+     for ch = (read-char stream)
+     until (eql ch terminator)
+     collect ch into chars
+     finally
+       (return (coerce chars 'string))))
+
+(defun |#long-ass-string-reader| (stream sub-char numarg)
+  (declare (ignore sub-char numarg))
+  (read-delimited-string stream))
+
+(defun |#timestamp-ansi-reader| (stream sub-char numarg)
+  (declare (ignore sub-char numarg))
+  (let ((ts (read-delimited-string stream)))
+    (parse-ansi-time ts)))
+
+(defun |#json-struct-reader| (stream sub-char numarg)
+  (declare (ignore sub-char numarg))
+  (let ((json-string (read-delimited-string stream)))
+    (json-parse json-string)))
+
+(let ((my-readtable (copy-readtable nil)))
+  (set-dispatch-macro-character #\# #\s
+                                #'|#long-ass-string-reader|
+                                my-readtable)
+  (set-dispatch-macro-character #\# #\t
+                                #'|#timestamp-ansi-reader|
+                                my-readtable)
+  (set-dispatch-macro-character #\# #\j
+                                #'|#json-struct-reader|
+                                my-readtable)
+  (setf (excl:named-readtable :my-readtable)
+        my-readtable))
+ </pre>
+	</div>
+</div>
+
+<p>Мы начинаем с установки переменной <a href="http://clhs.lisp.se/Body/v_rdtabl.htm"><code class="western">*readtable*</code> </a>для нашей вновь созданной таблицы для чтения в REPL и 
+просто набираем: </p>
+
+<div id="gist88319080" dir="ltr">
+
+<p><br/>
+<br/>
+
+	</p>
+
+	<div id="file-using-my-readtable-lisp" dir="ltr">
+		<pre class="western"><font size="2" style="font-size: 10pt">CL-USER&gt; ;; Set the readtable to what we created above</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; (setf *readtable* (excl:named-readtable :my-readtable))</font>
+<font size="2" style="font-size: 10pt">#&lt;readtable named MY-READTABLE @ #x10001a913a2&gt;</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; Try out the string thingy</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; #s/Long ass multiline string with &quot;quotes inside&quot; and this could be multiline too omg!/</font>
+<font size="2" style="font-size: 10pt">&quot;Long ass multiline string with \&quot;quotes inside\&quot; and this could be multiline too omg!&quot;</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; Nice! Now try out typing timestamps in ANSI format</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; #t/2018-03-16/</font>
+<font size="2" style="font-size: 10pt">3732124897</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; Convenient! Now try to do some JSON</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; #j/{&quot;Hello&quot;:&quot;World!&quot;}/</font>
+<font size="2" style="font-size: 10pt">(:OBJ (&quot;Hello&quot; . &quot;World!&quot;))</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; Okay, we cheated here, but if we had a real JSON parser then it</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; still be amazing</font></pre>
+<p>
+		<br/>
+<br/>
+
+		</p>
+
+	</div>
+</div>
+
+<p>Для меня это невероятная возможность. И, когда вы объединяете это с 
+мощью макросов и программирования метаобъектов, действительно подчеркивает, 
+почему CL действительно является программируемым языком программирования.</p>
+
+<p><a name="fnref3"></a>Все еще не уверены?  В своем отчете <code class="western">xooglers</code>,
+ <a href="http://www.flownet.com/ron/">Рон Гаррет</a>  рассказывает о том, как мы могли бы
+адаптировать один конкретный продукт для поддержки нескольких языков. Его пример в основном
+заменяет читатель строк по умолчанию тем, который заменяет все строки их ответным переводом, 
+если таковой существует. Пример ниже предназначен для AllegroCL, но он полностью адаптирован 
+из его примера CCL<a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fn3"><sup>3</sup></a>:</p>
+
+<div id="gist88492481" dir="ltr">
+
+<p><br/>
+<br/>
+
+	</p>
+
+	<div id="file-string-reader-for-translations-lisp" dir="ltr">
+		<pre class="western"><font size="2" style="font-size: 10pt">(defvar *translations* '((&quot;Hello&quot; :spanish &quot;Hola&quot; :german</font>
+                          <font size="2" style="font-size: 10pt">&quot;Guten tag&quot;)</font>
+                         <font size="2" style="font-size: 10pt">(&quot;Goodbye&quot; :spanish &quot;Adios&quot; :german</font>
+                          <font size="2" style="font-size: 10pt">&quot;Auf wiedersehen&quot;)))</font>
+
+<font size="2" style="font-size: 10pt">(defvar *current-language* :english)</font>
+
+<font size="2" style="font-size: 10pt">(defun my-string-reader (stream char)</font>
+  <font size="2" style="font-size: 10pt">(let* ((s (excl::read-string stream char))</font>
+         <font size="2" style="font-size: 10pt">(translations (rest (assoc s *translations* :test</font>
+                                    <font size="2" style="font-size: 10pt">'string-equal))))</font>
+    <font size="2" style="font-size: 10pt">(if translations</font>
+        <font size="2" style="font-size: 10pt">`(or (getf ',translations *current-language*) ,s)</font>
+        <font size="2" style="font-size: 10pt">s)))</font>
+
+<font size="2" style="font-size: 10pt">(defun test (&amp;key (language :english))</font>
+  <font size="2" style="font-size: 10pt">(let ((*current-language* language))</font>
+    <font size="2" style="font-size: 10pt">(print &quot;Hello&quot;)</font>
+    <font size="2" style="font-size: 10pt">(print &quot;Goodbye&quot;)</font>
+    <font size="2" style="font-size: 10pt">(values)))</font>
+
+<font size="2" style="font-size: 10pt">;; This ouputs the following in your REPL</font>
+
+<font size="2" style="font-size: 10pt">CL-USER&gt; (test :language :english)</font>
+<font size="2" style="font-size: 10pt">&quot;Hello&quot; </font>
+<font size="2" style="font-size: 10pt">&quot;Goodbye&quot;</font>
+
+<font size="2" style="font-size: 10pt">CL-USER&gt; (test :language :spanish)</font>
+<font size="2" style="font-size: 10pt">&quot;Hola&quot; </font>
+<font size="2" style="font-size: 10pt">&quot;Adios&quot;</font>
+
+<font size="2" style="font-size: 10pt">CL-USER&gt; (test :language :german)</font>
+<font size="2" style="font-size: 10pt">&quot;Guten tag&quot; </font>
+<font size="2" style="font-size: 10pt">&quot;Auf wiedersehen&quot; </font></pre>
+<p>
+		<a name="gist884924811"></a><br/>
+<br/>
+
+		</p>
+
+	</div>
+</div>
+<div id="Section39" dir="ltr">
+	<div id="Section40" dir="ltr">
+
+<p><br/>
+<br/>
+
+		</p>
+
+	</div>
+</div>
+
+<p><a name="fnref4"></a>Я предлагаю почитать его материалы про 
+<code class="western">xooglers</code> <a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fn4"><sup>4</sup></a>:</p>
+
+<p>â<b>Xooglers Rises From the Ashesâ by Ron
+Garret</b><br/>
+<a href="http://blog.rongarret.info/2009/12/xooglers-rises-from-ashes.html">http://blog.rongarret.info/2009/12/xooglers-rises-from-ashes.html</a></p>
+
+<h6 class="western"><a name="tell-the-compiler-that-certain-functions-or-files-are-fine-to-optimize"></a>
+Сообщите компилятору, что определенные функции или файлы можно оптимизировать.</h6>
+
+<p>И это оптимизирует их.</p>
+
+<p><a name="fnref5"></a>Поскольку Lisp является динамическим языком, он делает то, 
+что вы ожидаете от динамического языка, например, проверяет, сравниваете ли вы строку 
+со строкой, или что вы складываете два числа, и многие другие вещи, которые он делает 
+без какой-либо информации о типе. Если он обнаруживает ошибку времени выполнения, 
+он выдаст легко читаемую трассировку стека(<strong>stack trace</strong>), где вы можете 
+отладить, то что пошло не так. Это то, что делают большинство языков<a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fn5"><sup>5</sup></a>, поэтому неудивительно.</p>
+
+<p>Но что, если у вас есть функция, которая <em>действительно</em> должна быть быстрой, 
+потому что она работает в замкнутом цикле, и вы действительно знаете, что делаете (тм), 
+поэтому вы не хотите, чтобы компилятор мешал. Вам просто нужно быстрое исполнение кода. 
+Что ж, посмотрите на это: </p>
+
+<div id="gist88457841" dir="ltr">
+
+<p><br/>
+<br/>
+
+	</p>
+
+	<div id="file-lisp-declare-lisp" dir="ltr">
+		<pre class="western"><font size="2" style="font-size: 10pt">CL-USER&gt; ;; We will declare two functions that do a depth-first search</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; on a tree.</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;;</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; (defun search-tree (tree search-item &amp;key (test 'eq))</font>
+           <font size="2" style="font-size: 10pt">(labels ((%search-tree (branch)</font>
+                      <font size="2" style="font-size: 10pt">(unless (null branch)</font>
+                        <font size="2" style="font-size: 10pt">(when (funcall test branch search-item)</font>
+                          <font size="2" style="font-size: 10pt">(return-from search-tree branch))</font>
+                        <font size="2" style="font-size: 10pt">(unless (atom branch)</font>
+                          <font size="2" style="font-size: 10pt">(%search-tree (car branch))</font>
+                          <font size="2" style="font-size: 10pt">(%search-tree (cdr branch))))))</font>
+             <font size="2" style="font-size: 10pt">(%search-tree tree)))</font>
+<font size="2" style="font-size: 10pt">SEARCH-TREE</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; (compile 'search-tree)</font>
+<font size="2" style="font-size: 10pt">SEARCH-TREE</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; We've got a new compiled function called 'search-tree</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; Now let's try a different alternative</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; (defun search-tree* (tree search-item &amp;key (test 'eq))</font>
+           <font size="2" style="font-size: 10pt">(labels ((%search-tree (branch)</font>
+                      <font size="2" style="font-size: 10pt">(declare (optimize (speed 3) (space 0) (debug 0)))</font>
+                      <font size="2" style="font-size: 10pt">(unless (null branch)</font>
+                        <font size="2" style="font-size: 10pt">(when (funcall test branch search-item)</font>
+                          <font size="2" style="font-size: 10pt">(return-from search-tree* branch))</font>
+                        <font size="2" style="font-size: 10pt">(unless (atom branch)</font>
+                          <font size="2" style="font-size: 10pt">(%search-tree (car branch))</font>
+                          <font size="2" style="font-size: 10pt">(%search-tree (cdr branch))))))</font>
+             <font size="2" style="font-size: 10pt">(%search-tree tree)))</font>
+<font size="2" style="font-size: 10pt">SEARCH-TREE*</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; (compile 'search-tree*)</font>
+<font size="2" style="font-size: 10pt">SEARCH-TREE*</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; We have this new function which is exactly the same</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; in behaviour, but it has that `optimize` in the middle there</font></pre>
+<p>
+		<a name="gist884578411"></a><br/>
+<br/>
+
+		</p>
+
+	</div>
+</div>
+<div id="Section45" dir="ltr">
+	<div id="Section46" dir="ltr">
+
+<p><br/>
+<br/>
+
+		</p>
+
+	</div>
+</div>
+
+<p>Итак, в нашем REPL мы набрали и скомпилировали две функции: <code class="western">search-tree</code> и <code class="western">search-tree*</code>, и единственная разница между ними в том, 
+что одна из них имеет внутри <code class="western"><a href="http://www.lispworks.com/documentation/lw50/CLHS/Body/d_optimi.htm">optimize</a></code>(команду оптимизации).</p>
+
+<p>Читая объявление <code class="western">optimize</code>, мы видим, что вторая
+функция <code class="western">search-tree*</code> будет компилироваться для 
+<em>speed</em>(скорости) и без отладки. В остальном все то же самое: поиск в 
+глубину по дереву (представленному как вложенный список).</p>
+
+<p>Итак, мы можем увидеть результаты ниже:</p>
+
+<div id="gist88458193" dir="ltr">
+
+<p><br/>
+<br/>
+
+	</p>
+
+	<div id="file-search-tree-time-results-lisp" dir="ltr">
+		<pre class="western"><font size="2" style="font-size: 10pt">CL-USER&gt; ;; Consider an existing function `mock-tree` which returns</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;; some random (nested) list</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; ;;</font>
+<font size="2" style="font-size: 10pt">CL-USER&gt; (time (loop</font>
+                    <font size="2" style="font-size: 10pt">with tree = (mock-tree)</font>
+                    <font size="2" style="font-size: 10pt">for i from 0 upto 1000000</font>
+                    <font size="2" style="font-size: 10pt">for rand = (random 17)</font>
+                    <font size="2" style="font-size: 10pt">do (search-tree tree rand)))</font>
+<font size="2" style="font-size: 10pt">; cpu time (non-gc) 1.861000 sec user, 0.000000 sec system</font>
+<font size="2" style="font-size: 10pt">; cpu time (gc)     0.000000 sec user, 0.000000 sec system</font>
+<font size="2" style="font-size: 10pt">; cpu time (total)  1.861000 sec user, 0.000000 sec system</font>
+<font size="2" style="font-size: 10pt">; cpu time (thread) 1.860000 sec user, 0.000000 sec system</font>
+<font size="2" style="font-size: 10pt">; real time  1.860217 sec (100.0%)</font>
+<font size="2" style="font-size: 10pt">; space allocation:</font>
+<font size="2" style="font-size: 10pt">;  118 cons cells, 14,528 other bytes, 0 static bytes</font>
+<font size="2" style="font-size: 10pt">; Page Faults: major: 0 (gc: 0), minor: 0 (gc: 0)</font>
+
+<font size="2" style="font-size: 10pt">CL-USER&gt; (time (loop</font>
+                    <font size="2" style="font-size: 10pt">with tree = (mock-tree)</font>
+                    <font size="2" style="font-size: 10pt">for i from 0 upto 1000000</font>
+                    <font size="2" style="font-size: 10pt">for rand = (random 17)</font>
+                    <font size="2" style="font-size: 10pt">do (search-tree* tree rand)))</font>
+<font size="2" style="font-size: 10pt">; cpu time (non-gc) 1.006000 sec user, 0.002000 sec system</font>
+<font size="2" style="font-size: 10pt">; cpu time (gc)     0.000000 sec user, 0.000000 sec system</font>
+<font size="2" style="font-size: 10pt">; cpu time (total)  1.006000 sec user, 0.002000 sec system</font>
+<font size="2" style="font-size: 10pt">; cpu time (thread) 1.007000 sec user, 0.000000 sec system</font>
+<font size="2" style="font-size: 10pt">; real time  1.006890 sec (100.1%)</font>
+<font size="2" style="font-size: 10pt">; space allocation:</font>
+<font size="2" style="font-size: 10pt">;  70 cons cells, 8,576 other bytes, 0 static bytes</font>
+<font size="2" style="font-size: 10pt">; Page Faults: major: 0 (gc: 0), minor: 0 (gc: 0)</font></pre>
+<p>
+		<br/>
+<br/>
+
+		</p>
+
+	</div>
+</div>
+
+<p>В целом, <code class="western">search-tree*</code> почти в два раза быстрее 
+без каких-либо изменений кода. Я не встречал ни одного другого языка программирования, 
+где это возможно, и это очень полезно.
+</p>
+
+<p><a name="fnref6"></a>Посмотрите, что мы сделали здесь с объявлением 
+<code class="western">optimize</code>, так это сказали компилятору 
+<strong>не хранить трассировку стека</strong><a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fn6"><sup>6</sup></a>, что он делает по умолчанию, 
+чтобы помочь при отладке. Это значительно ускоряет выполнение, потому что 
+теперь функция хвостово-рекурсивная, тогда как раньше она сохраняла стек, 
+что может значительно снизить производительность.</p>
+
+<p>Хотите сделать то же самое, но для всего файла? Просто введите это в 
+верхней части вашего файла Lisp: </p>
+
+<pre class="western"><code class="western">(eval-when (:compile-toplevel)</code>
+<code class="western">   </code><code class="western">(declaim (optimize (speed 3)</code>
+<code class="western">                      </code><code class="western">(space 0)</code>
+<code class="western">                      </code><code class="western">(debug 0))))</code></pre>
+<p>
+Но <strong>будьте осторожны</strong>.</p>
+
+<h5 class="western"><a name="parentheses-are-a-solved-problem"></a>Скобки - решенная проблема</h5>
+
+<p>Если вы пишете CL и не пользуетесь <code class="western">parinfer</code>, то серьезно: 
+<strong>что, черт возьми, вы делаете?</strong></strong></p>
+
+<p>Скобки - решенная проблема. Нет необходимости выравнивать их вручную и 
+проверять балансировку вручную.</p>
+
+<p>Сделайте себе одолжение и установите Parinfer. Вам даже не нужно использовать Emacs, 
+он поддерживает все Лиспы. Так что оправдания нет. Установите его.   
+<a href="https://cdagostino.io/images/didyoudoit.jpg">Сделай это.</a></p>
+
+<h5 class="western"><a name="interactive-development-is-wonderful"></a>
+Интерактивная разработка прекрасна</h5>
+
+<p>Когда я печатаю в Emacs с полностью загруженным Лиспом и гигабайтами данных, 
+загруженными в ОЗУ, примерно в 90% случаев я могу просто навести указатель мыши 
+на функцию и набрать <code class="western">C-c C-c</code>, а после небольшой вспышки 
+и сообщения в минибуфере что «компиляция завершена», я могу снова запустить свои тесты, 
+и вдруг они пройдут! Я исправил проблему в своем редакторе, который удобно размещал REPL, 
+где я мог выполнить тестовую команду.</p>
+
+<p>Интерактивная разработка - это не побочный эффект CL, а функция и важная функция 
+для ее системы условий (которая включает в себя понятие «перезапуск»), и любой 
+достойный лиспер пишет код, который адаптируется к перезагрузке в реальном времени.</p>
+
+<p>Доступ к REPL настолько важен для сообщества CL и его предыстории, 
+что одна из наиболее цитируемых историй, связанных с этим, упоминается в книге, 
+на которую я ссылался выше, но вот Google Talk по этому поводу: </p>
+
+<p><a href="https://www.youtube.com/watch?v=_gZK0tW8EhQ">https://www.youtube.com/watch?v=_gZK0tW8EhQ</a></p>
+
+<p> 
+</p>
+
+<p>Мистер Гаррет в этом выступлении очень предвзят и высказывает множество 
+собственных мнений, но что вы можете усвоить из видео, так это то, что они 
+отлаживали спутник с очень большого расстояния, используя Lisp (в мин. 42:00). 
+Хорошая штука.</p>
+
+<h5 class="western"><a name="theres-more"></a>Здесь еще!</h5>
+
+<p>Можно еще так много сказать, но я лучше остановлюсь на этом «ради хорошего». 
+Я мог бы продолжить, но я также рекомендовал бы вам прочитать здесь больше о таких вещах, 
+как система типов и фантастическая функция <code class="western">disassemble</code>(дизассемблирования): </p>
+
+<p>â<b>Performance and Types in Lispâ by Bob
+Krzaczek</b><br/>
+<a href="http://blog.30dor.com/2014/03/21/performance-and-types-in-lisp/">http://blog.30dor.com/2014/03/21/performance-and-types-in-lisp/</a></p>
+
+<h2 class="western"><a name="amendments"></a>Поправки </h2>
+
+<p>Amendments to this page can be found <a href="https://github.com/carlosdagos/blog/commits/master/posts/2018-03-28-one-year-common-lisp-developer-part-1-the-good.md">here</a>.</p>
+
+<h2 class="western"><a name="footnotes"></a>Сноски</h2>
+<hr/>
+
+<ol>
+	<li/>
+
+<p><a name="fn1"></a>But I was.<a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fnref1">â©ï¸</a></p>
+
+	<li/>
+
+<p><a name="fn2"></a>Yes, yes. You can just append <code class="western">'</code>
+	to everything and then itâs a valid identifier. Still, itâs not
+	âthe sameâ.<a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fnref2">â©ï¸</a></p>
+
+	<li/>
+
+<p><a name="fn3"></a>In truth, this piece of code is only to
+	show an example. But, Iâve also thought that you could instead
+	just set the macro character to be a single quote instead. Then you
+	have single quotes that act as strings that the programmer controls,
+	and double quotes act as everyday strings. Now that could make for
+	some interesting experiments.<a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fnref3">â©ï¸</a></p>
+
+	<li/>
+
+<p><a name="fn4"></a>Iâve enjoyed reading (and listening to)
+	Ron Garret. For some reason, a lot of what he says makes a lot of
+	sense to me. Maybe itâs an age thing, Iâm getting old after
+	all.<a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fnref4">â©ï¸</a></p>
+
+	<li/>
+
+<p><a name="fn5"></a>Well, with the exception that in the Lisp
+	condition system, the runtime will actually set a <em>break</em> in
+	the execution, and in a lot of situations allow you to amend the
+	problem and continue executing.<a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fnref5">â©ï¸</a></p>
+
+	<li/>
+
+<p><a name="fn6"></a>Actually depending on the Lisp
+	implementation we could have told the compiler to do a bit more than
+	that. Always read the docs!<a href="2018-03-28-one-year-common-lisp-developer-part-1-the-good.html#fnref6">â©ï¸</a></p>
+
+</ol>
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

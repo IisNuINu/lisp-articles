@@ -1,0 +1,610 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2021-12-26T22:39:54.694145080"/>
+	<meta name="changed" content="2021-12-26T22:47:26.663783398"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<p style="margin-bottom: 0cm; line-height: 100%"><a href="https://dev.to/rajasegar">
+  <font color="#000080">
+    <img src="lisp-for-the-web-5_html_ca320a977652d19f.png" name="Image1" alt="Rajasegar Chandran" align="bottom" width="40" height="40" border="1"/>
+  </font>
+</a>
+
+</p>
+
+<p style="margin-bottom: 0.5cm; line-height: 100%"><a href="https://dev.to/rajasegar">Rajasegar
+Chandran</a> 
+</p>
+
+<p>Posted on 
+</p>
+
+<h1 class="western">Lisp для Web - 5 
+</h1>
+<p style="margin-bottom: 0cm"><a href="https://dev.to/t/commonlisp">#commonlisp</a>
+<a href="https://dev.to/t/webdev">#webdev</a> <a href="https://dev.to/t/lisp">#lisp</a>
+<a href="https://dev.to/t/caveman2">#caveman2</a> 
+</p>
+
+<div id="article-body" dir="ltr">
+	<h1 class="western">Lisp для web - 5 
+	</h1>
+
+<p>Это сообщение об использовании Common Lisp для веб-разработки. 
+	Лисп - один из старейших языков программирования, который 
+	<a href="https://lisp-lang.org/success/">используется</a> до сих пор. 
+	Его окрестили <code class="western">программируемым языком программирования</code> 
+	за его отличные характеристики по расширению. Он стал пионером многих идей 
+	в области информатики, включая древовидные структуры данных, 
+	автоматическое управление храненилищем данных, динамическую типизацию, 
+	условные выражения, функции высшего порядка, рекурсию, компилятор с 
+	собственным хостом(self-hosting compiler) и цикл чтения – оценки(вычисления)
+	 – печати(REPL).</p>
+
+<p>В прошлом было много замечательных сообщений об использовании Lisp для веб-разработки. 
+	Это мой шанс перенести Lisp в ультрасовременный Интернет и особенно как развернуть 
+	ваши веб-приложения Common Lisp в облаке.
+</p>
+
+<p>Как Front-end разработчик, в этом посте я сосредоточусь в основном на следующих 
+	аспектах веб-разработки. </p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm">Средства разраотки(Frameworks) 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm">IDE &amp; Инструменты
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"> Настройка среды разработки 
+		</p>
+
+		<li/>
+
+<p>Развертывание
+		</p>
+
+	</ul>
+
+<p>Это сообщение вводного уровня, которое познакомит вас с инструментами и практиками 
+	разработки и развертывания ваших веб-приложений на Лиспе. Я планирую написать 
+	более подробные статьи по каждому из инструментов и практик позже. </p>
+
+	<h2 class="western">Предыдущие посты
+	</h2>
+
+<p>Это самые популярные посты, посвященные данной теме до моего поста. Пожалуйста, 
+	не стесняйтесь проверить их, если вы хотите получить больше информации о 
+	веб-разработке с помощью Lisp. </p>
+
+	<ul>
+		<li/>
+<p style="margin-bottom: 0cm"><a href="http://www.adamtornhill.com/articles/lispweb.htm">List
+		for the Web</a> 
+		</p>
+
+		<li/>
+<p style="margin-bottom: 0cm"><a href="https://vitovan.com/lispweb3.html">Lisp
+		for The Modern Web</a> 
+		</p>
+
+		<li/>
+
+<p><a href="https://medium.math.dev/lisp-the-web-4c00c88d11f9">Lisp
+		&amp; the Web</a> 
+		</p>
+
+	</ul>
+	<h2 class="western">Как мне начать? 
+	</h2>
+
+<p>Чтобы начать работу с Lisp для веб-разработки, вам потребуются две вещи. 
+	Реализация Lisp, установленная на вашем компьютере, и редактор с возможностями 
+	IDE для разработки веб-приложений с помощью lisp. Я использую SBCL в качестве 
+	своей реализации Lisp и Emacs в качестве редактора. Вы можете выбрать любой
+	редактор для задачи, но ничто не может сравниться с Emacs в редактировании 
+	кода Lisp. Это идеальный инструмент для работы. </p>
+
+	<h2 class="western">SBCL 
+	</h2>
+
+<p>Steel Bank Common Lisp (SBCL) - это высокопроизводительный компилятор 
+	Common Lisp. Это открытое / бесплатное программное обеспечение с 
+	разрешающей лицензией. Помимо компилятора и системы времени выполнения 
+	для ANSI Common Lisp, он предоставляет интерактивную среду, включая 
+	отладчик, статистический профилировщик, инструмент покрытия кода и 
+	многие другие расширения.
+</p>
+
+<p>SBCL работает на нескольких платформах POSIX и экспериментально в Windows. 
+	См. <a href="http://sbcl.org/platform-table.html">Страницу загрузки</a> 
+	для получения информации о поддерживаемых платформах и руководство по 
+	началу работы для получения дополнительной помощи.</p>
+
+<p>Установка SBCL в Ubuntu </p>
+
+	<pre class="western" style="margin-bottom: 0.5cm"><code class="western">sudo apt-get install sbcl</code></pre>
+</div>
+
+<p>Installing SBCL on Mac using Homebrew</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">brew install sbcl</code></pre>
+<p>
+После того, как вы установили SBCL на свой компьютер, вы можете начать экспериментировать 
+с REPL, вызвав его из командной строки. </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">sbcl</code></pre>
+<p>
+Вы можете ввести любое выражение Lisp в REPL и сразу же получить результат. </p>
+
+<pre class="western"><code class="western">CL-USER&gt; (+ 1 2)</code>
+<code class="western">3</code></pre><h2 class="western">
+Quicklisp 
+</h2>
+
+<p>После установки SBCL следующим шагом будет установка 
+<a href="https://www.quicklisp.org/beta/">Quicklisp</a>. 
+Quicklisp - это менеджер библиотеки Common Lisp. Он работает 
+с вашей существующей реализацией Common Lisp для загрузки, 
+установки и загрузки любой из более чем 1500 библиотек с 
+помощью нескольких простых команд. Это похоже на npm для Node.js, 
+cargo для Rust и аналогично другим менеджерам пакетов для других 
+языковых реализаций. Перейдите на их домашнюю страницу и обратитесь 
+к инструкциям по установке, чтобы узнать, как установить и 
+настроить quicklisp для вашей реализации Lisp. </p>
+
+<h2 class="western">Emacs 
+</h2>
+
+<p>Затем идет наш редактор - Emacs. <a href="https://www.gnu.org/software/emacs/">Emacs</a> - 
+это расширяемый, настраиваемый и бесплатный текстовый редактор, который по своей сути 
+является интерпретатором Emacs Lisp. По сути, это означает, что в него встроена 
+поддержка редактирования кода Lisp. Вы можете зайти на их веб-сайт и следовать 
+инструкциям по установке в различных операционных системах и платформах. 
+В Emacs также есть масса удивительных вещей, таких как <a href="https://orgmode.org/">org-mode</a>,
+встроенный файловый проводник под названием dired и так далее. Это операционная 
+система внутри себя. </p>
+
+<h2 class="western">SLIME 
+</h2>
+
+<p><a href="https://common-lisp.net/project/slime/">SLIME</a> - это 
+режим Emacs для разработки Common Lisp. Это среда для хакинга(программирования) 
+Common Lisp. У него есть отладчик Common Lisp, REPL (Read-Eval-Print-Loop), 
+который написан на Emacs Lisp для более тесной интеграции с Emacs и 
+интерактивным инспектором объектов.</p>
+
+<p>Так что это необходимый аддон для Emacs, если вы заинтересованы в 
+серьезном Lisp. После того, как вы установили Emacs, вы можете установить 
+slime с помощью <code class="western">M-x package-install</code>, а затем 
+введите <code class="western">slime</code> и нажмите Enter.<br/>
+Вы также можете обратиться к инструкциям по <a href="https://github.com/slime/slime#quick-setup-instructions">быстрой настройке</a> на их github README, чтобы быстро 
+настроить SLIME.</p>
+
+<p>Вы можете запустить SLIME с помощью <code class="western">M-x slime</code>, 
+то есть<code class="western">Alt</code> или <code class="western">Meta</code> 
+клавишь + x, а затем ввести <code class="western">slime</code> и войти. Он 
+запустит программу Lisp по умолчанию, которую вы настроили ранее (в нашем случае - SBCL), 
+в самом Emacs. Вы можете поиграть в интерпретаторе так же, как вы делали это 
+раньше с SBCL.</p>
+
+<h2 class="western">Caveman 
+</h2>
+
+<p>Когда вы будете готовы с настройкой IDE и необходимыми инструментами, 
+установленными на вашем компьютере, пора приступить к настоящей работе. 
+Создание проекта веб-приложения с помощью Lisp.
+</p>
+
+<p>В старых сообщениях, о которых я упоминал выше, на самом деле не было 
+никаких фреймворков, используемых для настройки и разработки веб-приложений для Lisp.
+ Они были просто ручной работы, простые и понятные.
+</p>
+
+<p>Но если вы хотите иметь масштабируемую и поддерживаемую базу кода для 
+своих веб-приложений, вам необходимо иметь какие-то соглашения о том, 
+как вы организуете свой код Lisp для создания веб-сайтов и приложений. 
+Используя такие фреймворки, как Ruby on Rails и Express.js, я, естественно, 
+склонен начинать наш проект с помощью фреймворка. Поскольку соглашения 
+делают вас продуктивным в долгосрочной перспективе, они избавляют вас 
+от принятия произвольных решений о том, как вы организуете свой код и 
+делаете свою кодовую базу поддерживаемой в будущем. .</p>
+
+<p>Поэтому я выбрал <a href="https://github.com/fukamachi/caveman">Caveman</a> 
+для этого проекта. После экспериментов с Caveman и без него для создания 
+веб-приложений на Common Lisp я обнаружил, что это лучший фреймворк 
+для разработки веб-приложений на Lisp. Caveman - это легкий фреймворк 
+для веб-приложений, созданный <a href="https://8arrow.org/">Eitaro
+Fukamachi</a>(Эйтаро Фукамачи) для Common lisp. У Фукамачи есть 
+несколько серьезных инструментов для веб-разработки на Lisp. 
+Не стесняйтесь проверять его профиль на Github для получения 
+дополнительных полезных инструментов.
+</p>
+
+<p>Caveman доступен в Quicklisp, поэтому вы можете установить его с помощью</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(ql:quickload :caveman2)</code></pre>
+<p>
+А вот как вы можете сгенерировать скелет проекта с помощью Caveman:</p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(caveman2:make-project #P&quot;~/quicklisp/local-projects/hello-caveman&quot; :author &quot;Rajasegar&quot;)</code></pre>
+<p>
+Это создаст папку проекта в &quot;~/quicklisp/local-projects&quot;, которая 
+является местом по умолчанию, откуда вы можете загружать свои проекты в Quicklisp. 
+Это означает, что вы можете загрузить наше недавно созданное приложение в quicklisp, 
+как показано ниже: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(ql:quickload :hello-caveman)</code></pre>
+<p>
+В вашем приложении есть функции с именами start и stop для запуска / остановки 
+вашего веб-приложения.<br/>
+Итак, вы можете запустить веб-сервер разработки 
+следующим образом: </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">(hello-caveman:start :port 3000)</code></pre>
+<p>
+Откройте браузер и перейдите по адресу <code class="western">http://localhost:3000</code>. 
+Вы получите пустую веб-страницу с надписью  <code class="western">Welcome to
+Caveman2</code>.</p>(«Добро пожаловать в Caveman2».)
+
+<p><a href="https://res.cloudinary.com/practicaldev/image/fetch/s--6BVRwClz--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_880/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/rzcqk9wdvof37i9aiip0.png">
+  <font color="#000080">
+    <img src="lisp-for-the-web-5_html_649a12dcdb862093.png" name="Image2" alt="Alt Text" align="bottom" width="880" height="314" border="1"/>
+  </font>
+</a>
+</p>
+
+<h3 class="western">Добавление новых маршрутов 
+</h3>
+
+<p>Вы можете добавить новые маршруты в свое веб-приложение, отредактировав 
+файл <code class="western">web.lisp</code>, расположенный в папке 
+<code class="western">src</code> вашего вновь созданного проекта.<br/>
+Скажем, например, если вы хотите добавить новый маршрут, например 
+<code class="western">http://localhost:3000/about</code>, в свое приложение, 
+вы можете определить новый маршрут под маршрутом по умолчанию, как 
+показано ниже. </p>
+
+<pre class="western"><code class="western">(defroute &quot;/about&quot; ()</code>
+<code class="western">  </code><code class="western">(render #P&quot;about.html&quot;))</code></pre><h3 class="western">
+src/web.lisp 
+</h3>
+<pre class="western"><code class="western">        </code><code class="western">(in-package :cl-user)</code>
+<code class="western">        </code><code class="western">(defpackage super-rentals.web</code>
+<code class="western">          </code><code class="western">(:use :cl</code>
+<code class="western">            </code><code class="western">:caveman2</code>
+<code class="western">            </code><code class="western">:super-rentals.config</code>
+<code class="western">            </code><code class="western">:super-rentals.view</code>
+<code class="western">            </code><code class="western">:super-rentals.db</code>
+<code class="western">            </code><code class="western">:datafly</code>
+<code class="western">            </code><code class="western">:sxql)</code>
+<code class="western">          </code><code class="western">(:export :*web*))</code>
+<code class="western">        </code><code class="western">(in-package :super-rentals.web)</code>
+
+<code class="western">        </code><code class="western">;; for @route annotation</code>
+<code class="western">        </code><code class="western">(syntax:use-syntax :annot)</code>
+
+<code class="western">        </code><code class="western">;;</code>
+<code class="western">        </code><code class="western">;; Application</code>
+
+<code class="western">        </code><code class="western">(defclass &lt;web&gt; (&lt;app&gt;) ())</code>
+<code class="western">        </code><code class="western">(defvar *web* (make-instance '&lt;web&gt;))</code>
+<code class="western">        </code><code class="western">(clear-routing-rules *web*)</code>
+
+<code class="western">        </code><code class="western">;;</code>
+<code class="western">        </code><code class="western">;; Routing rules</code>
+
+<code class="western">        </code><code class="western">(defroute &quot;/&quot; ()</code>
+<code class="western">          </code><code class="western">(render #P&quot;index.html&quot;))</code>
+
+<code class="western">        </code><code class="western">(defroute &quot;/about&quot; ()</code>
+<code class="western">          </code><code class="western">(render #P&quot;about.html&quot;))</code>
+
+<code class="western">        </code><code class="western">;;</code>
+<code class="western">        </code><code class="western">;; Error pages</code>
+
+<code class="western">        </code><code class="western">(defmethod on-exception ((app &lt;web&gt;) (code (eql 404)))</code>
+<code class="western">          </code><code class="western">(declare (ignore app))</code>
+<code class="western">          </code><code class="western">(merge-pathnames #P&quot;_errors/404.html&quot;</code>
+<code class="western">                   </code><code class="western">*template-directory*))</code></pre><h3 class="western">
+Добавление нового шаблона для вашего маршрута 
+</h3>
+
+<p>Вы можете создавать новые шаблоны для своих маршрутов в папке 
+<code class="western">templates</code>(шаблонов), расположенной в 
+корне вашего проекта. Просто создайте новый файл <code class="western">about.html</code> 
+и немного HTML к нему.</p>
+
+<h3 class="western">Djula Шаблоны(Templates) 
+</h3>
+
+<p>Хороший фреймворк обеспечивает надежную поддержку шаблонов в ваших веб-приложениях. 
+Потому что это помогает вам выразить вашу разметку с помощью динамической информации 
+с сервера.</p>
+
+<p>Caveman использует для работы шаблоны <a href="https://mmontone.github.io/djula/">Djula</a>. 
+Djula - это порт шаблонизатора Python Django на Common Lisp.
+Язык шаблонов Djula разработан для достижения баланса между мощностью и легкостью. 
+Он разработан для тех, кто привык работать с HTML. </p>
+
+<pre class="western"><code class="western">&lt;h1&gt;About page&lt;/h1&gt;</code>
+<code class="western">&lt;p&gt;This is the about page&lt;/p&gt;</code></pre>
+<p>
+Теперь перейдите в файл <code class="western">web.lisp</code>, перезагрузите изменения, 
+чтобы новые маршруты вступили в силу. В Emacs вы можете просто выполнить 
+<code class="western">C-c C-l</code>, то есть сначала нажать <code class="western">Ctrl-c</code>,
+а затем <code class="western">Ctrl-l</code>, чтобы скомпилировать ваш файл и загрузить 
+его в среду SLIME. Затем перейдите в свой браузер и перейдите по 
+<code class="western">http://localhost:3000/about</code>, чтобы просмотреть новую страницу.
+Прелесть использования такого фреймворка, как Caveman, заключается в том, что 
+любые изменения, которые вы вносите в свои шаблоны, файлы HTML, будут автоматически 
+отражаться в браузере. Все, что вам нужно сделать, это просто обновить страницу. </p>
+
+<p><a href="https://res.cloudinary.com/practicaldev/image/fetch/s--qAp0qQDX--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_880/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/7u3yg8m3kevd9zy6snht.png">
+  <font color="#000080">
+    <img src="lisp-for-the-web-5_html_4558a70d194cd4b0.png" name="Image3" alt="Alt Text" align="bottom" width="880" height="196" border="1"/>
+  </font>
+</a>
+</p>
+
+<h3 class="western">Добавление стиля
+</h3>
+
+<p>В папке <code class="western">static/css</code> в корне вашего проекта есть 
+файл css по умолчанию с именем <code class="western">main.css</code>. Вы можете 
+добавить любые настраиваемые свойства и объявления CSS для стилизации ваших 
+веб-страниц. </p>
+
+<pre class="western"><code class="western">/* static/css/main.css */</code>
+<code class="western">h1 {</code>
+<code class="western"> </code><code class="western">color: red;</code>
+<code class="western">}</code></pre>
+<p>
+В приведенном выше коде все ваши теги <code class="western">h1</code> будут 
+иметь текст красного цвета. Теперь, когда мы наигрались достаточно, чтобы 
+понять структуру нашего проекта и разработали очень простое веб-приложение, 
+пришло время развернуть наше приложение в облаке, чтобы мы могли поделиться 
+им с другими.
+</p>
+
+<p>Какой смысл в создании крутого веб-приложения, если вы не можете 
+поделиться им с внешним миром и получить обратную связь. Это один из 
+важных аспектов, который не рассматривался в предыдущих статьях о 
+Common Lisp и веб-разработке.</p>
+
+<p>Измените свою домашнюю страницу, включив в нее ссылки на 
+about и home страницы. Для этого вам необходимо внести следующие 
+изменения в файл <code class="western">templates/index.html</code>. 
+Это шаблон домашней страницы для нашего приложения. </p>
+
+<pre class="western"><code class="western">    </code><code class="western">{% extends &quot;layouts/default.html&quot; %}</code>
+<code class="western">    </code><code class="western">{% block title %}Lisp for the web{% endblock %}</code>
+<code class="western">    </code><code class="western">{% block content %}</code>
+<code class="western">    </code><code class="western">&lt;div id=&quot;main&quot;&gt;</code>
+<code class="western">      </code><code class="western">&lt;h1&gt;Lisp for the Web&lt;/h1&gt;</code>
+<code class="western">      </code><code class="western">&lt;nav&gt;</code>
+<code class="western">        </code><code class="western">&lt;ul&gt;</code>
+<code class="western">          </code><code class="western">&lt;li&gt;&lt;a href=&quot;/&quot;&gt;Home&lt;/a&gt;&lt;/li&gt;</code>
+<code class="western">          </code><code class="western">&lt;li&gt;&lt;a href=&quot;/about&quot;&gt;About&lt;/a&gt;&lt;/li&gt;</code>
+<code class="western">        </code><code class="western">&lt;/ul&gt;</code>
+<code class="western">      </code><code class="western">&lt;/nav&gt;</code>
+<code class="western">      </code><code class="western">&lt;p&gt;Source Code: &lt;a href=&quot;https://github.com/rajasegar/lisp-for-the-web&quot;&gt;Github&lt;/a&gt;&lt;/p&gt;</code>
+<code class="western">    </code><code class="western">&lt;/div&gt;</code>
+<code class="western">    </code><code class="western">{% endblock %}</code></pre>
+<p>
+<a href="https://res.cloudinary.com/practicaldev/image/fetch/s--xbqxOOoP--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_880/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/ztf5mxt37svs40irb0pi.png">
+  <font color="#000080">
+    <img src="lisp-for-the-web-5_html_bef8e893dfc2431f.png" name="Image4" alt="Alt Text" align="bottom" width="880" height="262" border="1"/>
+  </font>
+</a>
+</p>
+
+<h2 class="western">Развертывание
+</h2>
+
+<p>Теперь мы увидим, как развернуть наше веб-приложение Common Lisp в облаке. 
+Я использую для этого Heroku. <a href="https://heroku.com/">Heroku</a> - мощный 
+поставщик PaaS (Platform as a Service/платформа как услуга), который имеет массу 
+функций для создания и развертывания веб-приложений. У него есть отличный инструмент 
+CLI, с помощью которого вы можете развернуть свои приложения за считанные минуты, 
+вы можете просматривать журналы из командной строки, использовать пользовательские 
+пакеты сборки и многое другое. Я использую Heroku уже десять лет, и у меня есть много демо,
+созданных с его помощью. Итак, для нашего приложения мы будем использовать то же самое. 
+</p>
+
+<p>Сначала нам нужно, чтобы на нашем компьютере был установлен инструмент heroku CLI. 
+Вы можете посетить официальную страницу <a href="https://devcenter.heroku.com/articles/heroku-cli">heroku-cli</a> для получения инструкций по установке на различных платформах. 
+После установки интерфейса командной строки heroku для создания нового приложения все, 
+что вам нужно сделать, это просто запустить эту команду из папки проекта. </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">heroku apps:create my-awesome-app</code></pre>
+<p>
+Но для нашего приложения на Лиспе этого недостаточно, потому что у нас 
+нет встроенной поддержки языка Лисп на платформе Heroku, поэтому мы 
+собираемся использовать так называемые пакеты сборки.</p>
+
+<h2 class="western">Heroku пакеты сборки(Buildpacks) 
+</h2>
+
+<p>
+Пакеты сборки(<a href="https://devcenter.heroku.com/articles/buildpacks">Buildpacks</a>) - 
+это сценарии, которые мощное приложение строит на Heroku. Они состоят из набора сценариев, 
+и в зависимости от языка программирования сценарии будут извлекать зависимости, 
+выводить сгенерированные ресурсы или скомпилированный код и т. Д.
+</p>
+
+<p>Этот вывод собирается в slug компилятором slug. Поддержка Heroku для 
+Ruby, Python, Java, Clojure, Node.js, Scala, Go и PHP реализована с помощью 
+набора пакетов сборки с открытым исходным кодом. </p>
+
+<p>Heroku поддерживает коллекцию официально поддерживаемых пакетов сборки, 
+которые по умолчанию доступны для всех приложений Heroku.</p>
+
+<p>Итак, чтобы наше веб-приложение Common Lisp было правильно развернуто 
+в Heroku, нам нужен специальный пакет сборки. К счастью, существует так 
+много пакетов сборки Common Lisp, созданных замечательными людьми для 
+развертывания веб-приложений Lisp на платформе Heroku. Мы собираемся 
+использовать один из них под названием <code class="western">heroku-buildpack-roswell</code>, 
+созданный <a href="https://github.com/gos-k">gos-k</a>. Итак, как мы собираемся 
+использовать этот buildpack. Нам нужно передать флаг <code class="western">--buildpack</code>
+ с URL-адресом buildpack нашей команде heroku следующим образом. </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">heroku apps:create my-awesome-app --buildpack https://github.com/gos-k/heroku-buildpack-roswell</code></pre>
+<p>
+Это говорит Heroku использовать специальный пакет сборки для создания наших 
+веб-приложений Common Lisp и их развертывания. Но перед созданием приложения 
+нам нужно выполнить некоторые настройки в нашем проекте, чтобы пакет сборки 
+работал. Сборка основана на  <a href="https://roswell.github.io/Home.html">roswell</a>.
+</p>
+
+<h3 class="western">roswell 
+</h3>
+
+<p>Roswell - это установщик  реализации Lisp/менеджер, программа запуска 
+и многое другое. Он начинался как инструмент командной строки с целью 
+сделать установку и управление реализациями Common Lisp действительно 
+простой и легкой. Теперь он превратился в среду с полным стеком для 
+разработки Common Lisp и имеет множество функций, которые упрощают 
+тестирование, совместное использование и распространение ваших приложений Lisp. 
+С Roswell мы можем вывести сообщество Common Lisp на совершенно 
+новый уровень продуктивности.</p>
+
+<p>Итак, чтобы наш пользовательский пакет сборки работал, нам нужно 
+создать четыре новых файла в корне проекта.</p>
+
+<h3 class="western">.roswell-install-list 
+</h3>
+
+<p>Этот файл сообщает roswell об установке этих пакетов в качестве 
+зависимостей для вашего приложения. </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">    </code><code class="western">clack</code></pre><h3 class="western">
+.roswell-use 
+</h3>
+
+<p>Этот файл сообщает roswell использовать двоичный файл sbcl по умолчанию 
+для наших приложений. </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">    </code><code class="western">sbcl-bin</code></pre><h3 class="western">
+.roswell-load-system-list 
+</h3>
+
+<p>Этот файл указывает roswell загружать эти системы как часть 
+зависимостей нашего проекта. </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">    </code><code class="western">clack</code></pre><h3 class="western">
+Procfile 
+</h3>
+
+<p>Этот файл сообщает Heroku команде запуска запустить наш веб-сервер с 
+помощью команды <code class="western">clackup</code> из Clack. </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">web: clackup --port $PORT --address 0.0.0.0 app.lisp</code></pre>
+<p>
+<a href="https://github.com/fukamachi/clack">Clack</a> - это уровень абстракции 
+веб-сервера для Common Lisp, вдохновленный WSGI Python и Rack Ruby.
+Clack предоставляет сценарий для запуска веб-сервера. Это полезно при развертывании 
+в производственной среде.</p>
+
+<p>Мы предоставляем флаг <code class="western">--port</code>, чтобы 
+использовать переменную env <code class="western">PORT</code>, назначенную 
+Heroku для вашего проекта, и флаг <code class="western">--address</code>, 
+чтобы использовать адрес <code class="western">0.0.0.0</code> вместо 
+<code class="western">localhost</code>. Этот флаг очень важен, иначе 
+ваше приложение выдаст ошибку запуска, сообщающую, что приложение не 
+привязано к порту в течение указанного тайм-аута. И, наконец, мы 
+предоставляем наш основной файл <code class="western">app.lisp</code> 
+для clack.</p>
+
+<p>После создания всех этих файлов нам все еще нужно сделать одно 
+последнее изменение в нашем коде, чтобы пакет сборки заработал. 
+Это означает, что система <code class="western">/app</code> должна 
+выбрать определение системы проекта из папки <code class="western">/app</code> 
+в Heroku после завершения сборки и готовности проекта к загрузке. 
+Мы добавим эту строку вверху в нашем файле <code class="western">app.lisp</code> 
+в корне папки проекта. </p>
+
+<h3 class="western">Что такое asdf?
+</h3>
+
+<p>ASDF расшифровывается как  Another System Definition Facility(Другая 
+возможность определения системы). Это то, что хакеры Common Lisp используют 
+для создания и загрузки программного обеспечения.<br/>
+ASDF - это де-факто стандартное средство сборки Common Lisp. Ваша реализация 
+Lisp, вероятно, содержит копию ASDF, которую вы можете загрузить с помощью 
+<code class="western">(require &quot;asdf&quot;)</code>.</p>
+
+<p>Это инструмент для описания того, как исходный код Lisp организован 
+в системах, а также как создавать и загружать эти системы. Каждый проект 
+Lisp имеет файл определения системы, который заканчивается расширением 
+<code class="western">.asd</code>, в котором вы можете указать некоторые 
+сведения о своем проекте. Это похоже на файл манифеста проекта, похожий на 
+<code class="western">package.json</code> для Node.js и 
+<code class="western">cargo.toml</code> для Rust. </p>
+
+<pre class="western"><code class="western">;; app.lisp</code>
+<code class="western">(push #p&quot;/app/&quot; asdf:*central-registry*)</code></pre>
+<p>
+После того, как вы добавите все вышеперечисленные изменения, зафиксируйте их 
+и отправьте в ветку heroku, и ваше приложение будет автоматически создано и 
+развернуто с новым пакетом сборки. </p>
+
+<pre class="western" style="margin-bottom: 0.5cm"><code class="western">git push heroku master</code></pre>
+<p>
+Вот и все, вы готовы просмотреть свое веб-приложение в действии по URL-адресу 
+<a href="https://lisp-for-the-web.herokuapp.com/">https://lisp-for-the-web.herokuapp.com</a>. Исходный код этого сообщения размещен на <a href="https://github.com/rajasegar/lisp-for-the-web">Github</a>.</p>
+
+<p>Надеюсь, вам понравился этот пост, и вы узнали, как создавать 
+веб-приложения на Common Lisp и как развертывать их на облачной платформе, 
+такой как Heroku.
+</p>
+
+<p>Пожалуйста, оставляйте свои отзывы / вопросы в разделе комментариев, 
+будем рады ответить и помочь.</p>
+
+<p>Вот некоторые из других демонстраций, которые я построил с 
+помощью Common Lisp: </p>
+
+<ul>
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://github.com/rajasegar/cl-super-rentals">https://github.com/rajasegar/cl-super-rentals</a>
+		</p>
+
+	<li/>
+<p style="margin-bottom: 0cm"><a href="https://github.com/rajasegar/ccl-demo-raja">https://github.com/rajasegar/ccl-demo-raja</a>
+		</p>
+
+	<li/>
+
+<p><a href="https://github.com/rajasegar/cl-tvmaze">https://github.com/rajasegar/cl-tvmaze</a>
+		</p>
+
+</ul>
+<p style="margin-bottom: 0cm; line-height: 100%"><br/>
+
+</p>
+
+</body>
+</html>

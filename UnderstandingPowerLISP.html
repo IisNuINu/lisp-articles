@@ -1,0 +1,646 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="2022-01-05T11:13:29.493263733"/>
+	<meta name="changed" content="2022-01-05T11:29:31.940450377"/>
+	<style type="text/css">
+		@page { margin: 2cm }
+		p { margin-bottom: 0.25cm; line-height: 115% }
+		h1 { margin-bottom: 0.21cm }
+		h1.western { font-family: "Liberation Serif", serif }
+		h1.cjk { font-family: "Noto Sans CJK SC"; font-size: 24pt }
+		h1.ctl { font-family: "Lohit Devanagari"; font-size: 24pt }
+		h2.cjk { font-family: "Noto Sans CJK SC" }
+		h2.ctl { font-family: "Lohit Devanagari" }
+		pre.cjk { font-family: "Courier New", monospace }
+		h3.cjk { font-family: "Noto Sans CJK SC" }
+		h3.ctl { font-family: "Lohit Devanagari" }
+		a:link { so-language: zxx }
+		code.cjk { font-family: "Courier New", monospace }
+	</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Понимание силы LISP</h1>
+
+<p><font size="2" style="font-size: 10pt"><a href="https://joshbradley.me/categories/programming/">Программирование</a>
+</font>
+</p>
+
+<p>Пол Грэм описывает LISP как точку схождения для всех языков программирования. 
+По его наблюдениям, по мере развития языков средний язык продолжает скатываться 
+в сторону LISP. Поэтому понимание LISP означает понимание фундаментальной модели 
+современного программирования.</p>
+
+<p>Другие называют LISP необходимым для того, чтобы стать лучшим программистом. 
+Эрик Реймонд зашел так далеко, что сказал, что понимание LISP - 
+это «глубокое просветление». </p>
+
+<p>В поисках этого понимания я обратился к первоисточнику. Оригинальная статья 
+Джона Маккарти <a href="http://www-formal.stanford.edu/jmc/recursive/recursive.html" target="_blank">Recursive Functions of Symbolic Expressions and Their Computation by Machine</a>(Рекурсивные функции символьных выражений и их вычисление машиной), заложившая 
+основу для LISP.</p>
+
+<p>Это объемная исследовательская статья, написанная гением для первых 
+компьютерных ученых. Это не легко усваиваемая документация, предназначенная 
+для того, чтобы помочь другим понять LISP. Я с трудом перебирал каждое предложение, 
+прежде чем наткнулся на статью Пола Грэма <a href="http://www.paulgraham.com/rootsoflisp.html" target="_blank">The Roots of LISP</a>(Корни LISP). Её ясность помогла мне обрести 
+это неуловимое чувство понимания.</p>
+
+<p>Но только когда я написал эту статью, я полностью понял язык и его возможности.
+Я оставляю свои шаги здесь для всех, кто прошел подобный путь и все еще пытается понять.</p>
+
+<p>Сохраняя верность Полу Грэму, я реализовал эту версию LISP в 
+<a href="http://www.arclanguage.org/tut.txt" target="_blank">Arc</a>. Вы можете найти 
+полный код  <a href="https://gist.github.com/joshuabradley012/d8e86fcbabac04b230b37e0f173259f5" target="_blank">здесь</a>.</p>
+
+<h2 class="western"><a name="list-expressions"></a>List expressions/Списковые выражения</h2>
+
+<p>Первоначально Джон Маккарти определил символические выражения (S-выражения) 
+и мета-выражения (M-выражения). S-выражения должны были содержать списки символов, 
+а M-выражения должны были обозначать функции. </p>
+
+<pre class="western"><code class="western">; S-expression</code>
+<code class="western">((ab .&nbsp;c) . d . nil)</code>
+
+<code class="western">; M-expression</code>
+<code class="western">eq[x; x]</code>
+<code class="western">; returns t</code></pre>
+<p>
+Однако на компьютере, который они использовали для первой реализации LISP, 
+отсутствовали квадратные скобки, поэтому все было написано в нотации S-выражений.
+<a href="https://joshbradley.me/understanding-the-power-of-lisp/#ref:1"><sup>1</sup></a> 
+Точки были опущены, и предполаглось, что завершения списков завершались 
+<code class="western">nil</code>.
+</p>
+
+<p>Таким образом, приведенное выше M-выражение становится </p>
+
+<pre class="western"><code class="western">(eq x x)</code>
+<code class="western">; returns t</code></pre>
+<p>
+которое стало стандартным синтаксисом LISP, сделав синтаксически 
+единообразным язык.</p>
+
+<h2 class="western"><a name="elementary-functions"></a>Элементарные функции</h2>
+
+<p>Чтобы сделать LISP законченным языком, необходимо очень мало элементарных функций. 
+Компилятор решает многие сложности, такие как выделение памяти и сборка мусора.
+</p>
+
+<p>Краткое введение в синтаксис LISP полезно, потому что некоторые аспекты 
+не понятны интуитивно. В частности, цитаты(quotes) и вычисление/evaluation изнутри наружу.</p>
+
+<p>Кавычки необходимы для LISP, потому что нет разделения данных и кода. 
+Последовательности символьных знаков могут интерпретироваться как переменные 
+или значения в зависимости от их контекста. Цитирование символьных знаков 
+решает эту проблему, заставляя буквально интерпретировать их как значения. </p>
+
+<p>Без quote(цитирования) <code class="western">(eq x x)</code> попытается 
+найти определенное/привязанное значение <code class="western">x</code> и 
+выдаст ошибку, если не оно будет найдено. Хотя <code class="western">(eq 'x 'x)</code> 
+возвращает <code class="western">t</code>. Имейте в виду, что это сокращение от 
+<code class="western">(eq (quote x) (quote x))</code>.
+</p>
+
+<p>Интерпретация изнутри наружу кажется очень неестественной, потому что 
+мы обучены читать слева направо даже на языках программирования. При чтении 
+таких выражений, как <code class="western">(outer (inner '(a b)))</code>, 
+вы можете ожидать, что в первую очередь будет вычислено <code class="western">outer</code>. 
+Однако в первую очередь будет вычислено <code class="western">inner</code>.
+</p>
+
+<p>Вооружившись этим базовым пониманием, вы готовы к 5 элементарным функциям, 
+необходимым для работы LISP. </p>
+
+<h3 class="western"><a name="atom"></a><code class="western">atom</code></h3>
+
+<p>Проверяет, является ли элемент одиночным символом. </p>
+
+<pre class="western"><code class="western">(atom 'x)</code>
+<code class="western">; returns t</code>
+
+<code class="western">(atom '(a b))</code>
+<code class="western">; returns nil</code></pre><h3 class="western">
+<a name="eq"></a><code class="western">eq</code></h3>
+
+<p>Проверяет, совпадают ли два атомарных символа. В Arc это пишется как 
+<code class="western">есть</code>.</p>
+
+<pre class="western"><code class="western">(eq 'x 'x)</code>
+<code class="western">; returns t</code>
+
+<code class="western">(eq 'x 'y)</code>
+<code class="western">; returns nil</code>
+
+<code class="western">(eq '(a b) '(a b))</code>
+<code class="western">; (a b) is a list and cannot be evaluated by eq</code>
+<code class="western">; returns nil</code></pre><h3 class="western">
+<a name="car"></a><code class="western">car</code></h3>
+
+<p>Обозначает в лисп машине (contents of the address register) содержимое адресного регистра. 
+Она возвращает первый элемент в списке, если он не является атомарным. </p>
+
+<pre class="western"><code class="western">(car '(x a))</code>
+<code class="western">; returns x</code>
+
+<code class="western">(car '((x a) y))</code>
+<code class="western">; returns (x a)</code></pre><h3 class="western">
+<a name="cdr"></a><code class="western">cdr</code></h3>
+
+<p>Обозначает в лисп машине (contents of the decrement register)содержимое регистра декремента. 
+Она возвращает остаток - все, что находится после первого элемента в списке.</p>
+
+<pre class="western"><code class="western">(cdr '(x a))</code>
+<code class="western">; returns a</code>
+
+<code class="western">(cdr '((x a) y))</code>
+<code class="western">; returns y</code>
+
+<code class="western">(cdr '((x a) (y b)))</code>
+<code class="western">; returns (y b)</code></pre><h3 class="western">
+<a name="cons"></a><code class="western">cons</code></h3>
+
+<p>Используется для создания списка из атомов или других списков. </p>
+
+<pre class="western"><code class="western">(cons 'x 'a)</code>
+<code class="western">; returns (x . a)</code>
+<code class="western">; lists should typically end in nil</code>
+<code class="western">; so it is better to write (cons x (cons a nil))</code>
+<code class="western">; which returns (x . a . nil)</code>
+<code class="western">; and can be written as (x a)</code>
+
+<code class="western">(cons '(x a) 'y)</code>
+<code class="western">; returns ((x a) . y)</code>
+
+<code class="western">(cons '(x a) '(y b))</code>
+<code class="western">; returns ((x a) y b)</code></pre><h2 class="western">
+<a name="foundational-functions"></a>Основные функции</h2>
+
+<p>Эти функции составляют основу «универсальной функции», которая является 
+конечной целью данной реализации.</p>
+
+<p>Поскольку я реализую это в Arc, я буду отходить от использования 
+Джоном Маккарти <code class="western">=</code> для определения функций и 
+<code class="western">[condition -&gt; expression; T -&gt; expression]</code> 
+синтаксис для условий <code class="western">if...else</code>. Вместо этого я 
+буду использовать  <code class="western">def</code> и <code class="western">if</code>, 
+как определено в Arc.</p>
+
+<p>Другие отличия включают использование <code class="western">is</code>
+для <code class="western">eq</code>, и я буду ставить перед всеми функциями префикс 
+<code class="western">_</code>, чтобы избежать конфликтов с существующими функциями. 
+Кроме того, <code class="western">t</code> представляет истину, а 
+<code class="western">nil</code> - ложь.</p>
+
+<p>Если у вас возникли проблемы с синтаксисом, я предлагаю сначала прочитать учебник 
+Пола Грэма по <a href="http://www.arclanguage.org/tut.txt" target="_blank">Arc
+tutorial</a>. </p>
+
+<h3 class="western"><a name="_null"></a><code class="western">_null</code></h3>
+
+<p>Проверяет, является ли выражение пустым.</p>
+
+<pre class="western"><code class="western">(def _null (x)</code>
+<code class="western">  </code><code class="western">(is x nil))</code>
+
+<code class="western">(_null nil)</code>
+<code class="western">; returns t</code>
+
+<code class="western">(_null '(x a))</code>
+<code class="western">; returns nil</code></pre><h3 class="western">
+<a name="_and"></a><code class="western">_and</code></h3>
+
+<p>Проверяет, верны ли оба условия. В Arc <code class="western">t</code> представляет истину, 
+а <code class="western">nil</code> - ложь. </p>
+
+<pre class="western"><code class="western">(def _and (x y)</code>
+<code class="western">  </code><code class="western">(if (is x t) (is y t) t nil))</code>
+
+<code class="western">(_and 'x 'y)</code>
+<code class="western">; returns t</code>
+
+<code class="western">(_and 'x nil)</code>
+<code class="western">; returns nil</code></pre><h3 class="western">
+<a name="_not"></a><code class="western">_not</code></h3>
+
+<p>Проверяет, равно ли условие  <code class="western">nil</code>.</p>
+
+<pre class="western"><code class="western">(def _not (x)</code>
+<code class="western">  </code><code class="western">(if (is x nil) t))</code>
+
+<code class="western">(_not nil)</code>
+<code class="western">; returns t</code>
+
+<code class="western">(_not 'x)</code>
+<code class="western">; returns nil</code></pre><h3 class="western">
+<a name="_caar-_cadr-_caddr-_cadar-and-_caddar"></a><code class="western">_caar</code>,
+<code class="western">_cadr</code>, <code class="western">_caddr</code>,
+<code class="western">_cadar</code>, and <code class="western">_caddar</code></h3>
+
+<p>Это сокращение для комбинаций <code class="western">car</code> и
+<code class="western">cdr</code>. Они возникают часто, поэтому сокращение 
+сохраняет ваш код DRY.</p>
+
+<pre class="western"><code class="western">(def _caar (x)</code>
+<code class="western">  </code><code class="western">(car (car x)))</code>
+
+<code class="western">(def _cadr (x)</code>
+<code class="western">  </code><code class="western">(car (cdr x)))</code>
+
+<code class="western">(def _cadar (x)</code>
+<code class="western">  </code><code class="western">(car (cdr (car x))))</code>
+
+<code class="western">(def _caddr (x)</code>
+<code class="western">  </code><code class="western">(car (cdr (cdr x))))</code>
+
+<code class="western">(def _caddar (x)</code>
+<code class="western">  </code><code class="western">(car (cdr (cdr (car x)))))</code>
+
+<code class="western">(_cadr '(a b c d))</code>
+<code class="western">; returns b</code>
+
+<code class="western">(_caddr '(a b c d))</code>
+<code class="western">; returns c</code>
+
+<code class="western">(_cadar '((a b c d) (e f g)))</code>
+<code class="western">; returns b</code>
+
+<code class="western">(_caddar '((a b c d) (e f g)))</code>
+<code class="western">; returns c</code></pre><h3 class="western">
+<a name="_append"></a><code class="western">_append</code></h3>
+
+<p>Позволяет вам соединять списки.</p>
+
+<pre class="western"><code class="western">(def _append (x y)</code>
+<code class="western">  </code><code class="western">(if (_null x) y (cons (car x) (_append (cdr x) y))))</code>
+
+<code class="western">(_append '(a b) '(c d))</code>
+<code class="western">; returns (a b c d)</code></pre><h3 class="western">
+<a name="_list"></a><code class="western">_list</code></h3>
+
+<p>Создает список из двух выражений. Разница между ним и <code class="western">cons</code> 
+в том, что <code class="western">_list</code> добавит за вас <code class="western">nil</code>.
+</p>
+
+<p>Она поддерживает целостность списков, которые вы передаете в качестве аргументов, 
+и устраняет необходимость в дополнительных <code class="western">cons</code> при 
+объединении двух атомов. </p>
+
+<pre class="western"><code class="western">(def _list (x y)</code>
+<code class="western">  </code><code class="western">(cons x (cons y nil)))</code>
+
+<code class="western">(_list 'a 'b)</code>
+<code class="western">; returns (a b)</code>
+
+<code class="western">(_list '(a b) '(c d))</code>
+<code class="western">; returns ((a b) (c d))</code></pre><h3 class="western">
+<a name="_pair"></a><code class="western">_pair</code></h3>
+
+<p>Объединяет два списка, создавая пары на основе положения каждого элемента. </p>
+
+<pre class="western"><code class="western">(def _pair (x y)</code>
+<code class="western">  </code><code class="western">(if (_and (_null x) (_null y)) nil</code>
+<code class="western">      </code><code class="western">(_and (_not (atom x)) (_not (atom y)))</code>
+<code class="western">      </code><code class="western">(cons (_list (car x) (car y))</code>
+<code class="western">            </code><code class="western">(_pair (cdr x) (cdr y)))))</code>
+
+<code class="western">(_pair '(x y z) '(a b c))</code>
+<code class="western">; returns ((x a) (y b) (z c))</code></pre><h3 class="western">
+<a name="_assoc"></a><code class="western">_assoc</code></h3>
+
+<p>Получает значения из пар "ключ-значение", где первый аргумент - это ключ, 
+а второй аргумент - это список пар. </p>
+
+<pre class="western"><code class="western">(def _assoc (x y)</code>
+<code class="western">  </code><code class="western">(if (is (caar y) x) (_cadar y)</code>
+<code class="western">    </code><code class="western">(_assoc x (cdr y))))</code>
+
+<code class="western">(_assoc 'y '((x a) (y b)))</code>
+<code class="western">; returns b</code>
+
+<code class="western">(_assoc 'x '((w (a b)) (x (c d)) (y (e f))))</code>
+<code class="western">; returns (c d)</code></pre><h2 class="western">
+<a name="the-universal-function"></a>Универсальная функция</h2>
+
+<p>Истинная сила LISP заключается в его способности оценивать/вычислять 
+себя из нескольких строительных блоков. Как и Джон Маккарти, мы будем 
+определять <code class="western">_eval</code>, который может вычислять/оценивать 
+LISP в LISP.</p>
+
+<p>Это самый удивительный и мощный аспект языка. С 5 примитивами и 
+12 функциями у вас есть строительные блоки для создания интерпретатора. </p>
+
+<pre class="western"><code class="western">(def _eval (e a)</code>
+<code class="western">  </code><code class="western">(if</code>
+<code class="western">    </code><code class="western">(atom e) (_assoc e a)</code>
+<code class="western">    </code><code class="western">(atom (car e)) (if</code>
+<code class="western">      </code><code class="western">(is (car e) 'quote) (_cadr e)</code>
+<code class="western">      </code><code class="western">(is (car e) 'atom)  (atom (_eval (_cadr  e) a))</code>
+<code class="western">      </code><code class="western">(is (car e) 'eq)    (is   (_eval (_cadr  e) a)</code>
+<code class="western">                                </code><code class="western">(_eval (_caddr e) a))</code>
+<code class="western">      </code><code class="western">(is (car e) 'car)   (car  (_eval (_cadr  e) a))</code>
+<code class="western">      </code><code class="western">(is (car e) 'cdr)   (cdr  (_eval (_cadr  e) a))</code>
+<code class="western">      </code><code class="western">(is (car e) 'cons)  (cons (_eval (_cadr  e) a)</code>
+<code class="western">                                </code><code class="western">(_eval (_caddr e) a))</code>
+<code class="western">      </code><code class="western">(is (car e) 'cond)  (_evcon (cdr e) a)</code>
+<code class="western">      </code><code class="western">(_eval (cons (_assoc (car e) a)</code>
+<code class="western">                   </code><code class="western">(cdr e))</code>
+<code class="western">             </code><code class="western">a))</code>
+<code class="western">    </code><code class="western">(is (caar e) 'label)</code>
+<code class="western">      </code><code class="western">(_eval (cons (_caddar e) (cdr e))</code>
+<code class="western">             </code><code class="western">(cons (_list (_cadar e) (car e)) a))</code>
+<code class="western">    </code><code class="western">(is (caar e) 'lambda)</code>
+<code class="western">      </code><code class="western">(_eval (_caddar e)</code>
+<code class="western">             </code><code class="western">(_append (_pair (_cadar e) (_evlis (cdr e) a))</code>
+<code class="western">                      </code><code class="western">a))))</code>
+
+<code class="western">(def _evcon (c a)</code>
+<code class="western">  </code><code class="western">(if (_eval (_caar c) a)</code>
+<code class="western">      </code><code class="western">(_eval (_cadar c) a)</code>
+<code class="western">      </code><code class="western">(_evcon (cdr c) a)))</code>
+
+<code class="western">(def _evlis (m a)</code>
+<code class="western">  </code><code class="western">(if (_null m) nil</code>
+<code class="western">      </code><code class="western">(cons (_eval  (car m) a)</code>
+<code class="western">            </code><code class="western">(_evlis (cdr m) a))))</code></pre>
+<p>
+При использовании <code class="western">_eval</code> синтаксис содержащихся в нем 
+выражений будет зависеть от интерпретатора. Мы больше не пишем на Arc, а на 
+совершенно новом языке. Примитивная форма LISP.
+</p>
+
+<p>Даже если вы следовали за нами, здесь есть что сломать, так что давайте 
+рассмотрим этот код.</p>
+
+<h3 class="western"><a name="interpreting-elementary-functions"></a>Интерпретация элементарных функций
+</h3>
+
+<p><code class="western">_eval</code> принимает <code class="western">e</code> как выражение, 
+которое нужно вычислить и <code class="western">a</code> как список пар, на которые будет 
+ссылаться  <code class="western">e</code>.</p>
+
+<p>Если <code class="western">e</code> является атомарным, вызывается 
+<code class="western">_assoc</code> для возврата значения, соответствующего ключу 
+<code class="western">e</code> в <code class="western">a</code>. 
+</p>
+
+<pre class="western"><code class="western">(_eval 'x '((x a) (y b)))</code>
+<code class="western">; returns a</code>
+
+<code class="western">(_eval 'y '((x a) (y b)))</code>
+<code class="western">; returns b</code></pre>
+<p>
+Если <code class="western">e</code> не является атомарным, то 
+<code class="western">_eval</code> проверяет, является ли первый элемент 
+<code class="western">e</code> одной из элементарных функций.
+</p>
+
+<p>В случае <code class="western">quote</code>(цитаты) символ, следующий за 
+<code class="western">quote</code>, возвращается буквально. </p>
+
+<pre class="western"><code class="western">(_eval '(quote x) nil)</code>
+<code class="western">; nil is needed because _eval requires two arguments</code>
+<code class="western">; returns x</code>
+
+<code class="western">(_eval '(quote (x a)) nil)</code>
+<code class="western">; returns (x a)</code></pre>
+<p>
+С другими элементарными функциями <code class="western">e</code> принимает форму 
+<code class="western">(function key)</code>, где <code class="western">key</code> используется 
+для получения значения из <code class="western">a</code>, которое будет вычислятся(обрабатываться) 
+<code class="western">function</code>.</p>
+
+<p>Следующее использование <code class="western">_eval</code> эквивалентно 
+гораздо более простому <code class="western">(atom 'y)</code>, но является 
+ключевым для понимания функции <code class="western">_eval</code>. Обратите внимание, 
+как <code class="western">x</code> используется для ссылки на значение второго 
+параметра, <code class="western">a</code>.</p>
+
+<pre class="western"><code class="western">(_eval '(atom x) '((x y)))</code>
+<code class="western">; returns t</code>
+
+<code class="western">(_eval '(atom x) '((x (a b))))</code>
+<code class="western">; returns nil</code></pre>
+<p>
+Для каждой элементарной функции, кроме <code class="western">quote</code>, выполняются 
+рекурсивные вызовы <code class="western">_eval</code> до тех пор, пока она не достигнет 
+<code class="western">_assoc</code> или <code class="western">quote</code>.</p>
+
+<p>Это шаги, которые выполняет <code class="western">_eval</code> для 
+вычисления/оценки  <code class="western">atom</code>.</p>
+
+<pre class="western"><code class="western">(_eval '(atom x) '((x y)))</code>
+<code class="western">; (atom (_eval (_cadr e) a))</code>
+<code class="western">; (atom (_eval  x ((x y))))</code>
+<code class="western">; (atom (_assoc x ((x y))))</code>
+<code class="western">; (atom y)</code>
+<code class="western">; returns t</code></pre>
+<p>
+<code class="western">car</code> и <code class="western">cdr</code>
+имеют очень похожую структуру на <code class="western">atom</code>, 
+потому что нужно вычислять только одно выражение. </p>
+
+<pre class="western"><code class="western">(_eval '(car x) '((x (a b c))))</code>
+<code class="western">; returns a</code>
+
+<code class="western">(_eval '(cdr x) '((x (a b c))))</code>
+<code class="western">; returns (b c)</code></pre>
+<p>
+<code class="western">cons</code> и <code class="western">eq</code> имеют 
+два выражения, которые необходимо вычислить. Таким образом, в <code class="western">a</code> 
+должно быть две пары. </p>
+
+<pre class="western"><code class="western">(_eval '(eq x y) '((x a) (y a)))</code>
+<code class="western">; returns t</code>
+
+<code class="western">(_eval '(cons x y) '((x a) (y b)))</code>
+<code class="western">; returns (a . b)</code></pre>
+<p>
+<code class="western">cond</code> использует новую функцию 
+<code class="western">_evcon</code>, которая принимает список пар в формате 
+<code class="western">(condition expression)</code>/(условие выражение). 
+Когда истинное условие найдено, это выражение вычисляется. </p>
+
+<pre class="western"><code class="western">(def _evcon (c a)</code>
+<code class="western">  </code><code class="western">(if (_eval (_caar c) a)</code>
+<code class="western">      </code><code class="western">(_eval (_cadar c) a)</code>
+<code class="western">      </code><code class="western">(_evcon (cdr c) a)))</code>
+
+<code class="western">(_evcon '(((atom c1) a1) ((atom c2) a2) ((atom c3) a3))</code>
+<code class="western">        </code><code class="western">'((c1 (a b)) (a1 not_atom)</code>
+<code class="western">          </code><code class="western">(c2 (c d)) (a2 still_not_atom)</code>
+<code class="western">          </code><code class="western">(c3 e)     (a3 is_atom)))</code>
+<code class="western">; returns is_atom</code></pre>
+<p>
+Вот то же выражение с использованием <code class="western">_eval</code>.</p>
+
+<pre class="western"><code class="western">(_eval '(cond ((atom c1) a1) ((atom c2) a2) ((atom c3) a3))</code>
+<code class="western">       </code><code class="western">'((c1 (a b)) (a1 not_atom)</code>
+<code class="western">         </code><code class="western">(c2 (c d)) (a2 still_not_atom)</code>
+<code class="western">         </code><code class="western">(c3 e)     (a3 is_atom)))</code>
+<code class="western">; returns is_atom</code></pre><h3 class="western">
+<a name="interpreting-label-and-lambda-functions"></a>Интерпретация 
+<code class="western">label</code> и <code class="western">lambda</code>
+функций</h3>
+
+<p>Если <code class="western">e</code> является атомарной, но 
+не элементарной функцией, это должна быть <code class="western">label</code> или 
+<code class="western">lambda</code>-функция, определенная пользователем.</p>
+
+<p><code class="western">lambda</code>-выражения принимают формат 
+<code class="western">(lambda (param) (expression) arg)</code>, где 
+<code class="western">arg</code> передается в <code class="western">expression</code> 
+через <code class="western">param</code>.</p>
+
+<pre class="western"><code class="western">(_eval '((lambda (param)</code>
+<code class="western">           </code><code class="western">(cond ((atom param) (quote is_atom))</code>
+<code class="western">                 </code><code class="western">((quote t)    (quote not_atom))))</code>
+<code class="western">          </code><code class="western">arg)</code>
+<code class="western">       </code><code class="western">'((arg (a b))))</code>
+<code class="western">; returns not_atom</code></pre>
+<p>
+Обратите внимание, что <code class="western">(quote t)</code> здесь используется 
+как явное условие <code class="western">else</code>. Arc обрабатывает эти случаи изящно, 
+но поскольку мы привязаны к правилам интерпретатора, мы должны использовать этот 
+синтаксис.</p>
+
+<p>Во время вычисления/оценки указанное выше <code class="western">lambda</code>-
+выражение становится </p>
+
+<pre class="western"><code class="western">(_eval '(cond ((atom param) (quote is_atom))</code>
+<code class="western">              </code><code class="western">((quote t)    (quote not_atom)))</code>
+<code class="western">       </code><code class="western">'((param (a b)) (arg (a b))))</code></pre>
+<p>
+Обратите внимание, как аргументы расширяются, чтобы содержать пару для 
+<code class="western">param</code>(параметра). Это использует дополнительную функцию 
+<code class="western">_evlis</code>, которая рекурсивно создает список пар из 
+<code class="western">arg</code> для каждого параметра(<code class="western">param</code>) 
+в <code class="western">lambda</code>. Это позволяет <code class="western">lambda</code>
+обрабатывать любой список параметров.</p>
+
+<p><code class="western">((lambda (</code><em>p</em><em><sub>1</sub></em><code class="western">...</code><em>p</em><em><sub>n</sub></em><code class="western">)
+</code><em>e</em><code class="western">) </code><em>a</em><em><sub>1</sub></em><code class="western">...</code><em>a</em><em><sub>n</sub></em><code class="western">)</code>
+это формальное определение. </p>
+
+<p><code class="western">label</code> позволяет вызывать функции по имени, 
+что, возможно, является наиболее важной особенностью любого языка 
+программирования.
+</p>
+
+<p>Здесь Маккарти определяет <code class="western">ff</code> как функцию, 
+возвращающую первый атом в списке. Он использует labeled(помеченную) рекурсию. </p>
+
+<pre class="western"><code class="western">(_eval '((label ff (lambda (x)</code>
+<code class="western">                     </code><code class="western">(cond ((atom x) x)</code>
+<code class="western">                           </code><code class="western">((quote t) (ff (car x))))))</code>
+<code class="western">         </code><code class="western">y)</code>
+<code class="western">       </code><code class="western">'((y ((a b) c))))</code>
+<code class="western">; returns a</code></pre>
+<p>
+Когда <code class="western">_eval</code> найдет <code class="western">label</code>, 
+она сохранит эту функцию в <code class="western">a</code>, чтобы использовать ее позже. 
+Она также начнет вычисление <code class="western">lambda</code>-функции, определенной 
+<code class="western">label</code>. Во время вычисления/оценки приведенное выше 
+выражение становится </p>
+
+<pre class="western"><code class="western">(_eval '((lambda (x)</code>
+<code class="western">           </code><code class="western">(cond ((atom x) x)</code>
+<code class="western">                 </code><code class="western">((quote t) (ff (car x)))))</code>
+<code class="western">         </code><code class="western">y)</code>
+<code class="western">       </code><code class="western">'((ff (label ff (lambda (x)</code>
+<code class="western">               </code><code class="western">(cond ((atom x) x)</code>
+<code class="western">                     </code><code class="western">((quote t) (ff (car x)))))))</code>
+<code class="western">         </code><code class="western">(y ((a b) c))))</code></pre>
+<p>
+Полное вычисление, как выразился Маккарти, «больше подходит для электронных компьютеров, 
+чем для людей». Я согласен и не буду перечислять каждый шаг вычисления/оценки.</p>
+
+<h3 class="western"><a name="simplifying-_eval"></a>Упрощение <code class="western">_eval</code></h3>
+
+<p>Использование <code class="western">_eval</code> в сырой форме довольно 
+многословно, поэтому Маккарти определил <code class="western">_apply</code> 
+как оболочку для <code class="western">_eval</code>, которая помогает делать 
+выражения короче и легче для понимания.
+</p>
+
+<p>Она возьмет параметры для <code class="western">_eval</code> и обернет их как 
+<code class="western">(quote (param))</code>. Она также применяет аргументы 
+непосредственно к функции. </p>
+
+<pre class="western"><code class="western">(def _appq (m)</code>
+<code class="western">  </code><code class="western">(if (_null m) nil (cons (_list 'quote (car m))</code>
+<code class="western">                          </code><code class="western">(_appq (cdr m)))))</code>
+
+<code class="western">(def _apply (f args)</code>
+<code class="western">  </code><code class="western">(_eval (cons f (_appq args)) nil))</code></pre>
+<p>
+Используя эту функцию, функцию <code class="western">ff</code> можно 
+записать как </p>
+
+<pre class="western"><code class="western">(_apply '(label ff (lambda (x)</code>
+<code class="western">                     </code><code class="western">(cond ((atom x) x)</code>
+<code class="western">                           </code><code class="western">((quote t) (ff (car x))))))</code>
+<code class="western">        </code><code class="western">'(a b))</code></pre>
+<p>
+которая вызывает <code class="western">_eval</code> как </p>
+
+<pre class="western"><code class="western">(_eval '((label ff (lambda (x)</code>
+<code class="western">                     </code><code class="western">(cond ((atom x) x)</code>
+<code class="western">                           </code><code class="western">((quote t) (ff (car x))))))</code>
+<code class="western">          </code><code class="western">(quote a) (quote b))</code>
+<code class="western">       </code><code class="western">'nil)</code></pre>
+<p>
+<code class="western">_apply</code>  можно использовать для всего, что вы 
+пишете используя <code class="western">_eval</code>. Но полезно сначала понять 
+<code class="western">_eval</code>, прежде чем добавлять этот уровень абстракции.</p>
+
+<h2 class="western"><a name="takeaways"></a>Выводы</h2>
+
+<p>Возможность определять новые языки и отслеживать их внутреннее состояние 
+делает LISP отличным языком для исследования и экспериментов.</p>
+
+<p>Исчезла магия компиляции и исполняемых файлов. Вы можете сами увидеть 
+каждый этап вычисления/оценки. Это делает упражнение по stumbling(спотыканию) 
+в архаичном синтаксисе полезным.</p>
+
+<p>Я не думаю, что буду использовать LISP в производственной среде. 
+Тем не менее, я буду продолжать использовать его как инструмент для 
+расширения своего понимания низкоуровневого программирования. </p>
+
+<p>Следующий шаг для меня - понять, как реализовать компилятор, который 
+преобразует это в машинный код. Для этого я планирую прочитать 
+<a href="https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book-Z-H-1.html" target="_blank">Структура и интерпретация компьютерных программ</a>.</p>
+
+<p>Дополнительно я хотел бы модернизировать этот интерпретатор. Как писал Пол Грэм: 
+«В языке, который он [Джон Маккарти] написал в 1960 году, многое не хватало. У него 
+нет побочных эффектов, последовательного выполнения, практических чисел и 
+динамической области действия ». Но с этим можно бороться.</p>
+
+<p>Пол Грэм намекает на статью Стила и Сассмана «Art of the Interpreter», 
+не вдаваясь в подробности. Возможно, я рассмотрю их в другой статье.</p>
+
+<p>Покопавшись в истории программирования, вы повсюду найдете влияние LISP. 
+Попытка приспособиться к его синтаксису - достойное занятие само по себе, 
+но развитие этого истинного чувства понимания открывает окно во внутреннюю 
+работу всех языков. Это цель понимания LISP. </p>
+
+<hr/>
+
+<ol>
+	<li/>
+
+<p><a name="ref:1"></a>Sinclair Target. &quot;How Lisp Became
+	God's Own Programming Language&quot;, Two Bit History, October 14,
+	2018, accessed April 3, 2020,
+	<a href="https://twobithistory.org/2018/10/14/lisp.html" target="_blank">https://twobithistory.org/2018/10/14/lisp.html</a></p>
+
+</ol>
+
+<p><font size="2" style="font-size: 10pt"><a href="https://joshbradley.me/tags/lisp/">LISP</a>
+</font>
+</p>
+
+</body>
+</html>
